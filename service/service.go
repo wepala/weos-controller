@@ -20,9 +20,24 @@ type MiddlewareConfig struct {
 	HandlerName string
 }
 
+type controllerService struct {
+}
+
+func (*controllerService) GetPathConfig(path string) (map[string]*PathConfig, error) {
+	panic("implement me")
+}
+
+func (*controllerService) GetConfig() (*Config, error) {
+	panic("implement me")
+}
+
 var api openapi3.Swagger
 
 type ServiceInterface interface {
 	GetPathConfig(path string) (map[string]*PathConfig, error)
 	GetConfig() (*Config, error)
+}
+
+func NewControllerService() ServiceInterface {
+	return &controllerService{}
 }
