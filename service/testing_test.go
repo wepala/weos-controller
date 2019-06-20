@@ -14,6 +14,7 @@ import (
 type HTTPTest struct {
 	name        string
 	testDataDir string
+	apiFixture  string
 	service     service.ServiceInterface
 }
 

@@ -23,10 +23,10 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //
 //         // make and configure a mocked ServiceInterface
 //         mockedServiceInterface := &ServiceInterfaceMock{
-//             GetConfigFunc: func() (*service.Config, error) {
+//             GetConfigFunc: func() *service.Config {
 // 	               panic("mock out the GetConfig method")
 //             },
-//             GetPathConfigFunc: func(path string) (map[string]*service.PathConfig, error) {
+//             GetPathConfigFunc: func(path string, operation string) (*service.PathConfig, error) {
 // 	               panic("mock out the GetPathConfig method")
 //             },
 //         }
@@ -37,10 +37,10 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //     }
 type ServiceInterfaceMock struct {
 	// GetConfigFunc mocks the GetConfig method.
-	GetConfigFunc func() (*service.Config, error)
+	GetConfigFunc func() *service.Config
 
 	// GetPathConfigFunc mocks the GetPathConfig method.
-	GetPathConfigFunc func(path string) (map[string]*service.PathConfig, error)
+	GetPathConfigFunc func(path string, operation string) (*service.PathConfig, error)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -51,12 +51,14 @@ type ServiceInterfaceMock struct {
 		GetPathConfig []struct {
 			// Path is the path argument value.
 			Path string
+			// Operation is the operation argument value.
+			Operation string
 		}
 	}
 }
 
 // GetConfig calls GetConfigFunc.
-func (mock *ServiceInterfaceMock) GetConfig() (*service.Config, error) {
+func (mock *ServiceInterfaceMock) GetConfig() *service.Config {
 	if mock.GetConfigFunc == nil {
 		panic("ServiceInterfaceMock.GetConfigFunc: method is nil but ServiceInterface.GetConfig was just called")
 	}
@@ -82,29 +84,33 @@ func (mock *ServiceInterfaceMock) GetConfigCalls() []struct {
 }
 
 // GetPathConfig calls GetPathConfigFunc.
-func (mock *ServiceInterfaceMock) GetPathConfig(path string) (map[string]*service.PathConfig, error) {
+func (mock *ServiceInterfaceMock) GetPathConfig(path string, operation string) (*service.PathConfig, error) {
 	if mock.GetPathConfigFunc == nil {
 		panic("ServiceInterfaceMock.GetPathConfigFunc: method is nil but ServiceInterface.GetPathConfig was just called")
 	}
 	callInfo := struct {
-		Path string
+		Path      string
+		Operation string
 	}{
-		Path: path,
+		Path:      path,
+		Operation: operation,
 	}
 	lockServiceInterfaceMockGetPathConfig.Lock()
 	mock.calls.GetPathConfig = append(mock.calls.GetPathConfig, callInfo)
 	lockServiceInterfaceMockGetPathConfig.Unlock()
-	return mock.GetPathConfigFunc(path)
+	return mock.GetPathConfigFunc(path, operation)
 }
 
 // GetPathConfigCalls gets all the calls that were made to GetPathConfig.
 // Check the length with:
 //     len(mockedServiceInterface.GetPathConfigCalls())
 func (mock *ServiceInterfaceMock) GetPathConfigCalls() []struct {
-	Path string
+	Path      string
+	Operation string
 } {
 	var calls []struct {
-		Path string
+		Path      string
+		Operation string
 	}
 	lockServiceInterfaceMockGetPathConfig.RLock()
 	calls = mock.calls.GetPathConfig

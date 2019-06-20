@@ -4,36 +4,35 @@ import (
 	"bitbucket.org/wepala/weos-controller/service"
 	"flag"
 	"io/ioutil"
+	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
 	"path/filepath"
 	"testing"
 )
 
-var htmlServeTests = []*HTTPTest{
+//go:generate moq -out testing_mocks_test.go -pkg service_test . ServiceInterface
+
+var mockServerTests = []*HTTPTest{
 	{
 		name:        "landingpage_200",
 		testDataDir: "testdata/html/http",
-		service: &ServiceInterfaceMock{
-			GetConfigFunc: func() (config *service.Config, e error) {
-				return &service.Config{
-					//TODO setup test config
-				}, nil
-			},
-		},
+		apiFixture:  "testdata/api/basic-site.yml",
 	},
 }
 
 func Test_Endpoints(t *testing.T) {
-	runHtmlTests(htmlServeTests, "static", t)
+	runMockServerTests(mockServerTests, "static", t)
 }
 
-func runHtmlTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
+func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(subTest *testing.T) {
-
+			var handler http.Handler
 			//setup html server
-			handler := service.NewHTMLServer(test.service, staticFolder)
+			controllerService, _ := service.NewControllerService(test.apiFixture, "")
+			handler = service.NewMockHTTPServer(controllerService, staticFolder)
+
 			rw := httptest.NewRecorder()
 
 			//send test request

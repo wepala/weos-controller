@@ -1,0 +1,24 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Basic Site
+paths:
+  /:
+    get:
+      summary: Landing page of the site
+      responses:
+        '200':
+          description: Landing page
+          content:
+            text/html:
+              schema:
+                type: string
+                example: |
+                  <html>
+                    <head>
+                        <title>Landing Page</title>
+                    </head>
+                    <body>
+                      This is a landing page
+                    </body>
+                  </html>

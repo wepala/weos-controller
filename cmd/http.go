@@ -11,16 +11,16 @@ import (
 	"time"
 )
 
-var htmlCmd = &cobra.Command{
+var httpCmd = &cobra.Command{
 	Use:   "html",
 	Short: "Start html server",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info("HTML Server started")
 		//create controller service
-		controllerService := service.NewControllerService()
+		controllerService, _ := service.NewControllerService("api.yaml", "")
 		//setup html handler
-		htmlHandler := service.NewHTMLServer(controllerService, "static")
+		htmlHandler := service.NewHTTPServer(controllerService, "static")
 		srv := &http.Server{
 			Addr:         "0.0.0.0:" + port,
 			WriteTimeout: time.Second * 30,
@@ -47,5 +47,5 @@ var htmlCmd = &cobra.Command{
 }
 
 func init() {
-	serveCmd.AddCommand(htmlCmd)
+	serveCmd.AddCommand(httpCmd)
 }
