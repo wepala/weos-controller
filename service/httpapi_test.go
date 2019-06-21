@@ -17,7 +17,7 @@ var mockServerTests = []*HTTPTest{
 	{
 		name:        "landingpage_200",
 		testDataDir: "testdata/html/http",
-		apiFixture:  "testdata/api/basic-site.yml",
+		apiFixture:  "testdata/api/basic-site-api.yml",
 	},
 }
 

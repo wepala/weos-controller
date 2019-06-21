@@ -2,6 +2,6 @@ paths:
   /:
     get:
       templates: ["base.html","singlecolumn.html"]
-      middlewares:
-        -
-          path: "testdata/middleware.so"
+      data:
+        title: We make great things
+        subTitle: Lorem Ipsum

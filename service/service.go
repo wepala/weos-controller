@@ -1,17 +1,26 @@
 package service
 
-import "github.com/getkin/kin-openapi/openapi3"
+import (
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/ghodss/yaml"
+	log "github.com/sirupsen/logrus"
+	"io/ioutil"
+)
 
 //go:generate moq -out testing_mocks_test.go -pkg service_test . ServiceInterface
 
 type Config struct {
-	ApiConfig   *openapi3.Swagger
-	PathConfigs map[string]map[string]PathConfig
+	ApiConfig *openapi3.Swagger
+	Paths     Paths
 }
+
+type Paths map[string]PathItem
+type PathItem map[string]*PathConfig
 
 type PathConfig struct {
 	Templates  []string
 	Middleware []*MiddlewareConfig
+	Data       interface{}
 }
 
 type MiddlewareConfig struct {
@@ -24,8 +33,8 @@ type controllerService struct {
 	config *Config
 }
 
-func (*controllerService) GetPathConfig(path string, operation string) (*PathConfig, error) {
-	return nil, nil
+func (s *controllerService) GetPathConfig(path string, operation string) (*PathConfig, error) {
+	return s.config.Paths[path][operation], nil
 }
 
 func (s *controllerService) GetConfig() *Config {
@@ -47,14 +56,30 @@ func NewControllerService(apiConfig string, controllerConfig string) (ServiceInt
 		return nil, err
 	}
 
-	svc := &controllerService{
-		config: &Config{
-			ApiConfig:   swagger,
-			PathConfigs: map[string]map[string]PathConfig{},
-		},
+	config := &struct {
+		Paths Paths
+	}{}
+
+	//load controller config
+	if controllerConfig != "" {
+		log.Debugf("load config '%s'", controllerConfig)
+		yamlFile, err := ioutil.ReadFile(controllerConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		err = yaml.Unmarshal(yamlFile, &config)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	//TODO loop through the paths and build the path configs
+	svc := &controllerService{
+		config: &Config{
+			ApiConfig: swagger,
+			Paths:     config.Paths,
+		},
+	}
 
 	return svc, nil
 }
