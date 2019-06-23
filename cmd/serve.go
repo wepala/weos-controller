@@ -16,7 +16,7 @@ var serveCmd = &cobra.Command{
 	Short: "Serve api ",
 	Long:  `This command is used in conjunction with a sub command to serve apis of the service`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("serve called")
+		fmt.Println("serve called for real")
 	},
 }
 
