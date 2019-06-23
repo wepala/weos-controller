@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
+	"html/template"
 	"net/http"
 	"strconv"
 )
@@ -13,17 +14,29 @@ type mockHandler struct {
 	statusCode  int
 	contentType string
 	content     string
+	pathConfig  PathConfig
 }
 
-func (*mockHandler) ServeHTTP(http.ResponseWriter, *http.Request) {
-	//TODO return a response based on the status code set on the handler with the content type header set to the content type
-	panic("implement me")
+func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+	//return a response based on the status code set on the handler with the content type header set to the content type
+	rw.WriteHeader(h.statusCode)
+	rw.Header().Set("Content-Type", h.contentType)
+	tmpl, err := template.New("mock").Parse(h.content)
+	if err != nil {
+		log.Errorf("error rendering mock : '%v'", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+	}
+	if err := tmpl.Execute(rw, h.pathConfig.Data); err != nil {
+		log.Errorf("error rendering mock : '%v'", err)
+		http.Error(rw, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func NewMockHandler(statusCode int, content openapi3.Content) (*mockHandler, error) {
-	//TODO check the content type and set the appropriate variable on the handler
+	//check the content type and set the appropriate variable on the handler
 	return &mockHandler{
 		statusCode: statusCode,
+		content:    content.Get("text/html").Example.(string),
 	}, nil
 }
 

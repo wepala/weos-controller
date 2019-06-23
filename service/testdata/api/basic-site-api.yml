@@ -11,14 +11,14 @@ paths:
           description: Landing page
           content:
             text/html:
+              example: |
+                <html>
+                  <head>
+                      <title>Landing Page</title>
+                  </head>
+                  <body>
+                    This is a landing page
+                  </body>
+                </html>
               schema:
                 type: string
-                example: |
-                  <html>
-                    <head>
-                        <title>Landing Page</title>
-                    </head>
-                    <body>
-                      This is a landing page
-                    </body>
-                  </html>

@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"net/http/httputil"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -41,7 +42,6 @@ func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 
 			//confirm response
 			response := rw.Result()
-			body, _ := ioutil.ReadAll(response.Body)
 
 			var update = flag.Bool("update", false, "update .golden files")
 
@@ -53,7 +53,7 @@ func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 					t.Fatalf("failed to write fixture '%s' with error '%v'", responseFixture, err)
 				}
 			}
-
+			body, _ := ioutil.ReadAll(response.Body)
 			expectedResponse := loadHttpResponseFixture(responseFixture, request, t)
 
 			//confirm the expected status code
@@ -68,8 +68,8 @@ func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 
 			//confirm the body
 			expectedBody, _ := ioutil.ReadAll(expectedResponse.Body)
-			if string(body) != string(expectedBody) {
-				t.Errorf("expected body '%s', got: '%s'", string(expectedBody), string(body))
+			if strings.TrimSpace(string(body)) != strings.TrimSpace(string(expectedBody)) {
+				t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
 			}
 		})
 	}

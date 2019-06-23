@@ -1,8 +1,5 @@
 HTTP/1.1 200 OK
 Connection: close
-Content-Type: text/html; charset=utf-8
-X-Content-Type-Options: nosniff
-Date: Wed, 19 Jul 1972 19:00:00 GMT
 
 <html>
   <head>
