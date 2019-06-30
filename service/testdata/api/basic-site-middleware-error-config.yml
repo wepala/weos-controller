@@ -9,8 +9,7 @@ paths:
     get:
       templates: ["base.html","singlecolumn.html"]
       middleware:
-        -
-          filename: custom.so
-          handler: AboutPage
+        filename: custom.so
+        handler: AboutPage
 
 

@@ -1,10 +1,12 @@
 package service
 
 import (
+	"errors"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"strings"
 )
 
 //go:generate moq -out testing_mocks_test.go -pkg service_test . ServiceInterface
@@ -19,14 +21,13 @@ type PathItem map[string]*PathConfig
 
 type PathConfig struct {
 	Templates  []string
-	Middleware []*MiddlewareConfig
+	Middleware []*MiddlewareConfig `yaml:"middleware"`
 	Data       interface{}
 }
 
 type MiddlewareConfig struct {
-	FileName    string
-	ServerName  string
-	HandlerName string
+	File    string `yaml:"file"`
+	Handler string `yaml:"handler"`
 }
 
 type controllerService struct {
@@ -58,7 +59,9 @@ func NewControllerService(apiConfig string, controllerConfig string) (ServiceInt
 
 	config := &struct {
 		Paths Paths
-	}{}
+	}{
+		Paths: Paths{},
+	}
 
 	//load controller config
 	if controllerConfig != "" {
@@ -70,7 +73,24 @@ func NewControllerService(apiConfig string, controllerConfig string) (ServiceInt
 
 		err = yaml.Unmarshal(yamlFile, &config)
 		if err != nil {
+			if strings.Contains(err.Error(), "MiddlewareConfig") {
+				return nil, errors.New("the list of middlewares must be an array in the config")
+			}
+
+			if strings.Contains(err.Error(), "Template") {
+				return nil, errors.New("the list of templates must be an array in the config")
+			}
 			return nil, err
+		}
+	}
+
+	for pathName, path := range swagger.Paths {
+		if config.Paths[pathName] == nil {
+			config.Paths[pathName] = make(PathItem, 6)
+		}
+
+		if path.Get != nil && config.Paths[pathName]["get"] == nil {
+			config.Paths[pathName]["get"] = &PathConfig{}
 		}
 	}
 
