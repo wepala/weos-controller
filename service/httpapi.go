@@ -1,12 +1,14 @@
 package service
 
 import (
+	"encoding/json"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/negroni"
 	"html/template"
 	"net/http"
+	"reflect"
 	"strconv"
 )
 
@@ -34,10 +36,48 @@ func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 func NewMockHandler(statusCode int, content openapi3.Content) (*mockHandler, error) {
 	//check the content type and set the appropriate variable on the handler
+	keys := reflect.ValueOf(content).MapKeys()
+
+	if len(keys) > 0 {
+		contentType := keys[0].String()
+		c := content.Get(contentType)
+		if c != nil && c.Example != nil {
+
+			switch x := c.Example.(type) {
+			case string:
+				log.Infof("type: %s", x)
+				return &mockHandler{
+					statusCode: statusCode,
+					content:    c.Example.(string),
+				}, nil
+			default:
+				if c.Extensions["example"] != nil {
+					//found that the Extensions property was a better way to access the raw data
+					example := c.Extensions["example"].(json.RawMessage)
+					exampleString, err := example.MarshalJSON()
+					if err != nil {
+						return nil, err
+					}
+					//trim {"example": from the front and "}" from the end
+
+					//example := string(data)[11:len(string(data))-1]
+					log.Infof("type: %s", exampleString)
+					return &mockHandler{
+						statusCode:  statusCode,
+						content:     string(exampleString),
+						contentType: contentType,
+					}, nil
+				}
+			}
+
+		}
+	}
+
 	return &mockHandler{
 		statusCode: statusCode,
-		content:    content.Get("text/html").Example.(string),
+		content:    "This endpoint was not mocked",
 	}, nil
+
 }
 
 func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
@@ -56,7 +96,7 @@ func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handl
 					} else {
 						handler, err := NewMockHandler(statusCode, responseRef.Value.Content)
 						if err != nil {
-							log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created", path, method)
+							log.Errorf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created because '%s'", path, method, err)
 						}
 						router.Handle(path, handler)
 					}

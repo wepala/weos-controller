@@ -22,12 +22,12 @@ type HTTPTest struct {
 func loadHttpRequestFixture(filename string, t *testing.T) *http.Request {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		t.Fatalf("test fixture not loaded %v", err)
+		t.Fatalf("test fixture '%s' not loaded %v", filename, err)
 	}
 
 	request, err := testhelpers.LoadHTTPRequestFixture(data)
 	if err != nil {
-		t.Fatalf("test fixture not loaded %v", err)
+		t.Fatalf("test fixture '%s' not loaded %v", filename, err)
 	}
 
 	return request

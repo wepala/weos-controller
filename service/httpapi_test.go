@@ -3,6 +3,7 @@ package service_test
 import (
 	"bitbucket.org/wepala/weos-controller/service"
 	"flag"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -20,6 +21,11 @@ var mockServerTests = []*HTTPTest{
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/basic-site-api.yml",
 	},
+	{
+		name:        "poll_list_200",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/rest-api.yml",
+	},
 }
 
 func Test_Endpoints(t *testing.T) {
@@ -27,6 +33,7 @@ func Test_Endpoints(t *testing.T) {
 }
 
 func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
+	var update = flag.Bool("update", false, "update .golden files")
 	for _, test := range tests {
 		t.Run(test.name, func(subTest *testing.T) {
 			var handler http.Handler
@@ -37,13 +44,12 @@ func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 			rw := httptest.NewRecorder()
 
 			//send test request
+			log.Debugf("Load input fixture: %s", test.name+".input.http")
 			request := loadHttpRequestFixture(filepath.Join(test.testDataDir, test.name+".input.http"), t)
 			handler.ServeHTTP(rw, request)
 
 			//confirm response
 			response := rw.Result()
-
-			var update = flag.Bool("update", false, "update .golden files")
 
 			responseFixture := filepath.Join(test.testDataDir, test.name+".golden.http")
 			if *update {
