@@ -121,16 +121,21 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 	if config != nil {
 		for path, pathObject := range config.ApiConfig.Paths {
 			for method, operation := range pathObject.Operations() {
-				for statusCodeString, responseRef := range operation.Responses {
-					statusCode, err := strconv.Atoi(statusCodeString)
+				for statusCodeString, _ := range operation.Responses {
+					n := negroni.Classic()
+					_, err := strconv.Atoi(statusCodeString)
 					if err != nil {
 						log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)
 					} else {
-						handler, err := NewMockHandler(statusCode, responseRef.Value.Content)
+						//read the handlers from the path config and add them to the route
+						pathConfig, err := service.GetPathConfig(path, method)
 						if err != nil {
 							log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created", path, method)
 						}
-						router.Handle(path, handler)
+						handlers := pathConfig.getHandlers()
+						for _, handler := range handlers {
+							n.UseHandler(handler)
+						}
 					}
 				}
 

@@ -6,6 +6,7 @@ import (
 	"github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
+	"net/http"
 	"strings"
 )
 
@@ -23,6 +24,15 @@ type PathConfig struct {
 	Templates  []string
 	Middleware []*MiddlewareConfig `yaml:"middleware"`
 	Data       interface{}
+}
+
+func (config *PathConfig) getHandlers() []*http.HandlerFunc {
+	handlers := make([]*http.HandlerFunc, len(config.Middleware))
+	for _, mc := range config.Middleware {
+		plugin, _ := GetPlugin(mc.File)
+		handlers = append(handlers, plugin.GetHandlerByName(mc.Handler))
+	}
+	return handlers
 }
 
 type MiddlewareConfig struct {
