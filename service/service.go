@@ -26,8 +26,8 @@ type PathConfig struct {
 	Data       interface{}
 }
 
-func (config *PathConfig) getHandlers() []*http.HandlerFunc {
-	handlers := make([]*http.HandlerFunc, len(config.Middleware))
+func (config *PathConfig) getHandlers() []http.HandlerFunc {
+	handlers := make([]http.HandlerFunc, len(config.Middleware))
 	for _, mc := range config.Middleware {
 		plugin, _ := GetPlugin(mc.File)
 		handlers = append(handlers, plugin.GetHandlerByName(mc.Handler))
