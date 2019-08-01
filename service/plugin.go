@@ -14,13 +14,23 @@ type PluginInterface interface {
 	GetHandlerByName(name string) http.HandlerFunc
 }
 
-var plugins = make(map[string]PluginInterface)
+//monkey patch for opening plugin so testing is easier
+var OpenPlugin = plugin.Open
 
-func GetPlugin(fileName string) (PluginInterface, error) {
-	if plugins[fileName] == nil {
+//setup a login loader
+type PluginLoader struct {
+	plugins map[string]PluginInterface
+}
+
+func NewPluginLoader() *PluginLoader {
+	return &PluginLoader{plugins: make(map[string]PluginInterface)}
+}
+
+func (loader *PluginLoader) GetPlugin(fileName string) (PluginInterface, error) {
+	if loader.plugins[fileName] == nil {
 		// Open - Loads the plugin
 		log.Debugf("Loading plugin %s", fileName)
-		p, err := plugin.Open(fileName)
+		p, err := OpenPlugin(fileName)
 		if err != nil {
 			log.Errorf("Unable to log plugin '%s' because of error '%s'", fileName, err)
 			return nil, err
@@ -38,8 +48,8 @@ func GetPlugin(fileName string) (PluginInterface, error) {
 			v := reflect.ValueOf(symbol)
 			return nil, errors.New(fmt.Sprintf("plugin does not implement PluginInterface, it is type '%s'", v.Kind().String()))
 		}
-		plugins[fileName] = weosPlugin
+		loader.plugins[fileName] = weosPlugin
 	}
 
-	return plugins[fileName], nil
+	return loader.plugins[fileName], nil
 }

@@ -1,6 +1,7 @@
-package service
+package service_test
 
 import (
+	"bitbucket.org/wepala/weos-controller/service"
 	"testing"
 )
 
@@ -8,7 +9,7 @@ func TestNewControllerService(t *testing.T) {
 	t.Run("test basic yaml loaded", func(t *testing.T) {
 		apiYaml := "testdata/api/basic-site-api.yml"
 		configYaml := "testdata/api/basic-site-config.yml"
-		service, err := NewControllerService(apiYaml, configYaml)
+		service, err := service.NewControllerService(apiYaml, configYaml)
 		if err != nil {
 			t.Fatalf("there was an error setting up service: %v", err)
 		}
@@ -53,7 +54,7 @@ func TestNewControllerService(t *testing.T) {
 	t.Run("test templates must be an array", func(t *testing.T) {
 		apiYaml := "testdata/api/basic-site-api.yml"
 		configYaml := "testdata/api/basic-site-template-error-config.yml"
-		_, err := NewControllerService(apiYaml, configYaml)
+		_, err := service.NewControllerService(apiYaml, configYaml)
 		if err == nil || err.Error() != "the list of templates must be an array in the config" {
 			t.Fatalf("expected an error 'the list of templates must be an array in the config' got: %v", err)
 		}
@@ -61,7 +62,7 @@ func TestNewControllerService(t *testing.T) {
 	t.Run("test middleware must be an array", func(t *testing.T) {
 		apiYaml := "testdata/api/basic-site-api.yml"
 		configYaml := "testdata/api/basic-site-middleware-error-config.yml"
-		_, err := NewControllerService(apiYaml, configYaml)
+		_, err := service.NewControllerService(apiYaml, configYaml)
 		if err == nil || err.Error() != "the list of middlewares must be an array in the config" {
 			t.Fatalf("expected an error 'the list of templates must be an array in the config' got: %v", err)
 		}
@@ -69,7 +70,7 @@ func TestNewControllerService(t *testing.T) {
 	t.Run("test loading api config only", func(t *testing.T) {
 		apiYaml := "testdata/api/basic-site-api.yml"
 		configYaml := ""
-		service, err := NewControllerService(apiYaml, configYaml)
+		service, err := service.NewControllerService(apiYaml, configYaml)
 		if err != nil {
 			t.Fatalf("there was an error setting up service: %v", err)
 		}
