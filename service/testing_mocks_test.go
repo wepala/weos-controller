@@ -5,11 +5,13 @@ package service_test
 
 import (
 	"bitbucket.org/wepala/weos-controller/service"
+	"net/http"
 	"sync"
 )
 
 var (
 	lockServiceInterfaceMockGetConfig     sync.RWMutex
+	lockServiceInterfaceMockGetHandlers   sync.RWMutex
 	lockServiceInterfaceMockGetPathConfig sync.RWMutex
 )
 
@@ -26,6 +28,9 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //             GetConfigFunc: func() *service.Config {
 // 	               panic("mock out the GetConfig method")
 //             },
+//             GetHandlersFunc: func(config *service.PathConfig) []http.HandlerFunc {
+// 	               panic("mock out the GetHandlers method")
+//             },
 //             GetPathConfigFunc: func(path string, operation string) (*service.PathConfig, error) {
 // 	               panic("mock out the GetPathConfig method")
 //             },
@@ -39,6 +44,9 @@ type ServiceInterfaceMock struct {
 	// GetConfigFunc mocks the GetConfig method.
 	GetConfigFunc func() *service.Config
 
+	// GetHandlersFunc mocks the GetHandlers method.
+	GetHandlersFunc func(config *service.PathConfig) []http.HandlerFunc
+
 	// GetPathConfigFunc mocks the GetPathConfig method.
 	GetPathConfigFunc func(path string, operation string) (*service.PathConfig, error)
 
@@ -46,6 +54,11 @@ type ServiceInterfaceMock struct {
 	calls struct {
 		// GetConfig holds details about calls to the GetConfig method.
 		GetConfig []struct {
+		}
+		// GetHandlers holds details about calls to the GetHandlers method.
+		GetHandlers []struct {
+			// Config is the config argument value.
+			Config *service.PathConfig
 		}
 		// GetPathConfig holds details about calls to the GetPathConfig method.
 		GetPathConfig []struct {
@@ -83,6 +96,37 @@ func (mock *ServiceInterfaceMock) GetConfigCalls() []struct {
 	return calls
 }
 
+// GetHandlers calls GetHandlersFunc.
+func (mock *ServiceInterfaceMock) GetHandlers(config *service.PathConfig) []http.HandlerFunc {
+	if mock.GetHandlersFunc == nil {
+		panic("ServiceInterfaceMock.GetHandlersFunc: method is nil but ServiceInterface.GetHandlers was just called")
+	}
+	callInfo := struct {
+		Config *service.PathConfig
+	}{
+		Config: config,
+	}
+	lockServiceInterfaceMockGetHandlers.Lock()
+	mock.calls.GetHandlers = append(mock.calls.GetHandlers, callInfo)
+	lockServiceInterfaceMockGetHandlers.Unlock()
+	return mock.GetHandlersFunc(config)
+}
+
+// GetHandlersCalls gets all the calls that were made to GetHandlers.
+// Check the length with:
+//     len(mockedServiceInterface.GetHandlersCalls())
+func (mock *ServiceInterfaceMock) GetHandlersCalls() []struct {
+	Config *service.PathConfig
+} {
+	var calls []struct {
+		Config *service.PathConfig
+	}
+	lockServiceInterfaceMockGetHandlers.RLock()
+	calls = mock.calls.GetHandlers
+	lockServiceInterfaceMockGetHandlers.RUnlock()
+	return calls
+}
+
 // GetPathConfig calls GetPathConfigFunc.
 func (mock *ServiceInterfaceMock) GetPathConfig(path string, operation string) (*service.PathConfig, error) {
 	if mock.GetPathConfigFunc == nil {
@@ -115,5 +159,184 @@ func (mock *ServiceInterfaceMock) GetPathConfigCalls() []struct {
 	lockServiceInterfaceMockGetPathConfig.RLock()
 	calls = mock.calls.GetPathConfig
 	lockServiceInterfaceMockGetPathConfig.RUnlock()
+	return calls
+}
+
+var (
+	lockPluginInterfaceMockAddConfig        sync.RWMutex
+	lockPluginInterfaceMockGetHandlerByName sync.RWMutex
+)
+
+// Ensure, that PluginInterfaceMock does implement PluginInterface.
+// If this is not the case, regenerate this file with moq.
+var _ service.PluginInterface = &PluginInterfaceMock{}
+
+// PluginInterfaceMock is a mock implementation of PluginInterface.
+//
+//     func TestSomethingThatUsesPluginInterface(t *testing.T) {
+//
+//         // make and configure a mocked PluginInterface
+//         mockedPluginInterface := &PluginInterfaceMock{
+//             AddConfigFunc: func(config interface{}) error {
+// 	               panic("mock out the AddConfig method")
+//             },
+//             GetHandlerByNameFunc: func(name string) http.HandlerFunc {
+// 	               panic("mock out the GetHandlerByName method")
+//             },
+//         }
+//
+//         // use mockedPluginInterface in code that requires PluginInterface
+//         // and then make assertions.
+//
+//     }
+type PluginInterfaceMock struct {
+	// AddConfigFunc mocks the AddConfig method.
+	AddConfigFunc func(config interface{}) error
+
+	// GetHandlerByNameFunc mocks the GetHandlerByName method.
+	GetHandlerByNameFunc func(name string) http.HandlerFunc
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// AddConfig holds details about calls to the AddConfig method.
+		AddConfig []struct {
+			// Config is the config argument value.
+			Config interface{}
+		}
+		// GetHandlerByName holds details about calls to the GetHandlerByName method.
+		GetHandlerByName []struct {
+			// Name is the name argument value.
+			Name string
+		}
+	}
+}
+
+// AddConfig calls AddConfigFunc.
+func (mock *PluginInterfaceMock) AddConfig(config interface{}) error {
+	if mock.AddConfigFunc == nil {
+		panic("PluginInterfaceMock.AddConfigFunc: method is nil but PluginInterface.AddConfig was just called")
+	}
+	callInfo := struct {
+		Config interface{}
+	}{
+		Config: config,
+	}
+	lockPluginInterfaceMockAddConfig.Lock()
+	mock.calls.AddConfig = append(mock.calls.AddConfig, callInfo)
+	lockPluginInterfaceMockAddConfig.Unlock()
+	return mock.AddConfigFunc(config)
+}
+
+// AddConfigCalls gets all the calls that were made to AddConfig.
+// Check the length with:
+//     len(mockedPluginInterface.AddConfigCalls())
+func (mock *PluginInterfaceMock) AddConfigCalls() []struct {
+	Config interface{}
+} {
+	var calls []struct {
+		Config interface{}
+	}
+	lockPluginInterfaceMockAddConfig.RLock()
+	calls = mock.calls.AddConfig
+	lockPluginInterfaceMockAddConfig.RUnlock()
+	return calls
+}
+
+// GetHandlerByName calls GetHandlerByNameFunc.
+func (mock *PluginInterfaceMock) GetHandlerByName(name string) http.HandlerFunc {
+	if mock.GetHandlerByNameFunc == nil {
+		panic("PluginInterfaceMock.GetHandlerByNameFunc: method is nil but PluginInterface.GetHandlerByName was just called")
+	}
+	callInfo := struct {
+		Name string
+	}{
+		Name: name,
+	}
+	lockPluginInterfaceMockGetHandlerByName.Lock()
+	mock.calls.GetHandlerByName = append(mock.calls.GetHandlerByName, callInfo)
+	lockPluginInterfaceMockGetHandlerByName.Unlock()
+	return mock.GetHandlerByNameFunc(name)
+}
+
+// GetHandlerByNameCalls gets all the calls that were made to GetHandlerByName.
+// Check the length with:
+//     len(mockedPluginInterface.GetHandlerByNameCalls())
+func (mock *PluginInterfaceMock) GetHandlerByNameCalls() []struct {
+	Name string
+} {
+	var calls []struct {
+		Name string
+	}
+	lockPluginInterfaceMockGetHandlerByName.RLock()
+	calls = mock.calls.GetHandlerByName
+	lockPluginInterfaceMockGetHandlerByName.RUnlock()
+	return calls
+}
+
+var (
+	lockPluginLoaderInterfaceMockGetPlugin sync.RWMutex
+)
+
+// Ensure, that PluginLoaderInterfaceMock does implement PluginLoaderInterface.
+// If this is not the case, regenerate this file with moq.
+var _ service.PluginLoaderInterface = &PluginLoaderInterfaceMock{}
+
+// PluginLoaderInterfaceMock is a mock implementation of PluginLoaderInterface.
+//
+//     func TestSomethingThatUsesPluginLoaderInterface(t *testing.T) {
+//
+//         // make and configure a mocked PluginLoaderInterface
+//         mockedPluginLoaderInterface := &PluginLoaderInterfaceMock{
+//             GetPluginFunc: func(fileName string) (service.PluginInterface, error) {
+// 	               panic("mock out the GetPlugin method")
+//             },
+//         }
+//
+//         // use mockedPluginLoaderInterface in code that requires PluginLoaderInterface
+//         // and then make assertions.
+//
+//     }
+type PluginLoaderInterfaceMock struct {
+	// GetPluginFunc mocks the GetPlugin method.
+	GetPluginFunc func(fileName string) (service.PluginInterface, error)
+
+	// calls tracks calls to the methods.
+	calls struct {
+		// GetPlugin holds details about calls to the GetPlugin method.
+		GetPlugin []struct {
+			// FileName is the fileName argument value.
+			FileName string
+		}
+	}
+}
+
+// GetPlugin calls GetPluginFunc.
+func (mock *PluginLoaderInterfaceMock) GetPlugin(fileName string) (service.PluginInterface, error) {
+	if mock.GetPluginFunc == nil {
+		panic("PluginLoaderInterfaceMock.GetPluginFunc: method is nil but PluginLoaderInterface.GetPlugin was just called")
+	}
+	callInfo := struct {
+		FileName string
+	}{
+		FileName: fileName,
+	}
+	lockPluginLoaderInterfaceMockGetPlugin.Lock()
+	mock.calls.GetPlugin = append(mock.calls.GetPlugin, callInfo)
+	lockPluginLoaderInterfaceMockGetPlugin.Unlock()
+	return mock.GetPluginFunc(fileName)
+}
+
+// GetPluginCalls gets all the calls that were made to GetPlugin.
+// Check the length with:
+//     len(mockedPluginLoaderInterface.GetPluginCalls())
+func (mock *PluginLoaderInterfaceMock) GetPluginCalls() []struct {
+	FileName string
+} {
+	var calls []struct {
+		FileName string
+	}
+	lockPluginLoaderInterfaceMockGetPlugin.RLock()
+	calls = mock.calls.GetPlugin
+	lockPluginLoaderInterfaceMockGetPlugin.RUnlock()
 	return calls
 }

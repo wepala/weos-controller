@@ -12,6 +12,11 @@ import (
 //define an interface that all plugins must implement
 type PluginInterface interface {
 	GetHandlerByName(name string) http.HandlerFunc
+	AddConfig(config interface{}) error
+}
+
+type PluginLoaderInterface interface {
+	GetPlugin(fileName string) (PluginInterface, error)
 }
 
 //monkey patch for opening plugin so testing is easier

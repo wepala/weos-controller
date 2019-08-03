@@ -18,7 +18,7 @@ var httpCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Info("HTML Server started")
 		//create controller service
-		controllerService, _ := service.NewControllerService("api.yaml", "")
+		controllerService, _ := service.NewControllerService("api.yaml", "", nil)
 		//setup html handler
 		htmlHandler := service.NewHTTPServer(controllerService, "static")
 		srv := &http.Server{

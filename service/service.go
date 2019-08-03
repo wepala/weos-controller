@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-//go:generate moq -out testing_mocks_test.go -pkg service_test . ServiceInterface
+//go:generate moq -out testing_mocks_test.go -pkg service_test . ServiceInterface PluginInterface PluginLoaderInterface
 
 type Config struct {
 	ApiConfig *openapi3.Swagger
@@ -21,27 +21,22 @@ type Paths map[string]PathItem
 type PathItem map[string]*PathConfig
 
 type PathConfig struct {
-	Templates  []string
 	Middleware []*MiddlewareConfig `yaml:"middleware"`
 	Data       interface{}
 }
 
-func (config *PathConfig) getHandlers() []http.HandlerFunc {
-	handlers := make([]http.HandlerFunc, len(config.Middleware))
-	for _, mc := range config.Middleware {
-		plugin, _ := NewPluginLoader().GetPlugin(mc.File)
-		handlers = append(handlers, plugin.GetHandlerByName(mc.Handler))
-	}
-	return handlers
-}
-
 type MiddlewareConfig struct {
-	File    string `yaml:"file"`
-	Handler string `yaml:"handler"`
+	Plugin struct {
+		FileName string                 `yaml:"filename"`
+		Config   map[string]interface{} `yaml:"config"`
+	} `yaml:"plugin"`
+	Handler string                 `yaml:"handler"`
+	Context map[string]interface{} `yaml:"context"`
 }
 
 type controllerService struct {
-	config *Config
+	config       *Config
+	pluginLoader PluginLoaderInterface
 }
 
 func (s *controllerService) GetPathConfig(path string, operation string) (*PathConfig, error) {
@@ -52,14 +47,24 @@ func (s *controllerService) GetConfig() *Config {
 	return s.config
 }
 
+func (s *controllerService) GetHandlers(config *PathConfig) []http.HandlerFunc {
+	handlers := make([]http.HandlerFunc, len(config.Middleware))
+	for key, mc := range config.Middleware {
+		plugin, _ := s.pluginLoader.GetPlugin(mc.Plugin.FileName)
+		handlers[key] = plugin.GetHandlerByName(mc.Handler)
+	}
+	return handlers
+}
+
 var api openapi3.Swagger
 
 type ServiceInterface interface {
 	GetPathConfig(path string, operation string) (*PathConfig, error)
 	GetConfig() *Config
+	GetHandlers(config *PathConfig) []http.HandlerFunc
 }
 
-func NewControllerService(apiConfig string, controllerConfig string) (ServiceInterface, error) {
+func NewControllerService(apiConfig string, controllerConfig string, pluginLoader PluginLoaderInterface) (ServiceInterface, error) {
 
 	loader := openapi3.NewSwaggerLoader()
 	swagger, err := loader.LoadSwaggerFromFile(apiConfig)
@@ -84,11 +89,7 @@ func NewControllerService(apiConfig string, controllerConfig string) (ServiceInt
 		err = yaml.Unmarshal(yamlFile, &config)
 		if err != nil {
 			if strings.Contains(err.Error(), "MiddlewareConfig") {
-				return nil, errors.New("the list of middlewares must be an array in the config")
-			}
-
-			if strings.Contains(err.Error(), "Template") {
-				return nil, errors.New("the list of templates must be an array in the config")
+				return nil, errors.New(err.Error())
 			}
 			return nil, err
 		}
@@ -109,6 +110,7 @@ func NewControllerService(apiConfig string, controllerConfig string) (ServiceInt
 			ApiConfig: swagger,
 			Paths:     config.Paths,
 		},
+		pluginLoader: pluginLoader,
 	}
 
 	return svc, nil

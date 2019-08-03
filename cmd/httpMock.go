@@ -17,7 +17,7 @@ var httpMockCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		//create controller service
-		controllerService, _ := service.NewControllerService(apiYaml, configYaml)
+		controllerService, _ := service.NewControllerService(apiYaml, configYaml, nil)
 		//setup html handler
 		htmlHandler := service.NewHTTPServer(controllerService, "static")
 		srv := &http.Server{

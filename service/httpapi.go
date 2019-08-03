@@ -132,7 +132,7 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 						if err != nil {
 							log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created", path, method)
 						}
-						handlers := pathConfig.getHandlers()
+						handlers := service.GetHandlers(pathConfig)
 						for _, handler := range handlers {
 							n.UseHandler(handler)
 						}
