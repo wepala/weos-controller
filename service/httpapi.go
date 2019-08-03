@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 type mockHandler struct {
@@ -83,7 +84,6 @@ func NewMockHandler(statusCode int, content openapi3.Content) (*mockHandler, err
 func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 	router := mux.NewRouter()
 	router.PathPrefix("/static").Handler(negroni.New(negroni.NewStatic(http.Dir(staticFolder))))
-	n := negroni.Classic()
 	config := service.GetConfig()
 
 	if config != nil {
@@ -107,43 +107,39 @@ func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handl
 		}
 	}
 
-	n.UseHandler(router)
-	return n
+	return router
 }
 
 func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
-	//TODO setup a handler using gorilla + negroni (or just negroni?)
 	router := mux.NewRouter()
 	router.PathPrefix("/static").Handler(negroni.New(negroni.NewStatic(http.Dir(staticFolder))))
-	n := negroni.Classic()
+
 	config := service.GetConfig()
 
 	if config != nil {
 		for path, pathObject := range config.ApiConfig.Paths {
 			for method, operation := range pathObject.Operations() {
+				n := negroni.Classic()
 				for statusCodeString, _ := range operation.Responses {
-					n := negroni.Classic()
 					_, err := strconv.Atoi(statusCodeString)
 					if err != nil {
 						log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)
 					} else {
-						//read the handlers from the path config and add them to the route
-						pathConfig, err := service.GetPathConfig(path, method)
+						pathConfig, err := service.GetPathConfig(path, strings.ToLower(method))
+						handlers, err := service.GetHandlers(pathConfig)
 						if err != nil {
-							log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created", path, method)
+							log.Errorf("error encountered retrieving the handlers for the route '%s', got: '%s'", path, err.Error())
 						}
-						handlers := service.GetHandlers(pathConfig)
 						for _, handler := range handlers {
 							n.UseHandler(handler)
 						}
 					}
 				}
-
+				router.Handle(path, n)
 			}
 
 		}
 	}
-	//TODO add middleware that returns the html response
-	n.UseHandler(router)
-	return n
+
+	return router
 }

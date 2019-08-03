@@ -17,12 +17,12 @@ import (
 
 var mockServerTests = []*HTTPTest{
 	{
-		name:        "landingpage_200",
+		name:        "landingpage_mock_200",
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/basic-site-api.yml",
 	},
 	{
-		name:        "poll_list_200",
+		name:        "poll_list_mock_200",
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/rest-api.yml",
 	},
@@ -30,23 +30,21 @@ var mockServerTests = []*HTTPTest{
 
 var httpServerTests = []*HTTPTest{
 	{
-		name:        "landingpage_200",
-		testDataDir: "testdata/html/http",
-		apiFixture:  "testdata/api/basic-site-api.yml",
-	},
-	{
-		name:        "poll_list_200",
-		testDataDir: "testdata/html/http",
-		apiFixture:  "testdata/api/rest-api.yml",
+		name:          "about_page_200",
+		testDataDir:   "testdata/html/http",
+		apiFixture:    "testdata/api/basic-site-api.yml",
+		configFixture: "testdata/api/basic-site-config.yml",
 	},
 }
+
+var update = flag.Bool("update", false, "update .golden files")
 
 func Test_Endpoints(t *testing.T) {
 	runMockServerTests(mockServerTests, "static", t)
+	runHttpServerTests(httpServerTests, "static", t)
 }
 
 func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
-	var update = flag.Bool("update", false, "update .golden files")
 	for _, test := range tests {
 		t.Run(test.name, func(subTest *testing.T) {
 			var handler http.Handler
@@ -95,12 +93,11 @@ func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 }
 
 func runHttpServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
-	var update = flag.Bool("update", false, "update .golden files")
 	for _, test := range tests {
 		t.Run(test.name, func(subTest *testing.T) {
 			var handler http.Handler
 			//setup html server
-			controllerService, _ := service.NewControllerService(test.apiFixture, "", nil)
+			controllerService, _ := service.NewControllerService(test.apiFixture, test.configFixture, service.NewPluginLoader())
 			handler = service.NewHTTPServer(controllerService, staticFolder)
 
 			rw := httptest.NewRecorder()

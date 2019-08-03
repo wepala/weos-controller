@@ -97,7 +97,7 @@ func TestControllerService_GetHandlers(t *testing.T) {
 	}
 
 	//use path config to get handlers
-	handlers := s.GetHandlers(pathConfig)
+	handlers, _ := s.GetHandlers(pathConfig)
 	if len(handlers) != 1 {
 		t.Errorf("expected %d handlers to be loaded: got %d [%s]", 1, len(handlers), strings.Join(handlerNames, ","))
 	}

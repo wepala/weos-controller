@@ -3,7 +3,7 @@ paths:
     get:
       plugins:
         - &weosPlugin
-          filename: custom.so
+          filename: testdata/plugins/test.so
           config:
             MYSQL_HOST: localhost
             MYSQL_USER: root
@@ -11,6 +11,4 @@ paths:
       middleware:
         -
           plugin: *weosPlugin
-          handler: RenderPage
-          context:
-            _templates: ["service/testdata/html/templates/base.html","service/testdata/html/templates/singlecolumn.html"]
+          handler: HelloWorld

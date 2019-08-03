@@ -28,7 +28,7 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //             GetConfigFunc: func() *service.Config {
 // 	               panic("mock out the GetConfig method")
 //             },
-//             GetHandlersFunc: func(config *service.PathConfig) []http.HandlerFunc {
+//             GetHandlersFunc: func(config *service.PathConfig) ([]http.HandlerFunc, error) {
 // 	               panic("mock out the GetHandlers method")
 //             },
 //             GetPathConfigFunc: func(path string, operation string) (*service.PathConfig, error) {
@@ -45,7 +45,7 @@ type ServiceInterfaceMock struct {
 	GetConfigFunc func() *service.Config
 
 	// GetHandlersFunc mocks the GetHandlers method.
-	GetHandlersFunc func(config *service.PathConfig) []http.HandlerFunc
+	GetHandlersFunc func(config *service.PathConfig) ([]http.HandlerFunc, error)
 
 	// GetPathConfigFunc mocks the GetPathConfig method.
 	GetPathConfigFunc func(path string, operation string) (*service.PathConfig, error)
@@ -97,7 +97,7 @@ func (mock *ServiceInterfaceMock) GetConfigCalls() []struct {
 }
 
 // GetHandlers calls GetHandlersFunc.
-func (mock *ServiceInterfaceMock) GetHandlers(config *service.PathConfig) []http.HandlerFunc {
+func (mock *ServiceInterfaceMock) GetHandlers(config *service.PathConfig) ([]http.HandlerFunc, error) {
 	if mock.GetHandlersFunc == nil {
 		panic("ServiceInterfaceMock.GetHandlersFunc: method is nil but ServiceInterface.GetHandlers was just called")
 	}

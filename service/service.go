@@ -47,13 +47,19 @@ func (s *controllerService) GetConfig() *Config {
 	return s.config
 }
 
-func (s *controllerService) GetHandlers(config *PathConfig) []http.HandlerFunc {
+func (s *controllerService) GetHandlers(config *PathConfig) ([]http.HandlerFunc, error) {
+	if config == nil {
+		return nil, errors.New("path config cannot be empty")
+	}
 	handlers := make([]http.HandlerFunc, len(config.Middleware))
 	for key, mc := range config.Middleware {
-		plugin, _ := s.pluginLoader.GetPlugin(mc.Plugin.FileName)
+		plugin, err := s.pluginLoader.GetPlugin(mc.Plugin.FileName)
+		if err != nil {
+			return nil, err
+		}
 		handlers[key] = plugin.GetHandlerByName(mc.Handler)
 	}
-	return handlers
+	return handlers, nil
 }
 
 var api openapi3.Swagger
@@ -61,7 +67,7 @@ var api openapi3.Swagger
 type ServiceInterface interface {
 	GetPathConfig(path string, operation string) (*PathConfig, error)
 	GetConfig() *Config
-	GetHandlers(config *PathConfig) []http.HandlerFunc
+	GetHandlers(config *PathConfig) ([]http.HandlerFunc, error)
 }
 
 func NewControllerService(apiConfig string, controllerConfig string, pluginLoader PluginLoaderInterface) (ServiceInterface, error) {

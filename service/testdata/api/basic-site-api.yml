@@ -22,3 +22,22 @@ paths:
                 </html>
               schema:
                 type: string
+  /about:
+    get:
+      summary: About Page
+      responses:
+        '200':
+          description: About Page
+          content:
+            text/html:
+              example: |
+                <html>
+                  <head>
+                      <title>Landing Page</title>
+                  </head>
+                  <body>
+                    This is a landing page
+                  </body>
+                </html>
+              schema:
+                type: string

@@ -12,10 +12,11 @@ import (
 )
 
 type HTTPTest struct {
-	name        string
-	testDataDir string
-	apiFixture  string
-	service     service.ServiceInterface
+	name          string
+	testDataDir   string
+	apiFixture    string
+	configFixture string
+	service       service.ServiceInterface
 }
 
 //loadHttpRequestFixture wrapper around the test helper to make it easier to use it with test table
