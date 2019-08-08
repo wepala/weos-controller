@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/ghodss/yaml"
 	log "github.com/sirupsen/logrus"
@@ -75,7 +76,7 @@ func NewControllerService(apiConfig string, controllerConfig string, pluginLoade
 	loader := openapi3.NewSwaggerLoader()
 	swagger, err := loader.LoadSwaggerFromFile(apiConfig)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(fmt.Sprintf("error loading %s: %s", apiConfig, err.Error()))
 	}
 
 	config := &struct {
@@ -89,7 +90,7 @@ func NewControllerService(apiConfig string, controllerConfig string, pluginLoade
 		log.Debugf("load config '%s'", controllerConfig)
 		yamlFile, err := ioutil.ReadFile(controllerConfig)
 		if err != nil {
-			return nil, err
+			return nil, errors.New(fmt.Sprintf("error loading %s: %s", controllerConfig, err.Error()))
 		}
 
 		err = yaml.Unmarshal(yamlFile, &config)
