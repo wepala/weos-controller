@@ -21,7 +21,7 @@ var httpMockCmd = &cobra.Command{
 		//setup html handler
 		htmlHandler := service.NewHTTPServer(controllerService, "static")
 		srv := &http.Server{
-			Addr:         "0.0.0.0:" + port,
+			Addr:         args[0],
 			WriteTimeout: time.Second * 30,
 			ReadTimeout:  time.Second * 30,
 			IdleTimeout:  time.Second * 60,
@@ -29,7 +29,7 @@ var httpMockCmd = &cobra.Command{
 		}
 
 		go func() {
-			log.Infof("Mock HTML Server started on port %s", port)
+			log.Infof("Mock HTML Server started on %s", args[0])
 			if err := srv.ListenAndServe(); err != nil {
 				log.Fatal("error setting up server: " + err.Error())
 			}
