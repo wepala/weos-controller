@@ -11,6 +11,6 @@ pipelines:
           - dep ensure
           - go fmt
           - go vet -v
-          - go test -v ./cmd
           - go test -v ./service
+          - go test -v ./cmd
           - go build -v
