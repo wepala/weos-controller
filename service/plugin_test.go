@@ -3,11 +3,12 @@ package service_test
 import (
 	"bitbucket.org/wepala/weos-controller/service"
 	"plugin"
+	"runtime"
 	"testing"
 )
 
 func TestGetPlugin(t *testing.T) {
-	plugin, err := service.NewPluginLoader().GetPlugin("testdata/plugins/test.so")
+	plugin, err := service.NewPluginLoader().GetPlugin("testdata/plugins/test." + runtime.GOOS + ".so")
 	if plugin == nil {
 		t.Errorf("expected plugin to be loaded, got error '%s'", err)
 	}
@@ -23,18 +24,18 @@ func TestPluginLoadedOnce(t *testing.T) {
 	}
 	pluginLoader := service.NewPluginLoader()
 
-	plugin, err := pluginLoader.GetPlugin("testdata/plugins/test.so")
+	plugin, err := pluginLoader.GetPlugin("testdata/plugins/test." + runtime.GOOS + ".so")
 	if plugin == nil {
 		t.Fatalf("expected plugin to be loaded the first time, got error '%s'", err)
 	}
-	plugin, _ = pluginLoader.GetPlugin("testdata/plugins/test.so")
+	plugin, _ = pluginLoader.GetPlugin("testdata/plugins/test.darwin.so")
 	if timesPluginLoaded != 1 {
 		t.Errorf("expected plugin to be loaded once")
 	}
 }
 
 func TestInvalidPluginNotLoaded(t *testing.T) {
-	_, err := service.NewPluginLoader().GetPlugin("testdata/plugins/invalid_test.so")
+	_, err := service.NewPluginLoader().GetPlugin("testdata/plugins/invalid_test." + runtime.GOOS + ".so")
 	if err == nil {
 		t.Errorf("expected error loading plugin")
 	}

@@ -3,7 +3,7 @@ paths:
     get:
       plugins:
         - &weosPlugin
-          filename: testdata/plugins/test.so
+          filename: testdata/plugins/test.darwin.so
           config:
             MYSQL_HOST: localhost
             MYSQL_USER: root
