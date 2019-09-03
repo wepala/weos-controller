@@ -24,7 +24,7 @@ func TestNewHTTPCmd(t *testing.T) {
 	if runtime.GOOS == "darwin" {
 		url = "localhost:8080"
 	} else {
-		url = "127.0.0.1:8080"
+		url = "127.0.0.1"
 	}
 
 	command, _ := cmd.NewHTTPCmd("../service/testdata/api/http-test-api.yml", "../service/testdata/api/http-test-config."+runtime.GOOS+".yml")
