@@ -28,7 +28,7 @@ func TestPluginLoadedOnce(t *testing.T) {
 	if plugin == nil {
 		t.Fatalf("expected plugin to be loaded the first time, got error '%s'", err)
 	}
-	plugin, _ = pluginLoader.GetPlugin("testdata/plugins/test.darwin.so")
+	plugin, _ = pluginLoader.GetPlugin("testdata/plugins/test." + runtime.GOOS + ".so")
 	if timesPluginLoaded != 1 {
 		t.Errorf("expected plugin to be loaded once")
 	}
