@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"net/http/httputil"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -33,7 +34,7 @@ var httpServerTests = []*HTTPTest{
 		name:          "about_page_200",
 		testDataDir:   "testdata/html/http",
 		apiFixture:    "testdata/api/basic-site-api.yml",
-		configFixture: "testdata/api/basic-site-config.yml",
+		configFixture: "testdata/api/basic-site-config." + runtime.GOOS + ".yml",
 	},
 }
 

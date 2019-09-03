@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"io"
 	"net/http"
+	"runtime"
 	"syscall"
 	"testing"
 )
@@ -20,7 +21,7 @@ func TestNewHTTPCmd(t *testing.T) {
 
 	url := "localhost:8080"
 
-	command, _ := cmd.NewHTTPCmd("../service/testdata/api/http-test-api.yml", "../service/testdata/api/http-test-config.yml")
+	command, _ := cmd.NewHTTPCmd("../service/testdata/api/http-test-api.yml", "../service/testdata/api/http-test-config."+runtime.GOOS+".yml")
 	defer syscall.Kill(syscall.Getpid(), syscall.SIGINT)
 
 	done := make(chan bool, 1)

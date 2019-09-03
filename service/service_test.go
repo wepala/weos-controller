@@ -3,6 +3,7 @@ package service_test
 import (
 	"bitbucket.org/wepala/weos-controller/service"
 	"net/http"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -10,7 +11,7 @@ import (
 func TestNewControllerService(t *testing.T) {
 	t.Run("test basic yaml loaded", func(t *testing.T) {
 		apiYaml := "testdata/api/basic-site-api.yml"
-		configYaml := "testdata/api/basic-site-config.yml"
+		configYaml := "testdata/api/basic-site-config." + runtime.GOOS + ".yml"
 		service, err := service.NewControllerService(apiYaml, configYaml, nil)
 		if err != nil {
 			t.Fatalf("there was an error setting up service: %v", err)
@@ -71,7 +72,7 @@ func TestNewControllerService(t *testing.T) {
 
 func TestControllerService_GetHandlers(t *testing.T) {
 	apiYaml := "testdata/api/basic-site-api.yml"
-	configYaml := "testdata/api/basic-site-config.yml"
+	configYaml := "testdata/api/basic-site-config." + runtime.GOOS + ".yml"
 	handlerNames := make([]string, 1)
 	//setup mock
 	weosPluginMock := &PluginInterfaceMock{
