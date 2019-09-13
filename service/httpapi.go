@@ -143,3 +143,7 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 
 	return router
 }
+
+func GenerateStaticPages(serviceInterface ServiceInterface, route string, data []interface{}) {
+
+}

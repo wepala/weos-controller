@@ -38,6 +38,15 @@ var httpServerTests = []*HTTPTest{
 	},
 }
 
+var staticPageTest = []*HTTPTest{
+	{
+		name:          "about_page_200",
+		testDataDir:   "testdata/html/http",
+		apiFixture:    "testdata/api/basic-site-api.yml",
+		configFixture: "testdata/api/basic-site-config." + runtime.GOOS + ".yml",
+	},
+}
+
 var update = flag.Bool("update", false, "update .golden files")
 
 func Test_Endpoints(t *testing.T) {

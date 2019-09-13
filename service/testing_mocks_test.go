@@ -274,7 +274,8 @@ func (mock *PluginInterfaceMock) GetHandlerByNameCalls() []struct {
 }
 
 var (
-	lockPluginLoaderInterfaceMockGetPlugin sync.RWMutex
+	lockPluginLoaderInterfaceMockGetPlugin     sync.RWMutex
+	lockPluginLoaderInterfaceMockGetRepository sync.RWMutex
 )
 
 // Ensure, that PluginLoaderInterfaceMock does implement PluginLoaderInterface.
@@ -290,6 +291,9 @@ var _ service.PluginLoaderInterface = &PluginLoaderInterfaceMock{}
 //             GetPluginFunc: func(fileName string) (service.PluginInterface, error) {
 // 	               panic("mock out the GetPlugin method")
 //             },
+//             GetRepositoryFunc: func(fileName string) (service.RepositoryInterface, error) {
+// 	               panic("mock out the GetRepository method")
+//             },
 //         }
 //
 //         // use mockedPluginLoaderInterface in code that requires PluginLoaderInterface
@@ -300,10 +304,18 @@ type PluginLoaderInterfaceMock struct {
 	// GetPluginFunc mocks the GetPlugin method.
 	GetPluginFunc func(fileName string) (service.PluginInterface, error)
 
+	// GetRepositoryFunc mocks the GetRepository method.
+	GetRepositoryFunc func(fileName string) (service.RepositoryInterface, error)
+
 	// calls tracks calls to the methods.
 	calls struct {
 		// GetPlugin holds details about calls to the GetPlugin method.
 		GetPlugin []struct {
+			// FileName is the fileName argument value.
+			FileName string
+		}
+		// GetRepository holds details about calls to the GetRepository method.
+		GetRepository []struct {
 			// FileName is the fileName argument value.
 			FileName string
 		}
@@ -338,5 +350,36 @@ func (mock *PluginLoaderInterfaceMock) GetPluginCalls() []struct {
 	lockPluginLoaderInterfaceMockGetPlugin.RLock()
 	calls = mock.calls.GetPlugin
 	lockPluginLoaderInterfaceMockGetPlugin.RUnlock()
+	return calls
+}
+
+// GetRepository calls GetRepositoryFunc.
+func (mock *PluginLoaderInterfaceMock) GetRepository(fileName string) (service.RepositoryInterface, error) {
+	if mock.GetRepositoryFunc == nil {
+		panic("PluginLoaderInterfaceMock.GetRepositoryFunc: method is nil but PluginLoaderInterface.GetRepository was just called")
+	}
+	callInfo := struct {
+		FileName string
+	}{
+		FileName: fileName,
+	}
+	lockPluginLoaderInterfaceMockGetRepository.Lock()
+	mock.calls.GetRepository = append(mock.calls.GetRepository, callInfo)
+	lockPluginLoaderInterfaceMockGetRepository.Unlock()
+	return mock.GetRepositoryFunc(fileName)
+}
+
+// GetRepositoryCalls gets all the calls that were made to GetRepository.
+// Check the length with:
+//     len(mockedPluginLoaderInterface.GetRepositoryCalls())
+func (mock *PluginLoaderInterfaceMock) GetRepositoryCalls() []struct {
+	FileName string
+} {
+	var calls []struct {
+		FileName string
+	}
+	lockPluginLoaderInterfaceMockGetRepository.RLock()
+	calls = mock.calls.GetRepository
+	lockPluginLoaderInterfaceMockGetRepository.RUnlock()
 	return calls
 }
