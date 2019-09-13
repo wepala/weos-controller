@@ -1,0 +1,14 @@
+paths:
+  /about:
+    get:
+      plugins:
+        - &weosPlugin
+          filename: testdata/plugins/test.linux.so
+          config:
+            MYSQL_HOST: localhost
+            MYSQL_USER: root
+            MYSQL_PASSWORD: root
+      middleware:
+        -
+          plugin: *weosPlugin
+          handler: HelloWorld

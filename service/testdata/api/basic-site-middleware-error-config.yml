@@ -1,0 +1,15 @@
+paths:
+  /:
+    get:
+      templates: ["base.html","singlecolumn.html"]
+      data:
+        title: We make great things
+        subTitle: Lorem Ipsum
+  /about:
+    get:
+      templates: ["base.html","singlecolumn.html"]
+      middleware:
+        filename: custom.so
+        handler: AboutPage
+
+
