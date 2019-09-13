@@ -9,6 +9,8 @@ import (
 )
 
 var port string
+var apiConfigFlag string
+var controllerConfigFlag string
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{

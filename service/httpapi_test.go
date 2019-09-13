@@ -27,6 +27,11 @@ var mockServerTests = []*HTTPTest{
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/rest-api.yml",
 	},
+	{
+		name:        "apollo_list_mock_200",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/apollo-api.yaml",
+	},
 }
 
 var httpServerTests = []*HTTPTest{
@@ -50,7 +55,10 @@ func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 		t.Run(test.name, func(subTest *testing.T) {
 			var handler http.Handler
 			//setup html server
-			controllerService, _ := service.NewControllerService(test.apiFixture, "", nil)
+			controllerService, err := service.NewControllerService(test.apiFixture, "", nil)
+			if controllerService == nil {
+				t.Fatalf("could not instantiate controller service because of error: %s", err)
+			}
 			handler = service.NewMockHTTPServer(controllerService, staticFolder)
 
 			rw := httptest.NewRecorder()
