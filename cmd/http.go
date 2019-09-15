@@ -21,7 +21,7 @@ func NewHTTPCmd() (*cobra.Command, *http.Server) {
 
 	return &cobra.Command{
 		Use:   "http",
-		Short: "Start mock html server",
+		Short: "Start html server",
 		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
 			if debug {
@@ -43,7 +43,7 @@ func NewHTTPCmd() (*cobra.Command, *http.Server) {
 			}
 
 			go func() {
-				log.Infof("Mock HTML Server started on %s", args[0])
+				log.Infof("HTML Server started on %s", args[0])
 				if err := srv.ListenAndServe(); err != nil {
 					log.Fatal("error setting up server: " + err.Error())
 				}
