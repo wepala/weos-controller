@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *http.Server) {
+func NewHTTPCmd() (*cobra.Command, *http.Server) {
 
 	srv := &http.Server{
 		WriteTimeout: time.Second * 30,
@@ -28,7 +28,7 @@ func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *htt
 				log.SetLevel(log.DebugLevel)
 			}
 			//create controller service
-			controllerService, err := service.NewControllerService(apiConfig, controllerConfig, nil)
+			controllerService, err := service.NewControllerService(apiYaml, configYaml, nil)
 			if err != nil {
 				log.Fatalf("error occurred setting up controller service: %s", err)
 			}
@@ -62,6 +62,6 @@ func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *htt
 }
 
 func init() {
-	command, _ := NewHTTPCmd(apiYaml, configYaml)
+	command, _ := NewHTTPCmd()
 	serveCmd.AddCommand(command)
 }
