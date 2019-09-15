@@ -18,8 +18,9 @@ pipelines:
             - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
             - cd "${PACKAGE_PATH}"
             - make
-            - tar cvf weos-controller.${BITBUCKET_BRANCH}.tar weos-controller
+            - tar -cO weos-controller.${BITBUCKET_BRANCH}.tar weos-controller
             - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "file=@weos-controller.${BITBUCKET_BRANCH}.tar"
+            - cp weos-controller.${BITBUCKET_BRANCH}.tar ${BITBUCKET_CLONE_DIR}
           artifacts:
             - weos-controller.*.tar
   tags:
