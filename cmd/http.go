@@ -25,7 +25,10 @@ func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *htt
 		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
 			//create controller service
-			controllerService, _ := service.NewControllerService(apiConfig, controllerConfig, nil)
+			controllerService, err := service.NewControllerService(apiConfig, controllerConfig, nil)
+			if err != nil {
+				log.Fatalf("error occurred setting up controller service: %s", err)
+			}
 			//setup html handler
 			htmlHandler := service.NewHTTPServer(controllerService, "static")
 			srv := &http.Server{
