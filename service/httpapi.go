@@ -22,8 +22,8 @@ type mockHandler struct {
 
 func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
+	rw.Header().Add("Content-Type", h.contentType)
 	rw.WriteHeader(h.statusCode)
-	rw.Header().Set("Content-Type", h.contentType)
 	tmpl, err := template.New("mock").Parse(h.content)
 	if err != nil {
 		log.Errorf("error rendering mock : '%v'", err)
@@ -62,7 +62,8 @@ func NewMockHandler(statusCode int, content openapi3.Content) (*mockHandler, err
 					//trim {"example": from the front and "}" from the end
 
 					//example := string(data)[11:len(string(data))-1]
-					log.Infof("type: %s", exampleString)
+					log.Debugf("type: %s", exampleString)
+					log.Debugf("content-type: %s", contentType)
 					return &mockHandler{
 						statusCode:  statusCode,
 						content:     string(exampleString),
@@ -90,6 +91,7 @@ func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handl
 		for path, pathObject := range config.ApiConfig.Paths {
 			for method, operation := range pathObject.Operations() {
 				for statusCodeString, responseRef := range operation.Responses {
+					log.Debug(path + " " + statusCodeString + " has mock responses")
 					statusCode, err := strconv.Atoi(statusCodeString)
 					if err != nil {
 						log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)

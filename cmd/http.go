@@ -4,16 +4,12 @@ import (
 	"bitbucket.org/wepala/weos-controller/service"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"golang.org/x/net/context"
 	"net/http"
 	"os"
 	"os/signal"
 	"time"
 )
-
-var apiConfigFlag string
-var controllerConfigFlag string
 
 func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *http.Server) {
 
@@ -24,21 +20,30 @@ func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *htt
 	}
 
 	return &cobra.Command{
-		Use:   "html",
-		Short: "Start html server",
+		Use:   "http",
+		Short: "Start mock html server",
 		Long:  ``,
-		Args:  cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			controllerService, err := service.NewControllerService(apiConfig, controllerConfig, service.NewPluginLoader())
-			if err != nil {
-				log.Fatalf("error encountered setting up command '%s'", err.Error())
+			if debug {
+				log.SetLevel(log.DebugLevel)
 			}
-			log.Info("HTML Server started")
+			//create controller service
+			controllerService, err := service.NewControllerService(apiConfig, controllerConfig, nil)
+			if err != nil {
+				log.Fatalf("error occurred setting up controller service: %s", err)
+			}
 			//setup html handler
 			htmlHandler := service.NewHTTPServer(controllerService, "static")
-			srv.Addr = args[0]
-			srv.Handler = htmlHandler
+			srv := &http.Server{
+				Addr:         args[0],
+				WriteTimeout: time.Second * 30,
+				ReadTimeout:  time.Second * 30,
+				IdleTimeout:  time.Second * 60,
+				Handler:      htmlHandler,
+			}
+
 			go func() {
+				log.Infof("Mock HTML Server started on %s", args[0])
 				if err := srv.ListenAndServe(); err != nil {
 					log.Fatal("error setting up server: " + err.Error())
 				}
@@ -49,18 +54,14 @@ func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *htt
 			<-c
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 			defer cancel()
-			srv.Shutdown(ctx)
+			err = srv.Shutdown(ctx)
+			log.Infof("server shutdown: %s", err)
 
 			os.Exit(0)
-		},
-	}, srv
+		}}, srv
 }
 
 func init() {
-	serveCmd.Flags().StringVar(&apiConfigFlag, "apiConfig", "", "Source directory to read from")
-	viper.BindPFlag("apiConfigFlag", serveCmd.LocalFlags().Lookup("apiConfig"))
-	serveCmd.Flags().StringVar(&controllerConfigFlag, "controllerConfig", "", "Source directory to read from")
-	viper.BindPFlag("controllerConfigFlag", serveCmd.LocalFlags().Lookup("controllerConfig"))
-	command, _ := NewHTTPCmd(apiConfigFlag, controllerConfigFlag)
+	command, _ := NewHTTPCmd(apiYaml, configYaml)
 	serveCmd.AddCommand(command)
 }

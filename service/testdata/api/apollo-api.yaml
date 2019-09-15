@@ -1,0 +1,1057 @@
+openapi: "3.0.0"
+info:
+  title: WeCMS Poll API
+  description: This api is for creating polls
+  version: 0.1.0
+paths:
+  /create:
+    post:
+      summary: Create polls
+      description: |
+        Create a poll
+      parameters:
+        - name: Authorization
+          in: header
+          description: JWT
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateRequest'
+      responses:
+        '200':
+          description: Ok
+          headers:
+            Authorization:
+              schema:
+                type: string
+          content:
+            application/json:
+              example:
+                {
+                  "id": "4e16c201-ecd8-4115-8cf9-ca995736fd86",
+                  "title": "which shirt should I buy",
+                  "type": "image",
+                  "options": [
+                  {
+                    "value": 1,
+                    "position":1,
+                    "image": {
+                        "id": "5a4b0e78-dd33-4c21-8c3e-55c747d3f32b",
+                        "size": "2000",
+                        "type": "image/png",
+                        "width": "800",
+                        "height": "400",
+                        "path": "https://s3.amazonaws.com/wepala/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png",
+                        "links": [
+                          {
+                            "rel": "self",
+                            "href": "/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b"
+                          },
+                          {
+                            "rel": "thumbnail",
+                            "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png"
+                          },
+                          {
+                            "rel": "400x300",
+                            "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b_400x300.png"
+                          }
+                        ]
+                    }
+                  },
+                  {
+                    "value": 2,
+                    "position":2,
+                    "image": {
+                        "id": "cae460c0-5398-47fa-b518-80e8b5f5900a",
+                        "size": "2000",
+                        "type": "image/png",
+                        "width": "800",
+                        "height": "400",
+                        "path": "https://s3.amazonaws.com/wepala/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png",
+                        "links": [
+                          {
+                            "rel": "self",
+                            "href": "/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b"
+                          },
+                          {
+                            "rel": "thumbnail",
+                            "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png"
+                          },
+                          {
+                            "rel": "400x300",
+                            "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b_400x300.png"
+                          }
+                        ]
+                    },
+                  }
+                  ],
+                  "links": [
+                  {
+                    "rel": "self",
+                    "href": "/4e16c201-ecd8-4115-8cf9-ca995736fd86"
+                  },
+                  {
+                    "rel": "poll.results",
+                    "href": "/4e16c201-ecd8-4115-8cf9-ca995736fd86/results"
+                  }
+                  ]
+                }
+              schema:
+                $ref: '#/components/schemas/PollResponse'
+
+          links:
+            self:
+              operationId: viewPoll
+              parameters:
+                id: '$response.body#/id'
+              description: |
+                The link to get the poll details
+            poll.results:
+              $ref: '#/components/links/poll.results'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Poll Invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+      security:
+        - JWTAuth: []
+  /{id}:
+    get:
+      operationId: viewPoll
+      summary: View poll details
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: poll id
+      responses:
+        '200':
+          description: Ok
+          headers:
+            Authorization:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PollResponse'
+          links:
+            self:
+              operationId: viewPoll
+              parameters:
+                id: $response.body#/id
+              description: |
+                The link to get the poll details
+            poll.results:
+              $ref: '#/components/links/poll.results'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      operationId: updatePost
+      summary: Update poll
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: poll id
+        - name: Authorization
+          in: header
+          description: JWT
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateRequest'
+      responses:
+        '200':
+          description: Ok
+          headers:
+            Authorization:
+              schema:
+                type: string
+          content:
+            application/json:
+              example:
+                {
+                  "id": "4e16c201-ecd8-4115-8cf9-ca995736fd86",
+                  "title": "which shirt should I buy",
+                  "type": "image",
+                  "options": [
+                  {
+                    "value": 1,
+                    "position":1,
+                    "image": {
+                      "id": "5a4b0e78-dd33-4c21-8c3e-55c747d3f32b",
+                      "size": "2000",
+                      "type": "image/png",
+                      "width": "800",
+                      "height": "400",
+                      "path": "https://s3.amazonaws.com/wepala/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png",
+                      "links": [
+                      {
+                        "rel": "self",
+                        "href": "/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b"
+                      },
+                      {
+                        "rel": "thumbnail",
+                        "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png"
+                      },
+                      {
+                        "rel": "400x300",
+                        "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b_400x300.png"
+                      }
+                      ]
+                    }
+                  },
+                  {
+                    "value": 2,
+                    "position":2,
+                    "image": {
+                      "id": "cae460c0-5398-47fa-b518-80e8b5f5900a",
+                      "size": "2000",
+                      "type": "image/png",
+                      "width": "800",
+                      "height": "400",
+                      "path": "https://s3.amazonaws.com/wepala/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png",
+                      "links": [
+                      {
+                        "rel": "self",
+                        "href": "/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b"
+                      },
+                      {
+                        "rel": "thumbnail",
+                        "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png"
+                      },
+                      {
+                        "rel": "400x300",
+                        "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b_400x300.png"
+                      }
+                      ]
+                    },
+                  }
+                  ],
+                  "links": [
+                  {
+                    "rel": "self",
+                    "href": "/4e16c201-ecd8-4115-8cf9-ca995736fd86"
+                  },
+                  {
+                    "rel": "poll.results",
+                    "href": "/4e16c201-ecd8-4115-8cf9-ca995736fd86/results"
+                  }
+                  ]
+                }
+              schema:
+                $ref: '#/components/schemas/PollResponse'
+
+          links:
+            self:
+              operationId: viewPoll
+              parameters:
+                id: '$response.body#/id'
+              description: |
+                The link to get the poll details
+            poll.results:
+              $ref: '#/components/links/poll.results'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Poll Invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - JWTAuth: []
+    delete:
+      operationId: deletePoll
+      summary: Delete poll
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: poll id
+        - name: Authorization
+          in: header
+          description: JWT
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          headers:
+            Authorization:
+              schema:
+                type: string
+      security:
+        - JWTAuth: []
+
+
+  /{id}/results:
+    get:
+      operationId: viewPollResults
+      summary: View poll results
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: poll id
+        - name: Authorization
+          in: header
+          description: JWT
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          headers:
+            Authorization:
+              schema:
+                type: string
+          content:
+            application/json:
+              example:
+                {
+                  "version": "2.0",
+                  "class": "dataset",
+                  "href": "/4e16c201-ecd8-4115-8cf9-ca995736fd86/results.json",
+                  "label": "<question>",
+                  "updated": "2019-02-27T12:25:09Z",
+                  "value": [6605,2713,2973,919,407,226,119,62,398,158,177,63,791,464,267,60,603,312,226,65,1016,303,637,76,621,184,210,227,1206,591,515,100, 766,310,388,68,797,165,434,198,1601,136,201,344, 14,5,4,5, 15,8,3,4,289,110,144,35, 223,121,100,2,197,68,128,1,318,20,98,200, 105,27,48,30, 217,155,44,18,223,32,99,92,1831,0,0,0,168,93,70,5, 135,47,53,35, 223,110,99,14,139,57,81,1, 501,87,394,20, 49,25,15,9, 115,64,38,13, 301,99,178,24,200,53,79,68,1939,0,0,0,24,2,2,20, 91,46,23,22, 189,155,24,10, 194,100,35,59, 194,68,81,45, 163,90,59,14, 792,343,409,40, 102,24,66,12,190,56,120,14,1234,0,0,0,201,126,43,32, 157,57,98,2,90,89,0,1,47,34,10,3, 124,80,34,10, 91,49,38,4, 194,157,20,17, 146,32,100,14, 184,24,136,24, 4518,1854,1862,802, 223,132,54,37, 340,137,146,57,334,226,60,48, 292,167,65,60, 508,201,244,63, 574,173,189,212, 1160,566,500,94, 443,123,266,54, 644,129,338,177, 681,136,201,344, 10,3,4,3, 5,2,1,2, 100,45,26,29, 45,23,21,1, 19,12,7,0, 300,12,89,199, 82,15,40,27, 20,12,1,7, 100,12,12,76, 869,0,0,0, 12,4,5,3, 123,45,45,33, 45,24,12,9, 12,12,0,0, 180,44,124,12, 29,23,6,0, 100,56,32,12, 178,56,100,22, 190,45,78,67, 1814,0,0,0, 12,2,2,8, 89,45,23,21, 100,68,22,10, 190,98,34,58, 189,67,79,43, 156,89,56,11, 789,341,408,40, 100,23,65,12, 189,56,120,13, 1154,0,0,0, 189,123,43,23, 123,45,77,1, 89,89,0,0, 45,34,10,1, 120,78,34,8, 89,49,38,2, 189,154,20,15, 145,32,100,13, 165,16,128,21, 2087,0,0,0, 184,76,98,10, 58,32,21,5, 457,321,132,4, 311,12,288,11, 508,254,247,7, 47,45,1,1, 46,2,43,1, 323,200,119,4, 153,54,76,23, 920,0,0,0, 4,2,0,2, 10,6,2,2, 189,65,118,6, 178,98,79,1, 178,56,121,1, 18,8,9,1,23,12,8,3, 197,143,43,11, 123,20,87,16, 962,0,0,0, 156,89,65,2, 12,2,8,2, 178,86,87,5, 127,45,81,1, 321,43,270,8, 20,2,9,9, 15,8,6,1,123,43,78,2, 10,8,1,1, 125,0,0,0, 12,0,0,12, 2,1,0,1, 89,87,2,0 4,2,1,1, 5,1,2,2, 7,1,3,3, 3,2,1,0, 2,1,1,0, 1,0,0,1, 80,0,0,0, 12,3,0,9,34,12,21,1, 1,0,0,1, 2,0,0,2, 4,2,0,2, 2,0,0,2, 5,3,0,2, 1,0,0,1, 19,8,8,3],
+                  "id": ["response","map","age","gender"],
+                  "size": [3,5,10,4],
+                  "role": {
+                    "geo": ["map"]
+                  },
+                  "dimension": {
+                    "response": {
+                      "label": "response options",
+                      "category": {
+                        "index":[0,1],
+                        "label": {
+                          0: "No",
+                          1: "Yes",
+                        }
+                      }
+                    },
+                    "map": {
+                      "label": "locations",
+                      "category": {
+                        "index": ["T","US", "TT", "V","U"],
+                        "label": {
+                          "T": "Total",
+                          "US": "United States",
+                          "TT": "Trinidad and Tobago",
+                          "V": "Venezuela",
+                          "U": "Unknown",
+                        },
+                        "coordinates": {
+                          "T": [],
+                          "US": [40.730610,-73.935242],
+                          "TT": [10.536421,-61.311951],
+                          "V": [0.500000,-66.916664],
+                          "U": []
+                        }
+                      }
+                    }
+                    ,
+                    "age": {
+                      "label": "age group",
+                      "category": {
+                        "index": [
+                          "T","U","0","12","18","25","35","45","55","65"
+                        ],
+                        "label": {
+                          "T": "total",
+                          "U": "Unknown",
+                          "0": "<12",
+                          "12": "12-17",
+                          "18": "18-24",
+                          "25": "25-34",
+                          "35": "35-44",
+                          "45": "45-54",
+                          "55": "55-64",
+                          "65": "65+"
+                        }
+                      }
+                    }
+                    ,
+                    "gender": {
+                      "label": "gender",
+                      "category": {
+                        "index": ["T", "M", "F","U"],
+                        "label": {
+                          "T": "total",
+                          "M": "male",
+                          "F": "female",
+                          "U": "unknown"
+                        }
+                      }
+                    }
+                  },
+                  "links": [
+                  {
+                    "rel": "self",
+                    "href": "/4e16c201-ecd8-4115-8cf9-ca995736fd86/results"
+                  },
+                  {
+                    "rel": "poll",
+                    "href": "/4e16c201-ecd8-4115-8cf9-ca995736fd86"
+                  }
+                  ]
+                }
+              schema:
+                $ref: '#/components/schemas/PollResult'
+
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - JWTAuth: []
+  /{id}/vote:
+    post:
+      operationId: vote on poll
+      summary: vote on poll
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: poll id
+        - name: Authorization
+          in: header
+          description: JWT
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VoteRequest'
+      responses:
+        '200':
+          description: Ok
+          headers:
+            Authorization:
+              schema:
+                type: string
+          content:
+            application/json:
+              example:
+                {
+                  "links": [
+                  {
+                    "rel": "poll.view",
+                    "href": "/4e16c201-ecd8-4115-8cf9-ca995736fd86"
+                  },
+                  {
+                    "rel": "poll.results",
+                    "href": "/4e16c201-ecd8-4115-8cf9-ca995736fd86/results"
+                  }
+                  ],
+                  "totalVotes": 0
+                }
+              schema:
+                $ref: '#/components/schemas/VoteResponse'
+
+          links:
+            poll.view:
+              operationId: viewPoll
+              parameters:
+                id: '$response.body#/id'
+              description: |
+                The link to get the poll details
+            poll.results:
+              $ref: '#/components/links/poll.results'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Poll Invalid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - JWTAuth: []
+
+  /account/{id}/list:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+        description: account id
+    get:
+      operationId: viewAccountPolls
+      summary: view list of polls belong to the account
+      responses:
+        '200':
+          description: OK
+          headers:
+            Authorization:
+              schema:
+                type: string
+          content:
+            application/json:
+              example:
+                [
+                  {
+                    "id": "4e16c201-ecd8-4115-8cf9-ca995736fd86",
+                    "title": "What shirt should I wear",
+                    "type": "image",
+                    "shortCode": "abc123",
+                    "options": [
+                    {
+                      "value": 1,
+                      "id": 1,
+                      "image": {
+                        "id": "5a4b0e78-dd33-4c21-8c3e-55c747d3f32b",
+                        "size": "2000",
+                        "type": "image/png",
+                        "width": "800",
+                        "height": "400",
+                        "path": "https://s3.amazonaws.com/wepala/c.png",
+                        "links": [
+                        {
+                          "rel": "self",
+                          "href": "/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b"
+                        },
+                        {
+                          "rel": "thumbnail",
+                          "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png"
+                        },
+                        {
+                          "rel": "400x300",
+                          "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b-400x300.png"
+                        }
+                        ]
+                      },
+                      "position": 1
+                    },
+                    {
+                      "value": 2,
+                      "id": 1,
+                      "image": {
+                        "id": "5a4b0e78-dd33-4c21-8c3e-55c747d3f32b",
+                        "size": "2000",
+                        "type": "image/png",
+                        "width": "800",
+                        "height": "400",
+                        "path": "https://s3.amazonaws.com/wepala/c.png",
+                        "links": [
+                          {
+                            "rel": "self",
+                            "href": "/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b"
+                          },
+                          {
+                            "rel": "thumbnail",
+                            "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png"
+                          },
+                          {
+                            "rel": "400x300",
+                            "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b-400x300.png"
+                          }
+                        ]
+                      },
+                      "position": 1
+                    }
+                    ],
+                    "active": true,
+                    "totalVotes": 0
+                  },
+                  {
+                    "id": "1512ae7e-8ff6-4de3-94c4-db3a87ec778b",
+                    "title": "Do you like mango",
+                    "type": "binary",
+                    "shortCode": "xyz123",
+                    "options": [
+                    {
+                      "value": 1,
+                      "id": 1,
+                      "title": "Yes",
+                      "position": 1
+                    },
+                    {
+                      "value": 0,
+                      "id": 0,
+                      "title": "Yes",
+                      "position": 1
+                    }
+                    ],
+                    "active": true,
+                    "totalVotes": 0,
+                    "responseType": "yn_poll"
+                  }
+                ]
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PollResponse'
+      security:
+        - JWTAuth: []
+  /list:
+    get:
+      operationId: listPolls
+      summary: view list of polls
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example:
+                [
+                  {
+                    "id": "4e16c201-ecd8-4115-8cf9-ca995736fd86",
+                    "title": "What shirt should I wear",
+                    "type": "image",
+                    "shortCode": "abc123",
+                    "options": [
+                      {
+                        "value": 1,
+                        "id": 1,
+                        "image": {
+                          "id": "5a4b0e78-dd33-4c21-8c3e-55c747d3f32b",
+                          "size": "2000",
+                          "type": "image/png",
+                          "width": "800",
+                          "height": "400",
+                          "path": "https://s3.amazonaws.com/wepala/c.png",
+                          "links": [
+                          {
+                            "rel": "self",
+                            "href": "/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b"
+                          },
+                          {
+                            "rel": "thumbnail",
+                            "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png"
+                          },
+                          {
+                            "rel": "400x300",
+                            "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b_400x300.png"
+                          }
+                          ]
+                        },
+                        "position": 1
+                      },
+                      {
+                        "value": 2,
+                        "id": 1,
+                        "image": {
+                          "id": "5a4b0e78-dd33-4c21-8c3e-55c747d3f32b",
+                          "size": "2000",
+                          "type": "image/png",
+                          "width": "800",
+                          "height": "400",
+                          "path": "https://s3.amazonaws.com/wepala/c.png",
+                          "links": [
+                          {
+                            "rel": "self",
+                            "href": "/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b"
+                          },
+                          {
+                            "rel": "thumbnail",
+                            "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b.png"
+                          },
+                          {
+                            "rel": "400x300",
+                            "href": "https://cdn.wepala.com/images/5a4b0e78-dd33-4c21-8c3e-55c747d3f32b_400x300.png"
+                          }
+                          ]
+                        },
+                        "position": 1
+                      }
+                    ],
+                    "active": true,
+                    "totalVotes": 0
+                  },
+                  {
+                    "id": "1512ae7e-8ff6-4de3-94c4-db3a87ec778b",
+                    "title": "Do you like mango",
+                    "type": "binary",
+                    "shortCode": "xyz123",
+                    "options": [
+                    {
+                      "value": 1,
+                      "id": 1,
+                      "title": "Yes",
+                      "position": 1
+                    },
+                    {
+                      "value": 0,
+                      "id": 0,
+                      "title": "Yes",
+                      "position": 1
+                    }
+                    ],
+                    "active": true,
+                    "totalVotes": 0,
+                    "responseType": "yn_poll"
+                  }
+                ]
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PollResponse'
+
+
+
+components:
+  securitySchemes:
+    JWTAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
+  schemas:
+    Link:
+      type: object
+      properties:
+        rel:
+          type: string
+          description: the relationship of the link
+        href:
+          type: string
+          description: is a complete URL that uniquely defines the resource.
+    Option:
+      type: object
+      required:
+        - id
+        - value
+      properties:
+        id:
+          type: integer
+          description: this is the id for the option
+        title:
+          type: string
+        image:
+          $ref: '#/components/schemas/Image'
+        position:
+          type: integer
+          description: Use this to order the options
+        value:
+          type: integer
+          description: The value of the option. Note this is an integer based on the initial position of the option BUT it does not change if the position is changed
+
+    Image:
+      type: object
+      properties:
+        id:
+          type: string
+          description: |
+            Image id
+        size:
+          type: integer
+          description: Image size in bytes
+        type:
+          type: string
+          description: image type e.g. image/jpeg
+        width:
+          type: integer
+          description: original image width
+        height:
+          type: integer
+          description: original image height
+        path:
+          type: string
+          description: path to the image on the cdns
+
+    CreateRequest:
+      type: object
+      required:
+        - title
+        - type
+        - options
+      properties:
+        title:
+          type: string
+          description: |
+            Question that was asked
+        type:
+          type: string
+          enum: [binary,image,multi]
+          description: Poll type
+        responseType:
+          type: string
+          description: |
+            For binary polls this describes the resposne type
+        image:
+          type: object
+          $ref: '#/components/schemas/Image'
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+
+    PollResponse:
+      type: object
+      required:
+        - id
+        - title
+        - type
+        - options
+      properties:
+        id:
+          type: string
+          description: Poll id
+        shortCode:
+          type: string
+          description: Poll short code
+        title:
+          type: string
+          description: |
+            Question that was asked
+        type:
+          type: string
+          enum: [binary,image,multi]
+          description: Poll type
+        responseType:
+          type: string
+          enum: [yn_poll,check_poll]
+          description: |
+            For binary polls this describes the response type
+        active:
+          type: boolean
+          description: Indicates if poll is active
+        options:
+          type: array
+          items:
+            $ref: '#/components/schemas/Option'
+        totalVotes:
+          type: integer
+          description: the total votes received
+        startDate:
+          type: string
+          description: The date that the poll is supposed to start
+          format: datetime
+        endDate:
+          type: string
+          description: End date of the poll
+          format: datetime
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+    strarray:
+      type: array
+      items:
+        type: string
+      uniqueItems: true
+    category:
+      type: object
+      properties:
+        index:
+          oneOf:
+            - $ref: '#/components/schemas/strarray'
+            - type: object
+              additionalProperties:
+                type: number
+        label:
+          type: object
+          minProperties: 1
+          additionalProperties:
+            type: string
+        note:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/strarray'
+        unit:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              label:
+                type: string
+              decimals:
+                type: integer
+              position:
+                type: string
+                enum:
+                  - start
+                  - end
+        coordinates:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: number
+        child:
+          type: object
+          additionalProperties:
+            $ref: '#/components/schemas/strarray'
+      additionalProperties: false
+
+    PollResult:
+      type: object
+      required:
+        - version
+        - class
+        - value
+        - id
+        - size
+        - dimension
+      properties:
+        version:
+          type: string
+          description: json-stat version
+        class:
+          type: string
+          description: json stat class type
+        href:
+          type: string
+          description: results endpoint
+        label:
+          type: string
+          description: poll question
+        updated:
+          type: string
+          description: the last updated time
+          format: date-time
+        value:
+          type: array
+          items:
+            type: number
+        id:
+          type: array
+          items:
+            type: string
+        size:
+          type: array
+          items:
+            type: integer
+        role:
+          type: object
+          properties:
+            time:
+              $ref: '#/components/schemas/strarray'
+            geo:
+              $ref: '#/components/schemas/strarray'
+            metric:
+              $ref: '#/components/schemas/strarray'
+          additionalProperties: false
+        dimension:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              href:
+                type: string
+                format: uri
+              label:
+                type: string
+              note:
+                type: string
+              link:
+                type: string
+              extension:
+                type: object
+              category:
+                $ref: '#/components/schemas/category'
+            additionalProperties: false
+            required:
+              - category
+
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+
+    VoteRequest:
+      type: object
+      required:
+        - optionId
+      properties:
+        optionId:
+          type: integer
+          description: |
+            The integer id of the selected option
+
+    VoteResponse:
+      type: object
+      properties:
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+
+  links:
+    poll.results:
+      operationId: poll.results
+      description: |
+        Link to poll results
+      parameters:
+        id: $response.body#/id

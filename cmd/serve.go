@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-var port string
+var debug bool
 
 // serveCmd represents the serve command
 var serveCmd = &cobra.Command{
@@ -22,5 +22,5 @@ var serveCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
-	serveCmd.PersistentFlags().StringVarP(&port, "port", "p", viper.GetString("PORT"), "Port to open TCP connection. Defaults to 5000")
+	serveCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", viper.GetBool("DEBUG"), "indicate if to run in debug mode")
 }

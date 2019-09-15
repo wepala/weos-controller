@@ -1,0 +1,25 @@
+paths:
+  /create:
+    post:
+      templates: []
+  /{id}:
+    get:
+      templates: []
+    post:
+      templates: []
+    delete:
+      templates: []
+
+  /{id}/results:
+    get:
+      templates: []
+  /{id}/vote:
+    post:
+      templates: []
+
+  /account/{id}/list:
+    get:
+      templates: []
+  /list:
+    get:
+      templates: []
