@@ -17,7 +17,7 @@ clean:
 		$(GOCLEAN)
 		rm -f $(BINARY_NAME)
 run:
-		$(GOBUILD) -o $(BINARY_NAME) -v ./...
+		$(GOBUILD) -o $(BINARY_NAME) -v
 		./$(BINARY_NAME)
 deps:
 		$(GOGET) github.com/golang/dep/cmd/dep

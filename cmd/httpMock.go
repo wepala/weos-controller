@@ -24,8 +24,11 @@ func NewHTTPMockCmd(apiConfig string, controllerConfig string) (*cobra.Command, 
 		Short: "Start mock html server",
 		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
+			if debug {
+				log.SetLevel(log.DebugLevel)
+			}
 			//create controller service
-			controllerService, err := service.NewControllerService(apiYaml, configYaml, nil)
+			controllerService, err := service.NewControllerService(apiConfig, controllerConfig, nil)
 			if err != nil {
 				log.Fatalf("error occurred setting up controller service: %s", err)
 			}
@@ -51,7 +54,8 @@ func NewHTTPMockCmd(apiConfig string, controllerConfig string) (*cobra.Command, 
 			<-c
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 			defer cancel()
-			srv.Shutdown(ctx)
+			err = srv.Shutdown(ctx)
+			log.Infof("server shutdown: %s", err)
 
 			os.Exit(0)
 		}}, srv
