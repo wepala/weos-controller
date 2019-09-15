@@ -54,10 +54,12 @@ func (s *controllerService) GetHandlers(config *PathConfig) ([]http.HandlerFunc,
 	}
 	handlers := make([]http.HandlerFunc, len(config.Middleware))
 	for key, mc := range config.Middleware {
+		log.Debugf("loading plugin %s", mc.Plugin.FileName)
 		plugin, err := s.pluginLoader.GetPlugin(mc.Plugin.FileName)
 		if err != nil {
 			return nil, err
 		}
+		log.Debugf("retrieving handler %s", mc.Handler)
 		handlers[key] = plugin.GetHandlerByName(mc.Handler)
 	}
 	return handlers, nil
