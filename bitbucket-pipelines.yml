@@ -21,7 +21,7 @@ pipelines:
             - tar cvf weos-controller.${BITBUCKET_BRANCH}.tar weos-controller
             - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "file=@weos-controller.${BITBUCKET_BRANCH}.tar"
           artifacts:
-            - weos-contoller.*.tar
+            - weos-controller.*.tar
   tags:
     WEOS*:
       - step:
@@ -35,7 +35,7 @@ pipelines:
             - tar cvf weos-controller.${BITBUCKET_TAG}.tar weos-controller
             - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "file=@weos-controller.${BITBUCKET_TAG}.tar"
           artifacts:
-            - weos-contoller.*.tar
+            - weos-controller.*.tar
     v*:
       - step:
           name: test and build
