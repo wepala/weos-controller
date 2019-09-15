@@ -18,7 +18,7 @@ func runCommand(ready chan bool, command *cobra.Command, args []string) {
 }
 
 func TestNewHTTPCmd(t *testing.T) {
-
+	t.SkipNow()
 	var url string
 
 	if runtime.GOOS == "darwin" {
