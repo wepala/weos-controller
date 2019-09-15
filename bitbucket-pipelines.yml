@@ -7,10 +7,45 @@ pipelines:
           - mkdir -pv "${PACKAGE_PATH}"
           - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
           - cd "${PACKAGE_PATH}"
-          - go get -u github.com/golang/dep/cmd/dep
-          - dep ensure
-          - go fmt
-          - go vet -v
-          - go test -v ./service
-#          - go test -v ./cmd #commented this out because this is failing on the pipeline because it doesn't seem to start the http server
-          - go build -v
+          - make test
+  branches:
+    master:
+      - step:
+          name: test and build
+          script:
+            - PACKAGE_PATH="${GOPATH}/src/bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+            - mkdir -pv "${PACKAGE_PATH}"
+            - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
+            - cd "${PACKAGE_PATH}"
+            - make
+            - tar cvf weos-controller.${BITBUCKET_BRANCH}.tar weos-controller
+            - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "file=@weos-controller.${BITBUCKET_BRANCH}.tar"
+          artifacts:
+            - weos-contoller.*.tar
+  tags:
+    WEOS*:
+      - step:
+          name: test and build
+          script:
+            - PACKAGE_PATH="${GOPATH}/src/bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+            - mkdir -pv "${PACKAGE_PATH}"
+            - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
+            - cd "${PACKAGE_PATH}"
+            - make
+            - tar cvf weos-controller.${BITBUCKET_TAG}.tar weos-controller
+            - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "file=@weos-controller.${BITBUCKET_TAG}.tar"
+          artifacts:
+            - weos-contoller.*.tar
+    v*:
+      - step:
+          name: test and build
+          script:
+            - PACKAGE_PATH="${GOPATH}/src/bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+            - mkdir -pv "${PACKAGE_PATH}"
+            - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
+            - cd "${PACKAGE_PATH}"
+            - make
+            - tar cvf weos-controller.${BITBUCKET_TAG}.tar weos-controller
+            - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "file=@weos-controller.${BITBUCKET_TAG}.tar"
+          artifacts:
+            - weos-contoller.*.tar
