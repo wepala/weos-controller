@@ -9,6 +9,8 @@ BINARY_NAME=weos-controller
 all: deps test build
 build:
 		$(GOBUILD) -o $(BINARY_NAME) -v
+		chmod u+x $(BINARY_NAME)
+		chmod o+x $(BINARY_NAME)
 test:
 		$(GOCMD) fmt
 		$(GOCMD) vet -v

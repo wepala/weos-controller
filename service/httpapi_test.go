@@ -97,14 +97,14 @@ func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 			}
 
 			//confirm the content type returned
-			if response.Header.Get("Content-Type") != expectedResponse.Header.Get("Content-Type") {
+			if !strings.Contains(response.Header.Get("Content-Type"), expectedResponse.Header.Get("Content-Type")) {
 				t.Errorf("expected content type %s, got: %s", expectedResponse.Header.Get("Content-Type"), response.Header.Get("Content-Type"))
 			}
 
 			//confirm the body
 			expectedBody, _ := ioutil.ReadAll(expectedResponse.Body)
 			if strings.TrimSpace(string(body)) != strings.TrimSpace(string(expectedBody)) {
-				t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+				t.Errorf("expected body '%s',\n got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
 			}
 		})
 	}

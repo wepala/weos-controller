@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *http.Server) {
+func NewHTTPCmd() (*cobra.Command, *http.Server) {
 
 	srv := &http.Server{
 		WriteTimeout: time.Second * 30,
@@ -21,14 +21,14 @@ func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *htt
 
 	return &cobra.Command{
 		Use:   "http",
-		Short: "Start mock html server",
+		Short: "Start html server",
 		Long:  ``,
 		Run: func(cmd *cobra.Command, args []string) {
 			if debug {
 				log.SetLevel(log.DebugLevel)
 			}
 			//create controller service
-			controllerService, err := service.NewControllerService(apiConfig, controllerConfig, nil)
+			controllerService, err := service.NewControllerService(apiYaml, configYaml, service.NewPluginLoader())
 			if err != nil {
 				log.Fatalf("error occurred setting up controller service: %s", err)
 			}
@@ -43,7 +43,7 @@ func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *htt
 			}
 
 			go func() {
-				log.Infof("Mock HTML Server started on %s", args[0])
+				log.Infof("HTML Server started on %s", args[0])
 				if err := srv.ListenAndServe(); err != nil {
 					log.Fatal("error setting up server: " + err.Error())
 				}
@@ -62,6 +62,6 @@ func NewHTTPCmd(apiConfig string, controllerConfig string) (*cobra.Command, *htt
 }
 
 func init() {
-	command, _ := NewHTTPCmd(apiYaml, configYaml)
+	command, _ := NewHTTPCmd()
 	serveCmd.AddCommand(command)
 }

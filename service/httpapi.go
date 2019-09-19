@@ -26,7 +26,7 @@ func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(h.statusCode)
 	tmpl, err := template.New("mock").Parse(h.content)
 	if err != nil {
-		log.Errorf("error rendering mock : '%v'", err)
+		log.Errorf("error rendering mock : '%s'", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	}
 	if err := tmpl.Execute(rw, h.pathConfig.Data); err != nil {
@@ -120,24 +120,21 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 
 	if config != nil {
 		for path, pathObject := range config.ApiConfig.Paths {
-			for method, operation := range pathObject.Operations() {
+			for method, _ := range pathObject.Operations() {
 				n := negroni.Classic()
-				for statusCodeString, _ := range operation.Responses {
-					_, err := strconv.Atoi(statusCodeString)
-					if err != nil {
-						log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)
-					} else {
-						pathConfig, err := service.GetPathConfig(path, strings.ToLower(method))
-						handlers, err := service.GetHandlers(pathConfig)
-						if err != nil {
-							log.Errorf("error encountered retrieving the handlers for the route '%s', got: '%s'", path, err.Error())
-						}
-						for _, handler := range handlers {
-							n.UseHandler(handler)
-						}
-					}
+				pathConfig, err := service.GetPathConfig(path, strings.ToLower(method))
+				if err != nil {
+					log.Errorf("error encountered getting the path config for the route '%s', got: '%s'", path, err.Error())
 				}
-				router.Handle(path, n)
+				handlers, err := service.GetHandlers(pathConfig)
+				if err != nil {
+					log.Errorf("error encountered retrieving the handlers for the route '%s', got: '%s'", path, err.Error())
+				}
+				for _, handler := range handlers {
+					n.UseHandler(handler)
+				}
+				router.Handle(path, n).Methods(method)
+				log.Debugf("added %d handler(s) to path %s %d", len(handlers), path, method)
 			}
 
 		}
