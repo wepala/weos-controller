@@ -51,6 +51,7 @@ func Test_Endpoints(t *testing.T) {
 }
 
 func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
+	log.SetLevel(log.DebugLevel)
 	for _, test := range tests {
 		t.Run(test.name, func(subTest *testing.T) {
 			var handler http.Handler

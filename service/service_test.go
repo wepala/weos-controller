@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"bitbucket.org/wepala/weos-controller/service"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"runtime"
 	"strings"
@@ -9,6 +10,7 @@ import (
 )
 
 func TestNewControllerService(t *testing.T) {
+	log.SetLevel(log.DebugLevel)
 	t.Run("test basic yaml loaded", func(t *testing.T) {
 		apiYaml := "testdata/api/basic-site-api.yml"
 		configYaml := "testdata/api/basic-site-config." + runtime.GOOS + ".yml"
@@ -71,6 +73,7 @@ func TestNewControllerService(t *testing.T) {
 }
 
 func TestControllerService_GetHandlers(t *testing.T) {
+	log.SetLevel(log.DebugLevel)
 	apiYaml := "testdata/api/basic-site-api.yml"
 	configYaml := "testdata/api/basic-site-config." + runtime.GOOS + ".yml"
 	handlerNames := make([]string, 1)
