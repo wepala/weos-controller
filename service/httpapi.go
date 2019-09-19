@@ -26,7 +26,7 @@ func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	rw.WriteHeader(h.statusCode)
 	tmpl, err := template.New("mock").Parse(h.content)
 	if err != nil {
-		log.Errorf("error rendering mock : '%v'", err)
+		log.Errorf("error rendering mock : '%s'", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	}
 	if err := tmpl.Execute(rw, h.pathConfig.Data); err != nil {
@@ -123,6 +123,9 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 			for method, _ := range pathObject.Operations() {
 				n := negroni.Classic()
 				pathConfig, err := service.GetPathConfig(path, strings.ToLower(method))
+				if err != nil {
+					log.Errorf("error encountered getting the path config for the route '%s', got: '%s'", path, err.Error())
+				}
 				handlers, err := service.GetHandlers(pathConfig)
 				if err != nil {
 					log.Errorf("error encountered retrieving the handlers for the route '%s', got: '%s'", path, err.Error())
@@ -130,7 +133,8 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 				for _, handler := range handlers {
 					n.UseHandler(handler)
 				}
-				router.Handle(path, n)
+				router.Handle(path, n).Methods(method)
+				log.Debugf("added %d handler(s) to path %s %d", len(handlers), path, method)
 			}
 
 		}
