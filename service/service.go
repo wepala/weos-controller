@@ -57,6 +57,7 @@ func (s *controllerService) GetHandlers(config *PathConfig) ([]http.HandlerFunc,
 		log.Debugf("loading plugin %s", mc.Plugin.FileName)
 		plugin, err := s.pluginLoader.GetPlugin(mc.Plugin.FileName)
 		if err != nil {
+			log.Errorf("error loading plugin %s", err)
 			return nil, err
 		}
 		log.Debugf("retrieving handler %s", mc.Handler)
