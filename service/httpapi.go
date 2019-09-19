@@ -134,7 +134,7 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 					n.UseHandler(handler)
 				}
 				router.Handle(path, n).Methods(method)
-				log.Debugf("added %d handler(s) to path %s %d", len(handlers), path, method)
+				log.Debugf("added %d handler(s) to path %s %s", len(handlers), path, method)
 			}
 
 		}
