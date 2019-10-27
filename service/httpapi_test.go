@@ -36,19 +36,17 @@ var mockServerTests = []*HTTPTest{
 
 var httpServerTests = []*HTTPTest{
 	{
-		name:          "about_page_200",
-		testDataDir:   "testdata/html/http",
-		apiFixture:    "testdata/api/basic-site-api.yml",
-		configFixture: "testdata/api/basic-site-config." + runtime.GOOS + ".yml",
+		name:        "about_page_200",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/basic-site-api." + runtime.GOOS + ".yml",
 	},
 }
 
 var staticPageTest = []*HTTPTest{
 	{
-		name:          "about_page_200",
-		testDataDir:   "testdata/html/http",
-		apiFixture:    "testdata/api/basic-site-api.yml",
-		configFixture: "testdata/api/basic-site-config." + runtime.GOOS + ".yml",
+		name:        "about_page_200",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/basic-site-api.yml",
 	},
 }
 
@@ -111,6 +109,7 @@ func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 }
 
 func runHttpServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
+	//t.SkipNow()
 	for _, test := range tests {
 		t.Run(test.name, func(subTest *testing.T) {
 			var handler http.Handler

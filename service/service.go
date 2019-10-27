@@ -52,7 +52,7 @@ func (s *controllerService) GetConfig() *openapi3.Swagger {
 
 func (s *controllerService) GetHandlers(config *PathConfig) ([]http.HandlerFunc, error) {
 	if config == nil {
-		return nil, errors.New("path config cannot be empty")
+		return nil, nil
 	}
 	handlers := make([]http.HandlerFunc, len(config.Middleware))
 	for key, mc := range config.Middleware {
