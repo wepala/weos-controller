@@ -34,8 +34,8 @@ paths:
               MYSQL_USER: root
               MYSQL_PASSWORD: root
         middleware:
-          - plugin: *weosPlugin
-            handler: HelloWorld
+          filename: custom.so
+          handler: AboutPage
       responses:
         '200':
           description: About Page

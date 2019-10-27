@@ -5,6 +5,7 @@ package service_test
 
 import (
 	"bitbucket.org/wepala/weos-controller/service"
+	"github.com/getkin/kin-openapi/openapi3"
 	"net/http"
 	"sync"
 )
@@ -25,7 +26,7 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //
 //         // make and configure a mocked ServiceInterface
 //         mockedServiceInterface := &ServiceInterfaceMock{
-//             GetConfigFunc: func() *service.Config {
+//             GetConfigFunc: func() *openapi3.Swagger {
 // 	               panic("mock out the GetConfig method")
 //             },
 //             GetHandlersFunc: func(config *service.PathConfig) ([]http.HandlerFunc, error) {
@@ -42,7 +43,7 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //     }
 type ServiceInterfaceMock struct {
 	// GetConfigFunc mocks the GetConfig method.
-	GetConfigFunc func() *service.Config
+	GetConfigFunc func() *openapi3.Swagger
 
 	// GetHandlersFunc mocks the GetHandlers method.
 	GetHandlersFunc func(config *service.PathConfig) ([]http.HandlerFunc, error)
@@ -71,7 +72,7 @@ type ServiceInterfaceMock struct {
 }
 
 // GetConfig calls GetConfigFunc.
-func (mock *ServiceInterfaceMock) GetConfig() *service.Config {
+func (mock *ServiceInterfaceMock) GetConfig() *openapi3.Swagger {
 	if mock.GetConfigFunc == nil {
 		panic("ServiceInterfaceMock.GetConfigFunc: method is nil but ServiceInterface.GetConfig was just called")
 	}

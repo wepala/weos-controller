@@ -61,10 +61,10 @@ func (loader *PluginLoader) GetRepository(fileName string) (RepositoryInterface,
 			v := reflect.ValueOf(symbol)
 			return nil, errors.New(fmt.Sprintf("plugin does not implement PluginInterface, it is type '%s'", v.Kind().String()))
 		}
-		loader.plugins[fileName] = weosRepository
+		loader.repositories[fileName] = weosRepository
 	}
 
-	return loader.plugins[fileName], nil
+	return loader.repositories[fileName], nil
 }
 
 func NewPluginLoader() *PluginLoader {

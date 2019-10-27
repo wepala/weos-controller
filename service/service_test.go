@@ -10,23 +10,22 @@ import (
 
 func TestNewControllerService(t *testing.T) {
 	t.Run("test basic yaml loaded", func(t *testing.T) {
-		apiYaml := "testdata/api/basic-site-api.yml"
-		configYaml := "testdata/api/basic-site-config." + runtime.GOOS + ".yml"
-		service, err := service.NewControllerService(apiYaml, configYaml, nil)
+		apiYaml := "testdata/api/basic-site-api." + runtime.GOOS + ".yml"
+		testService, err := service.NewControllerService(apiYaml, nil)
 		if err != nil {
-			t.Fatalf("there was an error setting up service: %v", err)
+			t.Fatalf("there was an error setting up testService: %v", err)
 		}
 
-		if service.GetConfig() == nil {
+		if testService.GetConfig() == nil {
 			t.Fatalf("failed to load config: '%s'", apiYaml)
 		}
 
 		//test loading the swagger file
-		if service.GetConfig().ApiConfig.Info.Title != "Basic Site" {
-			t.Errorf("expected the api title to be: '%s', got: '%s", "Basic Site", service.GetConfig().ApiConfig.Info.Title)
+		if testService.GetConfig().Info.Title != "Basic Site" {
+			t.Errorf("expected the api title to be: '%s', got: '%s", "Basic Site", testService.GetConfig().Info.Title)
 		}
 
-		aboutPathConfig, err := service.GetPathConfig("/about", "get")
+		aboutPathConfig, err := testService.GetPathConfig("/about", "get")
 
 		if len(aboutPathConfig.Middleware) != 1 {
 			t.Errorf("expected 1 middleware to be configured, got %d", len(aboutPathConfig.Middleware))
@@ -34,17 +33,19 @@ func TestNewControllerService(t *testing.T) {
 
 	})
 	t.Run("test middleware must be an array", func(t *testing.T) {
-		apiYaml := "testdata/api/basic-site-api.yml"
-		configYaml := "testdata/api/basic-site-middleware-error-config.yml"
-		_, err := service.NewControllerService(apiYaml, configYaml, nil)
+		apiYaml := "testdata/api/basic-site-api-error.yml"
+		testService, err := service.NewControllerService(apiYaml, nil)
+		if err != nil {
+			t.Fatalf("unable to instantiate new service, got error %s", err)
+		}
+		_, err = testService.GetPathConfig("/about", "get")
 		if err == nil || !strings.Contains(err.Error(), "Middleware") {
 			t.Fatalf("expected an error 'the list of templates must be an array in the config' got: %v", err)
 		}
 	})
 	t.Run("test loading api config only", func(t *testing.T) {
-		apiYaml := "testdata/api/basic-site-api.yml"
-		configYaml := ""
-		service, err := service.NewControllerService(apiYaml, configYaml, nil)
+		apiYaml := "testdata/api/basic-site-api." + runtime.GOOS + ".yml"
+		service, err := service.NewControllerService(apiYaml, nil)
 		if err != nil {
 			t.Fatalf("there was an error setting up service: %v", err)
 		}
@@ -54,12 +55,11 @@ func TestNewControllerService(t *testing.T) {
 		}
 
 		//test loading the swagger file
-		if service.GetConfig().ApiConfig.Info.Title != "Basic Site" {
-			t.Errorf("expected the api title to be: '%s', got: '%s", "Basic Site", service.GetConfig().ApiConfig.Info.Title)
+		if service.GetConfig().Info.Title != "Basic Site" {
+			t.Errorf("expected the api title to be: '%s', got: '%s", "Basic Site", service.GetConfig().Info.Title)
 		}
 
-		//check that the path is parsed. Note it was decided that the casing must match what is in the config. This can (should) be fixed in the future
-		pathConfig, err := service.GetPathConfig("/", "get")
+		pathConfig, err := service.GetPathConfig("/about", "get")
 		if err != nil {
 			t.Fatalf("issue getting path config: '%v", err)
 		}
@@ -71,8 +71,7 @@ func TestNewControllerService(t *testing.T) {
 }
 
 func TestControllerService_GetHandlers(t *testing.T) {
-	apiYaml := "testdata/api/basic-site-api.yml"
-	configYaml := "testdata/api/basic-site-config." + runtime.GOOS + ".yml"
+	apiYaml := "testdata/api/basic-site-api." + runtime.GOOS + ".yml"
 	handlerNames := make([]string, 1)
 	//setup mock
 	weosPluginMock := &PluginInterfaceMock{
@@ -89,7 +88,7 @@ func TestControllerService_GetHandlers(t *testing.T) {
 		},
 	}
 
-	s, err := service.NewControllerService(apiYaml, configYaml, pluginLoaderMock)
+	s, err := service.NewControllerService(apiYaml, pluginLoaderMock)
 
 	//get path config
 	pathConfig, err := s.GetPathConfig("/about", "get")

@@ -64,7 +64,7 @@ func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 		t.Run(test.name, func(subTest *testing.T) {
 			var handler http.Handler
 			//setup html server
-			controllerService, err := service.NewControllerService(test.apiFixture, "", nil)
+			controllerService, err := service.NewControllerService(test.apiFixture, nil)
 			if controllerService == nil {
 				t.Fatalf("could not instantiate controller service because of error: %s", err)
 			}
@@ -115,7 +115,7 @@ func runHttpServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 		t.Run(test.name, func(subTest *testing.T) {
 			var handler http.Handler
 			//setup html server
-			controllerService, _ := service.NewControllerService(test.apiFixture, test.configFixture, service.NewPluginLoader())
+			controllerService, _ := service.NewControllerService(test.apiFixture, service.NewPluginLoader())
 			handler = service.NewHTTPServer(controllerService, staticFolder)
 
 			rw := httptest.NewRecorder()
