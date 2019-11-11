@@ -10,7 +10,6 @@ import (
 
 var cfgFile string
 var apiYaml string
-var configYaml string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -36,7 +35,6 @@ func init() {
 	// will be global for your application.
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.weos-controller.yaml)")
 	rootCmd.PersistentFlags().StringVarP(&apiYaml, "api", "a", viper.GetString("API_YAML"), "Api swagger file")
-	rootCmd.PersistentFlags().StringVarP(&configYaml, "controller-config", "c", viper.GetString("CONFIG_YAML"), "Controller config file")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.

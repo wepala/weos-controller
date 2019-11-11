@@ -1,0 +1,54 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Basic Site
+paths:
+  /:
+    get:
+      summary: Landing page of the site
+      responses:
+        '200':
+          description: Landing page
+          content:
+            text/html:
+              example: |
+                <html>
+                  <head>
+                      <title>Landing Page</title>
+                  </head>
+                  <body>
+                    This is a landing page
+                  </body>
+                </html>
+              schema:
+                type: string
+  /about:
+    get:
+      summary: About Page
+      x-weos-config:
+        plugins:
+          - &weosPlugin
+            filename: testdata/plugins/test.darwin.so
+            config:
+              MYSQL_HOST: localhost
+              MYSQL_USER: root
+              MYSQL_PASSWORD: root
+        middleware:
+          - plugin: *weosPlugin
+            handler: HelloWorld
+      responses:
+        '200':
+          description: About Page
+          content:
+            text/html:
+              example: |
+                <html>
+                  <head>
+                      <title>Landing Page</title>
+                  </head>
+                  <body>
+                    This is a landing page
+                  </body>
+                </html>
+              schema:
+                type: string

@@ -25,6 +25,17 @@ paths:
   /about:
     get:
       summary: About Page
+      x-weos-config:
+        plugins:
+          - &weosPlugin
+            filename: testdata/plugins/test.linux.so
+            config:
+              MYSQL_HOST: localhost
+              MYSQL_USER: root
+              MYSQL_PASSWORD: root
+        middleware:
+          - plugin: *weosPlugin
+            handler: HelloWorld
       responses:
         '200':
           description: About Page

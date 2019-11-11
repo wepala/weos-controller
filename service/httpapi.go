@@ -88,7 +88,7 @@ func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handl
 	config := service.GetConfig()
 
 	if config != nil {
-		for path, pathObject := range config.ApiConfig.Paths {
+		for path, pathObject := range config.Paths {
 			for method, operation := range pathObject.Operations() {
 				for statusCodeString, responseRef := range operation.Responses {
 					log.Debug(path + " " + statusCodeString + " has mock responses")
@@ -119,7 +119,7 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 	config := service.GetConfig()
 
 	if config != nil {
-		for path, pathObject := range config.ApiConfig.Paths {
+		for path, pathObject := range config.Paths {
 			for method, _ := range pathObject.Operations() {
 				n := negroni.Classic()
 				pathConfig, err := service.GetPathConfig(path, strings.ToLower(method))
@@ -134,7 +134,7 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 					n.UseHandler(handler)
 				}
 				router.Handle(path, n).Methods(method)
-				log.Debugf("added %d handler(s) to path %s %d", len(handlers), path, method)
+				log.Debugf("added %d handler(s) to path %s %s", len(handlers), path, method)
 			}
 
 		}
