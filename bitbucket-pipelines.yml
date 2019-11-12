@@ -11,8 +11,8 @@ pipelines:
           - make
           - go run -ldflags "-X main.version=${BITBUCKET_BRANCH} -X main.build=${BITBUCKET_BUILD_NUMBER}" main.go
           - go build  -v -o weos-controller -ldflags "-X main.version=${BITBUCKET_BRANCH} -X main.build=${BITBUCKET_BUILD_NUMBER}" main.go
-          - chmod u+x $(BINARY_NAME)
-          - chmod o+x $(BINARY_NAME)
+          - chmod u+x weos-controller
+          - chmod o+x weos-controller
   branches:
     master:
       - step:
@@ -25,8 +25,8 @@ pipelines:
             - make
             - go run -ldflags "-X main.version=${BITBUCKET_BRANCH} -X main.build=${BITBUCKET_BUILD_NUMBER}" main.go
             - go build  -v -o weos-controller -ldflags "-X main.version=${BITBUCKET_BRANCH} -X main.build=${BITBUCKET_BUILD_NUMBER}" main.go
-            - chmod u+x $(BINARY_NAME)
-            - chmod o+x $(BINARY_NAME)
+            - chmod u+x weos-controller
+            - chmod o+x weos-controller
             - tar -cvf weos-controller.latest.tar weos-controller
             - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "files=@weos-controller.latest.tar"
             - cp weos-controller.latest.tar ${BITBUCKET_CLONE_DIR}
@@ -43,8 +43,8 @@ pipelines:
             - make
             - go run -ldflags "-X main.version=${BITBUCKET_BRANCH} -X main.build=${BITBUCKET_BUILD_NUMBER}" main.go
             - go build  -v -o weos-controller -ldflags "-X main.version=${BITBUCKET_BRANCH} -X main.build=${BITBUCKET_BUILD_NUMBER}" main.go
-            - chmod u+x $(BINARY_NAME)
-            - chmod o+x $(BINARY_NAME)
+            - chmod u+x weos-controller
+            - chmod o+x weos-controller
             - tar -cvf weos-controller.dev.tar weos-controller
             - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "files=@weos-controller.dev.tar"
             - cp weos-controller.dev.tar ${BITBUCKET_CLONE_DIR}
@@ -62,8 +62,8 @@ pipelines:
             - make
             - go run -ldflags "-X main.version=${BITBUCKET_TAG} -X main.build=${BITBUCKET_BUILD_NUMBER}" main.go
             - go build  -v -o weos-controller -ldflags "-X main.version=${BITBUCKET_TAG} -X main.build=${BITBUCKET_BUILD_NUMBER}" main.go
-            - chmod u+x $(BINARY_NAME)
-            - chmod o+x $(BINARY_NAME)
+            - chmod u+x weos-controller
+            - chmod o+x weos-controller
             - tar cvf weos-controller.${BITBUCKET_TAG}.tar weos-controller
             - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "files=@weos-controller.${BITBUCKET_TAG}.tar"
             - cp weos-controller.${BITBUCKET_TAG}.tar ${BITBUCKET_CLONE_DIR}
