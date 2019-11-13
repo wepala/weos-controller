@@ -33,7 +33,7 @@ func NewHTTPCmd() (*cobra.Command, *http.Server) {
 				log.Fatalf("error occurred setting up controller service: %s", err)
 			}
 			//setup html handler
-			htmlHandler := service.NewHTTPServer(controllerService, "static")
+			htmlHandler := service.NewHTTPServer(controllerService, staticPath)
 			srv := &http.Server{
 				Addr:         args[0],
 				WriteTimeout: time.Second * 30,
