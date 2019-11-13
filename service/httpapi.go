@@ -85,7 +85,7 @@ func NewMockHandler(statusCode int, content *openapi3.Content) (*mockHandler, er
 
 func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 	router := mux.NewRouter()
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticFolder))))
 	config := service.GetConfig()
 	if config != nil {
 		paths := make([]string, 0, len(config.Paths))
@@ -126,7 +126,7 @@ func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handl
 
 func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 	router := mux.NewRouter()
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticFolder))))
 	config := service.GetConfig()
 
 	if config != nil {
