@@ -2,11 +2,20 @@ package service_test
 
 import (
 	"bitbucket.org/wepala/weos-controller/service"
+	"encoding/json"
 	"net/http"
 	"runtime"
 	"strings"
 	"testing"
 )
+
+type Config struct {
+	Mysql struct {
+		Host     string `json:"host" yaml:"host"`
+		User     string `json:"user"`
+		Password string `json:"password"`
+	} `json:"mysql"`
+}
 
 func TestNewControllerService(t *testing.T) {
 	t.Run("test basic yaml loaded", func(t *testing.T) {
@@ -28,7 +37,7 @@ func TestNewControllerService(t *testing.T) {
 		aboutPathConfig, err := testService.GetPathConfig("/about", "get")
 
 		if len(aboutPathConfig.Middleware) != 1 {
-			t.Errorf("expected 1 middleware to be configured, got %d", len(aboutPathConfig.Middleware))
+			t.Fatalf("expected 1 middleware to be configured, got %d", len(aboutPathConfig.Middleware))
 		}
 
 	})
@@ -73,12 +82,25 @@ func TestNewControllerService(t *testing.T) {
 func TestControllerService_GetHandlers(t *testing.T) {
 	apiYaml := "testdata/api/basic-site-api." + runtime.GOOS + ".yml"
 	handlerNames := make([]string, 1)
+	config := Config{}
 	//setup mock
 	weosPluginMock := &PluginInterfaceMock{
 		GetHandlerByNameFunc: func(name string) http.HandlerFunc {
 			return func(writer http.ResponseWriter, request *http.Request) {
 				handlerNames = append(handlerNames, name)
 			}
+		},
+		AddConfigFunc: func(tconfig json.RawMessage) error {
+			//check the config on the middleware
+			tbytes, err := tconfig.MarshalJSON()
+			if err != nil {
+				t.Fatalf("encountered error marshaling json for config")
+			}
+			if err = json.Unmarshal(tbytes, &config); err != nil {
+				t.Fatalf("encountered error unmarshaling json for config")
+			}
+
+			return nil
 		},
 	}
 
@@ -100,6 +122,18 @@ func TestControllerService_GetHandlers(t *testing.T) {
 	handlers, _ := s.GetHandlers(pathConfig)
 	if len(handlers) != 1 {
 		t.Errorf("expected %d handlers to be loaded: got %d [%s]", 1, len(handlers), strings.Join(handlerNames, ","))
+	}
+
+	if config.Mysql.Host != "localhost" {
+		t.Errorf("exepcted mysql host to be %s", "localhost")
+	}
+
+	if config.Mysql.User != "root" {
+		t.Errorf("exepcted mysql user to be %s", "root")
+	}
+
+	if config.Mysql.Password != "root" {
+		t.Errorf("exepcted mysql password to be %s", "root")
 	}
 
 }

@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	log "github.com/sirupsen/logrus"
@@ -12,7 +13,7 @@ import (
 //define an interface that all plugins must implement
 type PluginInterface interface {
 	GetHandlerByName(name string) http.HandlerFunc
-	AddConfig(config interface{}) error
+	AddConfig(config json.RawMessage) error
 }
 
 type RepositoryInterface interface {

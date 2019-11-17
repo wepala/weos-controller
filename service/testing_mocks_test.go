@@ -5,6 +5,7 @@ package service_test
 
 import (
 	"bitbucket.org/wepala/weos-controller/service"
+	"encoding/json"
 	"github.com/getkin/kin-openapi/openapi3"
 	"net/http"
 	"sync"
@@ -178,7 +179,7 @@ var _ service.PluginInterface = &PluginInterfaceMock{}
 //
 //         // make and configure a mocked PluginInterface
 //         mockedPluginInterface := &PluginInterfaceMock{
-//             AddConfigFunc: func(config interface{}) error {
+//             AddConfigFunc: func(config json.RawMessage) error {
 // 	               panic("mock out the AddConfig method")
 //             },
 //             GetHandlerByNameFunc: func(name string) http.HandlerFunc {
@@ -192,7 +193,7 @@ var _ service.PluginInterface = &PluginInterfaceMock{}
 //     }
 type PluginInterfaceMock struct {
 	// AddConfigFunc mocks the AddConfig method.
-	AddConfigFunc func(config interface{}) error
+	AddConfigFunc func(config json.RawMessage) error
 
 	// GetHandlerByNameFunc mocks the GetHandlerByName method.
 	GetHandlerByNameFunc func(name string) http.HandlerFunc
@@ -202,7 +203,7 @@ type PluginInterfaceMock struct {
 		// AddConfig holds details about calls to the AddConfig method.
 		AddConfig []struct {
 			// Config is the config argument value.
-			Config interface{}
+			Config json.RawMessage
 		}
 		// GetHandlerByName holds details about calls to the GetHandlerByName method.
 		GetHandlerByName []struct {
@@ -213,12 +214,12 @@ type PluginInterfaceMock struct {
 }
 
 // AddConfig calls AddConfigFunc.
-func (mock *PluginInterfaceMock) AddConfig(config interface{}) error {
+func (mock *PluginInterfaceMock) AddConfig(config json.RawMessage) error {
 	if mock.AddConfigFunc == nil {
 		panic("PluginInterfaceMock.AddConfigFunc: method is nil but PluginInterface.AddConfig was just called")
 	}
 	callInfo := struct {
-		Config interface{}
+		Config json.RawMessage
 	}{
 		Config: config,
 	}
@@ -232,10 +233,10 @@ func (mock *PluginInterfaceMock) AddConfig(config interface{}) error {
 // Check the length with:
 //     len(mockedPluginInterface.AddConfigCalls())
 func (mock *PluginInterfaceMock) AddConfigCalls() []struct {
-	Config interface{}
+	Config json.RawMessage
 } {
 	var calls []struct {
-		Config interface{}
+		Config json.RawMessage
 	}
 	lockPluginInterfaceMockAddConfig.RLock()
 	calls = mock.calls.AddConfig

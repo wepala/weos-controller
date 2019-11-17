@@ -2,6 +2,14 @@ openapi: "3.0.0"
 info:
   version: 1.0.0
   title: Basic Site
+x-weos-plugins:
+  - &weosPlugin
+    filename: testdata/plugins/test.darwin.so
+    config:
+      mysql:
+        host: localhost
+        user: root
+        password: root
 paths:
   /:
     get:
@@ -26,13 +34,6 @@ paths:
     get:
       summary: About Page
       x-weos-config:
-        plugins:
-          - &weosPlugin
-            filename: testdata/plugins/test.darwin.so
-            config:
-              MYSQL_HOST: localhost
-              MYSQL_USER: root
-              MYSQL_PASSWORD: root
         middleware:
           - plugin: *weosPlugin
             handler: HelloWorld

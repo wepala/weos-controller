@@ -18,8 +18,8 @@ type PathConfig struct {
 
 type MiddlewareConfig struct {
 	Plugin struct {
-		FileName string                 `yaml:"filename"`
-		Config   map[string]interface{} `yaml:"config"`
+		FileName string           `yaml:"filename"`
+		Config   *json.RawMessage `yaml:"config"`
 	} `yaml:"plugin"`
 	Handler string                 `yaml:"handler"`
 	Context map[string]interface{} `yaml:"context"`
@@ -62,6 +62,15 @@ func (s *controllerService) GetHandlers(config *PathConfig) ([]http.HandlerFunc,
 			log.Errorf("error loading plugin %s", err)
 			return nil, err
 		}
+
+		if mc.Plugin.Config != nil {
+			err = plugin.AddConfig(*mc.Plugin.Config) //pass the raw json message that is loaded to the plugin
+			if err != nil {
+				log.Error("error loading plugin config", err)
+				return nil, err
+			}
+		}
+
 		log.Debugf("retrieving handler %s", mc.Handler)
 		handlers[key] = plugin.GetHandlerByName(mc.Handler)
 	}
