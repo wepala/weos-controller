@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"net/http"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -35,9 +36,9 @@ func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewMockHandler(statusCode int, content openapi3.Content) (*mockHandler, error) {
+func NewMockHandler(statusCode int, content *openapi3.Content) (*mockHandler, error) {
 	//check the content type and set the appropriate variable on the handler
-	keys := reflect.ValueOf(content).MapKeys()
+	keys := reflect.ValueOf(*content).MapKeys()
 
 	if len(keys) > 0 {
 		contentType := keys[0].String()
@@ -84,26 +85,37 @@ func NewMockHandler(statusCode int, content openapi3.Content) (*mockHandler, err
 
 func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 	router := mux.NewRouter()
-	router.PathPrefix("/static").Handler(negroni.New(negroni.NewStatic(http.Dir(staticFolder))))
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticFolder))))
 	config := service.GetConfig()
-
 	if config != nil {
-		for path, pathObject := range config.ApiConfig.Paths {
+		paths := make([]string, 0, len(config.Paths))
+		for k := range config.Paths {
+			paths = append(paths, k)
+		}
+		sort.Strings(paths)
+		for _, path := range paths {
+			pathObject := config.Paths[path]
 			for method, operation := range pathObject.Operations() {
+				var responseContent *openapi3.Content
+				var statusCode int
+				var err error
 				for statusCodeString, responseRef := range operation.Responses {
 					log.Debug(path + " " + statusCodeString + " has mock responses")
-					statusCode, err := strconv.Atoi(statusCodeString)
+					statusCode, err = strconv.Atoi(statusCodeString)
 					if err != nil {
 						log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)
 					} else {
-						handler, err := NewMockHandler(statusCode, responseRef.Value.Content)
-						if err != nil {
-							log.Errorf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created because '%s'", path, method, err)
-						}
-						router.Handle(path, handler)
+						responseContent = &responseRef.Value.Content
 					}
 				}
 
+				if responseContent != nil {
+					handler, err := NewMockHandler(statusCode, responseContent)
+					if err != nil {
+						log.Errorf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created because '%s'", path, method, err)
+					}
+					router.Handle(path, handler).Methods(method)
+				}
 			}
 
 		}
@@ -114,12 +126,17 @@ func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handl
 
 func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 	router := mux.NewRouter()
-	router.PathPrefix("/static").Handler(negroni.New(negroni.NewStatic(http.Dir(staticFolder))))
-
+	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticFolder))))
 	config := service.GetConfig()
 
 	if config != nil {
-		for path, pathObject := range config.ApiConfig.Paths {
+		paths := make([]string, 0, len(config.Paths))
+		for k := range config.Paths {
+			paths = append(paths, k)
+		}
+		sort.Strings(paths)
+		for _, path := range paths {
+			pathObject := config.Paths[path]
 			for method, _ := range pathObject.Operations() {
 				n := negroni.Classic()
 				pathConfig, err := service.GetPathConfig(path, strings.ToLower(method))
@@ -141,4 +158,8 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 	}
 
 	return router
+}
+
+func GenerateStaticPages(serviceInterface ServiceInterface, route string, data []interface{}) {
+
 }

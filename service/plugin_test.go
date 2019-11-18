@@ -40,3 +40,11 @@ func TestInvalidPluginNotLoaded(t *testing.T) {
 		t.Errorf("expected error loading plugin")
 	}
 }
+
+func TestPluginLoader_GetRepository(t *testing.T) {
+	t.SkipNow()
+	plugin, err := service.NewPluginLoader().GetRepository("testdata/plugins/test." + runtime.GOOS + ".so")
+	if plugin == nil {
+		t.Errorf("expected plugin to be loaded, got error '%s'", err)
+	}
+}
