@@ -95,6 +95,11 @@ func runMockServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 			}
 
 			//confirm the content type returned
+			if !strings.Contains(response.Header.Get("Access-Control-Allow-Origin"), "*") {
+				t.Errorf("expected content type %s, got: %s", "*", response.Header.Get("Access-Control-Allow-Origin"))
+			}
+
+			//confirm the cross origin header is sent
 			if !strings.Contains(response.Header.Get("Content-Type"), expectedResponse.Header.Get("Content-Type")) {
 				t.Errorf("expected content type %s, got: %s", expectedResponse.Header.Get("Content-Type"), response.Header.Get("Content-Type"))
 			}

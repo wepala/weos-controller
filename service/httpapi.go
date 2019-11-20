@@ -24,6 +24,7 @@ type mockHandler struct {
 func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
 	rw.Header().Add("Content-Type", h.contentType)
+	rw.Header().Add("Access-Control-Allow-Origin", "*")
 	rw.WriteHeader(h.statusCode)
 	tmpl, err := template.New("mock").Parse(h.content)
 	if err != nil {
