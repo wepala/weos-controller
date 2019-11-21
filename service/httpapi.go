@@ -128,6 +128,8 @@ func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handl
 				//return a response based on the status code set on the handler with the content type header set to the content type
 				rw.Header().Add("Access-Control-Allow-Methods", strings.Join(pathMethods, ", "))
 				rw.Header().Add("Access-Control-Allow-Origin", "*")
+				rw.Header().Add("Accept", "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8")
+				rw.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 				rw.WriteHeader(200)
 			}).Methods("OPTIONS")
 
@@ -175,6 +177,7 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 					rw.Header().Add("Access-Control-Allow-Methods", strings.Join(pathMethods, ", "))
 					rw.Header().Add("Access-Control-Allow-Origin", "*")
 					rw.Header().Add("Accept", "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8")
+					rw.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 					rw.WriteHeader(200)
 				}).Methods("OPTIONS")
 			}
