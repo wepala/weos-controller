@@ -18,6 +18,11 @@ import (
 
 var mockServerTests = []*HTTPTest{
 	{
+		name:        "about_page_OPTION",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/basic-site-api.yml",
+	},
+	{
 		name:        "landingpage_mock_200",
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/basic-site-api.yml",

@@ -115,7 +115,7 @@ func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handl
 					if err != nil {
 						log.Errorf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created because '%s'", path, method, err)
 					}
-					router.Handle(path, handler).Methods(method)
+					router.Handle(path, handler).Methods(method, "OPTIONS")
 				}
 			}
 
@@ -151,7 +151,7 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 				for _, handler := range handlers {
 					n.UseHandler(handler)
 				}
-				router.Handle(path, n).Methods(method)
+				router.Handle(path, n).Methods(method, "OPTIONS")
 				log.Debugf("added %d handler(s) to path %s %s", len(handlers), path, method)
 			}
 
