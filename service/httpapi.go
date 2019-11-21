@@ -96,10 +96,13 @@ func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handl
 		sort.Strings(paths)
 		for _, path := range paths {
 			pathObject := config.Paths[path]
+			var pathMethods []string
+
 			for method, operation := range pathObject.Operations() {
 				var responseContent *openapi3.Content
 				var statusCode int
 				var err error
+				pathMethods = append(pathMethods, method)
 				for statusCodeString, responseRef := range operation.Responses {
 					log.Debug(path + " " + statusCodeString + " has mock responses")
 					statusCode, err = strconv.Atoi(statusCodeString)
@@ -115,9 +118,18 @@ func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handl
 					if err != nil {
 						log.Errorf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created because '%s'", path, method, err)
 					}
-					router.Handle(path, handler).Methods(method, "OPTIONS")
+					router.Handle(path, handler).Methods(method)
 				}
 			}
+
+			//Add handler for each path's OPTIONS call
+			pathMethods = append(pathMethods, "OPTIONS")
+			router.HandleFunc(path, func(rw http.ResponseWriter, r *http.Request) {
+				//return a response based on the status code set on the handler with the content type header set to the content type
+				rw.Header().Add("Access-Control-Allow-Methods", strings.Join(pathMethods, ", "))
+				rw.Header().Add("Access-Control-Allow-Origin", "*")
+				rw.WriteHeader(200)
+			}).Methods("OPTIONS")
 
 		}
 	}
@@ -138,7 +150,9 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 		sort.Strings(paths)
 		for _, path := range paths {
 			pathObject := config.Paths[path]
+			var pathMethods []string
 			for method, _ := range pathObject.Operations() {
+				pathMethods = append(pathMethods, method)
 				n := negroni.Classic()
 				pathConfig, err := service.GetPathConfig(path, strings.ToLower(method))
 				if err != nil {
@@ -151,8 +165,17 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 				for _, handler := range handlers {
 					n.UseHandler(handler)
 				}
-				router.Handle(path, n).Methods(method, "OPTIONS")
+				router.Handle(path, n).Methods(method)
 				log.Debugf("added %d handler(s) to path %s %s", len(handlers), path, method)
+
+				//Add handler for each path's OPTIONS call
+				pathMethods = append(pathMethods, "OPTIONS")
+				router.HandleFunc(path, func(rw http.ResponseWriter, r *http.Request) {
+					//return a response based on the status code set on the handler with the content type header set to the content type
+					rw.Header().Add("Access-Control-Allow-Methods", strings.Join(pathMethods, ", "))
+					rw.Header().Add("Access-Control-Allow-Origin", "*")
+					rw.WriteHeader(200)
+				}).Methods("OPTIONS")
 			}
 
 		}

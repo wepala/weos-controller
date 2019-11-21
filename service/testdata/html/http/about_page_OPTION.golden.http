@@ -1,11 +1,5 @@
 HTTP/1.1 200 OK
 Connection: close
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, OPTIONS
 
-<html>
-  <head>
-      <title>Landing Page</title>
-  </head>
-  <body>
-    This is a landing page
-  </body>
-</html>
