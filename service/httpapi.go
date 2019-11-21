@@ -174,6 +174,7 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 					//return a response based on the status code set on the handler with the content type header set to the content type
 					rw.Header().Add("Access-Control-Allow-Methods", strings.Join(pathMethods, ", "))
 					rw.Header().Add("Access-Control-Allow-Origin", "*")
+					rw.Header().Add("Accept", "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8")
 					rw.WriteHeader(200)
 				}).Methods("OPTIONS")
 			}
