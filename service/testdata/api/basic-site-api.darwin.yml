@@ -37,6 +37,9 @@ paths:
         middleware:
           - plugin: *weosPlugin
             handler: HelloWorld
+            config:
+              postgres:
+                host: db
       responses:
         '200':
           description: About Page
