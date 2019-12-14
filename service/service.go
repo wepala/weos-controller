@@ -7,6 +7,7 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
 	"net/http"
+	"sort"
 	"strings"
 )
 
@@ -21,8 +22,9 @@ type MiddlewareConfig struct {
 		FileName string           `yaml:"filename"`
 		Config   *json.RawMessage `yaml:"config"`
 	} `yaml:"plugin"`
-	Handler string                 `yaml:"handler"`
-	Context map[string]interface{} `yaml:"context"`
+	Handler  string                 `yaml:"handler"`
+	Context  map[string]interface{} `yaml:"context"`
+	Priority int                    `yaml:"priority"`
 }
 
 type controllerService struct {
@@ -55,6 +57,7 @@ func (s *controllerService) GetHandlers(config *PathConfig) ([]http.HandlerFunc,
 		return nil, nil
 	}
 	handlers := make([]http.HandlerFunc, len(config.Middleware))
+	sort.Sort(NewMiddlewareConfigSorter(config.Middleware))
 	for key, mc := range config.Middleware {
 		log.Debugf("loading plugin %s", mc.Plugin.FileName)
 		plugin, err := s.pluginLoader.GetPlugin(mc.Plugin.FileName)

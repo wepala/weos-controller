@@ -166,6 +166,7 @@ func (mock *ServiceInterfaceMock) GetPathConfigCalls() []struct {
 
 var (
 	lockPluginInterfaceMockAddConfig        sync.RWMutex
+	lockPluginInterfaceMockAddPathConfig    sync.RWMutex
 	lockPluginInterfaceMockGetHandlerByName sync.RWMutex
 )
 
@@ -182,6 +183,9 @@ var _ service.PluginInterface = &PluginInterfaceMock{}
 //             AddConfigFunc: func(config json.RawMessage) error {
 // 	               panic("mock out the AddConfig method")
 //             },
+//             AddPathConfigFunc: func(handler string, config json.RawMessage) error {
+// 	               panic("mock out the AddPathConfig method")
+//             },
 //             GetHandlerByNameFunc: func(name string) http.HandlerFunc {
 // 	               panic("mock out the GetHandlerByName method")
 //             },
@@ -195,6 +199,9 @@ type PluginInterfaceMock struct {
 	// AddConfigFunc mocks the AddConfig method.
 	AddConfigFunc func(config json.RawMessage) error
 
+	// AddPathConfigFunc mocks the AddPathConfig method.
+	AddPathConfigFunc func(handler string, config json.RawMessage) error
+
 	// GetHandlerByNameFunc mocks the GetHandlerByName method.
 	GetHandlerByNameFunc func(name string) http.HandlerFunc
 
@@ -202,6 +209,13 @@ type PluginInterfaceMock struct {
 	calls struct {
 		// AddConfig holds details about calls to the AddConfig method.
 		AddConfig []struct {
+			// Config is the config argument value.
+			Config json.RawMessage
+		}
+		// AddPathConfig holds details about calls to the AddPathConfig method.
+		AddPathConfig []struct {
+			// Handler is the handler argument value.
+			Handler string
 			// Config is the config argument value.
 			Config json.RawMessage
 		}
@@ -241,6 +255,41 @@ func (mock *PluginInterfaceMock) AddConfigCalls() []struct {
 	lockPluginInterfaceMockAddConfig.RLock()
 	calls = mock.calls.AddConfig
 	lockPluginInterfaceMockAddConfig.RUnlock()
+	return calls
+}
+
+// AddPathConfig calls AddPathConfigFunc.
+func (mock *PluginInterfaceMock) AddPathConfig(handler string, config json.RawMessage) error {
+	if mock.AddPathConfigFunc == nil {
+		panic("PluginInterfaceMock.AddPathConfigFunc: method is nil but PluginInterface.AddPathConfig was just called")
+	}
+	callInfo := struct {
+		Handler string
+		Config  json.RawMessage
+	}{
+		Handler: handler,
+		Config:  config,
+	}
+	lockPluginInterfaceMockAddPathConfig.Lock()
+	mock.calls.AddPathConfig = append(mock.calls.AddPathConfig, callInfo)
+	lockPluginInterfaceMockAddPathConfig.Unlock()
+	return mock.AddPathConfigFunc(handler, config)
+}
+
+// AddPathConfigCalls gets all the calls that were made to AddPathConfig.
+// Check the length with:
+//     len(mockedPluginInterface.AddPathConfigCalls())
+func (mock *PluginInterfaceMock) AddPathConfigCalls() []struct {
+	Handler string
+	Config  json.RawMessage
+} {
+	var calls []struct {
+		Handler string
+		Config  json.RawMessage
+	}
+	lockPluginInterfaceMockAddPathConfig.RLock()
+	calls = mock.calls.AddPathConfig
+	lockPluginInterfaceMockAddPathConfig.RUnlock()
 	return calls
 }
 
