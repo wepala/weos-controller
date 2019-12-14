@@ -102,6 +102,9 @@ func TestControllerService_GetHandlers(t *testing.T) {
 
 			return nil
 		},
+		AddPathConfigFunc: func(handler string, config json.RawMessage) error {
+			return nil
+		},
 	}
 
 	pluginLoaderMock := &PluginLoaderInterfaceMock{
@@ -134,6 +137,10 @@ func TestControllerService_GetHandlers(t *testing.T) {
 
 	if config.Mysql.Password != "root" {
 		t.Errorf("exepcted mysql password to be %s", "root")
+	}
+
+	if len(weosPluginMock.AddPathConfigCalls()) != 1 {
+		t.Errorf("expected add handler config to be called %d time, called %d times", 1, len(weosPluginMock.AddPathConfigCalls()))
 	}
 
 }
