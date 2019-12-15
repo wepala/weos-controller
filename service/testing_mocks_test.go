@@ -12,9 +12,10 @@ import (
 )
 
 var (
-	lockServiceInterfaceMockGetConfig     sync.RWMutex
-	lockServiceInterfaceMockGetHandlers   sync.RWMutex
-	lockServiceInterfaceMockGetPathConfig sync.RWMutex
+	lockServiceInterfaceMockGetConfig                 sync.RWMutex
+	lockServiceInterfaceMockGetGlobalMiddlewareConfig sync.RWMutex
+	lockServiceInterfaceMockGetHandlers               sync.RWMutex
+	lockServiceInterfaceMockGetPathConfig             sync.RWMutex
 )
 
 // Ensure, that ServiceInterfaceMock does implement ServiceInterface.
@@ -29,6 +30,9 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //         mockedServiceInterface := &ServiceInterfaceMock{
 //             GetConfigFunc: func() *openapi3.Swagger {
 // 	               panic("mock out the GetConfig method")
+//             },
+//             GetGlobalMiddlewareConfigFunc: func() ([]*service.MiddlewareConfig, error) {
+// 	               panic("mock out the GetGlobalMiddlewareConfig method")
 //             },
 //             GetHandlersFunc: func(config *service.PathConfig) ([]http.HandlerFunc, error) {
 // 	               panic("mock out the GetHandlers method")
@@ -46,6 +50,9 @@ type ServiceInterfaceMock struct {
 	// GetConfigFunc mocks the GetConfig method.
 	GetConfigFunc func() *openapi3.Swagger
 
+	// GetGlobalMiddlewareConfigFunc mocks the GetGlobalMiddlewareConfig method.
+	GetGlobalMiddlewareConfigFunc func() ([]*service.MiddlewareConfig, error)
+
 	// GetHandlersFunc mocks the GetHandlers method.
 	GetHandlersFunc func(config *service.PathConfig) ([]http.HandlerFunc, error)
 
@@ -56,6 +63,9 @@ type ServiceInterfaceMock struct {
 	calls struct {
 		// GetConfig holds details about calls to the GetConfig method.
 		GetConfig []struct {
+		}
+		// GetGlobalMiddlewareConfig holds details about calls to the GetGlobalMiddlewareConfig method.
+		GetGlobalMiddlewareConfig []struct {
 		}
 		// GetHandlers holds details about calls to the GetHandlers method.
 		GetHandlers []struct {
@@ -95,6 +105,32 @@ func (mock *ServiceInterfaceMock) GetConfigCalls() []struct {
 	lockServiceInterfaceMockGetConfig.RLock()
 	calls = mock.calls.GetConfig
 	lockServiceInterfaceMockGetConfig.RUnlock()
+	return calls
+}
+
+// GetGlobalMiddlewareConfig calls GetGlobalMiddlewareConfigFunc.
+func (mock *ServiceInterfaceMock) GetGlobalMiddlewareConfig() ([]*service.MiddlewareConfig, error) {
+	if mock.GetGlobalMiddlewareConfigFunc == nil {
+		panic("ServiceInterfaceMock.GetGlobalMiddlewareConfigFunc: method is nil but ServiceInterface.GetGlobalMiddlewareConfig was just called")
+	}
+	callInfo := struct {
+	}{}
+	lockServiceInterfaceMockGetGlobalMiddlewareConfig.Lock()
+	mock.calls.GetGlobalMiddlewareConfig = append(mock.calls.GetGlobalMiddlewareConfig, callInfo)
+	lockServiceInterfaceMockGetGlobalMiddlewareConfig.Unlock()
+	return mock.GetGlobalMiddlewareConfigFunc()
+}
+
+// GetGlobalMiddlewareConfigCalls gets all the calls that were made to GetGlobalMiddlewareConfig.
+// Check the length with:
+//     len(mockedServiceInterface.GetGlobalMiddlewareConfigCalls())
+func (mock *ServiceInterfaceMock) GetGlobalMiddlewareConfigCalls() []struct {
+} {
+	var calls []struct {
+	}
+	lockServiceInterfaceMockGetGlobalMiddlewareConfig.RLock()
+	calls = mock.calls.GetGlobalMiddlewareConfig
+	lockServiceInterfaceMockGetGlobalMiddlewareConfig.RUnlock()
 	return calls
 }
 
