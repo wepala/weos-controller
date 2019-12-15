@@ -32,6 +32,23 @@ type controllerService struct {
 	pluginLoader PluginLoaderInterface
 }
 
+func (s *controllerService) GetGlobalMiddlewareConfig() ([]*MiddlewareConfig, error) {
+	if s.config.ExtensionProps.Extensions["x-weos-config"] != nil {
+		globalConfigBytes, err := s.config.ExtensionProps.Extensions["x-weos-config"].(json.RawMessage).MarshalJSON()
+		if err != nil {
+			return nil, err
+		}
+		var globalConfig PathConfig
+		err = json.Unmarshal(globalConfigBytes, &globalConfig)
+		if err != nil {
+			return nil, err
+		}
+
+		return globalConfig.Middleware, nil
+	}
+	return nil, nil
+}
+
 func (s *controllerService) GetPathConfig(path string, operation string) (*PathConfig, error) {
 	weosConfig := s.config.Paths[path].GetOperation(strings.ToUpper(operation)).ExtensionProps.Extensions["x-weos-config"]
 	if weosConfig == nil {
@@ -53,12 +70,25 @@ func (s *controllerService) GetConfig() *openapi3.Swagger {
 }
 
 func (s *controllerService) GetHandlers(config *PathConfig) ([]http.HandlerFunc, error) {
-	if config == nil {
+	globalHandlers, err := s.GetGlobalMiddlewareConfig()
+	var middlewareConfig []*MiddlewareConfig
+
+	if err != nil {
+		log.Debug("there was an issue loading global handlers")
+		return nil, err
+	}
+
+	if config == nil && len(globalHandlers) == 0 {
 		return nil, nil
 	}
-	handlers := make([]http.HandlerFunc, len(config.Middleware))
-	sort.Sort(NewMiddlewareConfigSorter(config.Middleware))
-	for key, mc := range config.Middleware {
+
+	if config != nil {
+		middlewareConfig = config.Middleware
+	}
+	middlewareConfig = append(middlewareConfig, globalHandlers...)
+	handlers := make([]http.HandlerFunc, len(middlewareConfig))
+	sort.Sort(NewMiddlewareConfigSorter(middlewareConfig))
+	for key, mc := range middlewareConfig {
 		log.Debugf("loading plugin %s", mc.Plugin.FileName)
 		plugin, err := s.pluginLoader.GetPlugin(mc.Plugin.FileName)
 		if err != nil {
@@ -86,6 +116,7 @@ type ServiceInterface interface {
 	GetPathConfig(path string, operation string) (*PathConfig, error)
 	GetConfig() *openapi3.Swagger
 	GetHandlers(config *PathConfig) ([]http.HandlerFunc, error)
+	GetGlobalMiddlewareConfig() ([]*MiddlewareConfig, error)
 }
 
 func NewControllerService(apiConfig string, pluginLoader PluginLoaderInterface) (ServiceInterface, error) {

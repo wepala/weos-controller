@@ -9,7 +9,7 @@ func (o ConfigSorter) Len() int {
 }
 
 func (o ConfigSorter) Less(i, j int) bool {
-	return o.MiddlewareConfigs[i].Priority < o.MiddlewareConfigs[j].Priority
+	return o.MiddlewareConfigs[i].Priority < o.MiddlewareConfigs[j].Priority && o.MiddlewareConfigs[i].Priority != 0
 }
 
 func (o ConfigSorter) Swap(i, j int) {
