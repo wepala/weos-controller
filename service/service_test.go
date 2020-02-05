@@ -126,7 +126,7 @@ func TestControllerService_GetHandlers(t *testing.T) {
 	}
 
 	//use path config to get handlers
-	handlers, _ := s.GetHandlers(pathConfig)
+	handlers, _ := s.GetHandlers("", pathConfig, nil)
 	if len(handlers) != 2 {
 		t.Errorf("expected %d handlers to be loaded: got %d [%s]", 2, len(handlers), strings.Join(handlerNames, ","))
 	}
@@ -221,7 +221,7 @@ func TestControllerService_HandlerPriority(t *testing.T) {
 	}
 
 	//use path config to get handlers
-	handlers, _ := s.GetHandlers(pathConfig)
+	handlers, _ := s.GetHandlers("/multiple-handlers", pathConfig, s.GetConfig().Paths["/"])
 	if len(handlers) != 3 {
 		t.Errorf("expected %d handlers to be loaded: got %d [%s]", 3, len(handlers), strings.Join(handlerNames, ","))
 	}
@@ -311,8 +311,100 @@ func TestControllerService_GlobalHandlers(t *testing.T) {
 	}
 
 	//use path config to get handlers
-	handlers, _ := s.GetHandlers(pathConfig)
+	handlers, _ := s.GetHandlers("/", pathConfig, s.GetConfig().Paths["/"])
 	if len(handlers) != 1 {
 		t.Errorf("expected %d handlers to be loaded: got %d [%s]", 1, len(handlers), strings.Join(handlerNames, ","))
 	}
+}
+
+func Test_WEOS_168(t *testing.T) {
+	t.Run("test mock when no plugins associated", func(t *testing.T) {
+		apiYaml := "testdata/api/mock-api.yml"
+
+		pluginLoaderMock := &PluginLoaderInterfaceMock{
+			GetPluginFunc: func(fileName string) (pluginInterface service.PluginInterface, e error) {
+				return nil, nil
+			},
+		}
+
+		s, err := service.NewControllerService(apiYaml, pluginLoaderMock)
+		if err != nil {
+			t.Fatalf("got an error while create new controller service %s", err)
+		}
+
+		//get path config
+		pathConfig, err := s.GetPathConfig("/", "get")
+		if err != nil {
+			t.Fatalf("issue getting path config: '%v", err)
+		}
+
+		if len(pluginLoaderMock.GetPluginCalls()) > 0 {
+			t.Fatalf("didn't expect any plugin to be loaded")
+		}
+
+		//use path config to get handlers
+		handlers, _ := s.GetHandlers("/", pathConfig, s.GetConfig().Paths["/"])
+
+		if len(handlers) != 1 {
+			t.Errorf("expected %d handlers to be loaded, got %d", 1, len(handlers))
+		}
+	})
+
+	t.Run("test mock when config is set to true", func(t *testing.T) {
+		apiYaml := "testdata/api/mock-api.yml"
+		var handlerNames []string
+		config := Config{}
+		//setup mock
+		weosPluginMock1 := &PluginInterfaceMock{
+			GetHandlerByNameFunc: func(name string) http.HandlerFunc {
+				return func(writer http.ResponseWriter, request *http.Request) {
+					handlerNames = append(handlerNames, name)
+				}
+			},
+			AddConfigFunc: func(tconfig json.RawMessage) error {
+				//check the config on the middleware
+				tbytes, err := tconfig.MarshalJSON()
+				if err != nil {
+					t.Fatalf("encountered error marshaling json for config")
+				}
+				if err = json.Unmarshal(tbytes, &config); err != nil {
+					t.Fatalf("encountered error unmarshaling json for config")
+				}
+
+				return nil
+			},
+			AddPathConfigFunc: func(handler string, config json.RawMessage) error {
+				return nil
+			},
+		}
+
+		pluginLoaderMock := &PluginLoaderInterfaceMock{
+			GetPluginFunc: func(fileName string) (pluginInterface service.PluginInterface, e error) {
+				return weosPluginMock1, nil
+			},
+		}
+
+		s, err := service.NewControllerService(apiYaml, pluginLoaderMock)
+		if err != nil {
+			t.Fatalf("got an error while create new controller service %s", err)
+		}
+
+		//get path config
+		pathConfig, err := s.GetPathConfig("/about", "get")
+		if err != nil {
+			t.Fatalf("issue getting path config: '%v", err)
+		}
+
+		//use path config to get handlers
+		handlers, _ := s.GetHandlers("/about", pathConfig, s.GetConfig().Paths["/about"])
+
+		if len(handlers) != 1 {
+			t.Errorf("expected %d handlers to be loaded, got %d", 1, len(handlers))
+		}
+
+		if len(pluginLoaderMock.GetPluginCalls()) > 0 {
+			t.Errorf("didn't expect the plugin to be loaded")
+		}
+	})
+
 }

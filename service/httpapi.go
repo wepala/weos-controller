@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"reflect"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -84,61 +83,6 @@ func NewMockHandler(statusCode int, content *openapi3.Content) (*mockHandler, er
 
 }
 
-func NewMockHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
-	router := mux.NewRouter()
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticFolder))))
-	config := service.GetConfig()
-	if config != nil {
-		paths := make([]string, 0, len(config.Paths))
-		for k := range config.Paths {
-			paths = append(paths, k)
-		}
-		sort.Strings(paths)
-		for _, path := range paths {
-			pathObject := config.Paths[path]
-			var pathMethods []string
-
-			for method, operation := range pathObject.Operations() {
-				var responseContent *openapi3.Content
-				var statusCode int
-				var err error
-				pathMethods = append(pathMethods, method)
-				for statusCodeString, responseRef := range operation.Responses {
-					log.Debug(path + " " + statusCodeString + " has mock responses")
-					statusCode, err = strconv.Atoi(statusCodeString)
-					if err != nil {
-						log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)
-					} else {
-						responseContent = &responseRef.Value.Content
-					}
-				}
-
-				if responseContent != nil {
-					handler, err := NewMockHandler(statusCode, responseContent)
-					if err != nil {
-						log.Errorf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created because '%s'", path, method, err)
-					}
-					router.Handle(path, handler).Methods(method)
-				}
-			}
-
-			//Add handler for each path's OPTIONS call
-			pathMethods = append(pathMethods, "OPTIONS")
-			router.HandleFunc(path, func(rw http.ResponseWriter, r *http.Request) {
-				//return a response based on the status code set on the handler with the content type header set to the content type
-				rw.Header().Add("Access-Control-Allow-Methods", strings.Join(pathMethods, ", "))
-				rw.Header().Add("Access-Control-Allow-Origin", "*")
-				rw.Header().Add("Accept", "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8")
-				rw.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-				rw.WriteHeader(200)
-			}).Methods("OPTIONS")
-
-		}
-	}
-
-	return router
-}
-
 func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 	router := mux.NewRouter()
 	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticFolder))))
@@ -160,7 +104,7 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 				if err != nil {
 					log.Errorf("error encountered getting the path config for the route '%s', got: '%s'", path, err.Error())
 				}
-				handlers, err := service.GetHandlers(pathConfig)
+				handlers, err := service.GetHandlers(path, pathConfig, pathObject)
 				if err != nil {
 					log.Errorf("error encountered retrieving the handlers for the route '%s', got: '%s'", path, err.Error())
 				}
