@@ -12,9 +12,10 @@ import (
 )
 
 var (
-	lockServiceInterfaceMockGetConfig     sync.RWMutex
-	lockServiceInterfaceMockGetHandlers   sync.RWMutex
-	lockServiceInterfaceMockGetPathConfig sync.RWMutex
+	lockServiceInterfaceMockGetConfig                 sync.RWMutex
+	lockServiceInterfaceMockGetGlobalMiddlewareConfig sync.RWMutex
+	lockServiceInterfaceMockGetHandlers               sync.RWMutex
+	lockServiceInterfaceMockGetPathConfig             sync.RWMutex
 )
 
 // Ensure, that ServiceInterfaceMock does implement ServiceInterface.
@@ -30,7 +31,10 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //             GetConfigFunc: func() *openapi3.Swagger {
 // 	               panic("mock out the GetConfig method")
 //             },
-//             GetHandlersFunc: func(config *service.PathConfig) ([]http.HandlerFunc, error) {
+//             GetGlobalMiddlewareConfigFunc: func() ([]*service.MiddlewareConfig, error) {
+// 	               panic("mock out the GetGlobalMiddlewareConfig method")
+//             },
+//             GetHandlersFunc: func(path string, config *service.PathConfig, pathInfo *openapi3.PathItem) ([]http.HandlerFunc, error) {
 // 	               panic("mock out the GetHandlers method")
 //             },
 //             GetPathConfigFunc: func(path string, operation string) (*service.PathConfig, error) {
@@ -46,8 +50,11 @@ type ServiceInterfaceMock struct {
 	// GetConfigFunc mocks the GetConfig method.
 	GetConfigFunc func() *openapi3.Swagger
 
+	// GetGlobalMiddlewareConfigFunc mocks the GetGlobalMiddlewareConfig method.
+	GetGlobalMiddlewareConfigFunc func() ([]*service.MiddlewareConfig, error)
+
 	// GetHandlersFunc mocks the GetHandlers method.
-	GetHandlersFunc func(config *service.PathConfig) ([]http.HandlerFunc, error)
+	GetHandlersFunc func(path string, config *service.PathConfig, pathInfo *openapi3.PathItem) ([]http.HandlerFunc, error)
 
 	// GetPathConfigFunc mocks the GetPathConfig method.
 	GetPathConfigFunc func(path string, operation string) (*service.PathConfig, error)
@@ -57,10 +64,17 @@ type ServiceInterfaceMock struct {
 		// GetConfig holds details about calls to the GetConfig method.
 		GetConfig []struct {
 		}
+		// GetGlobalMiddlewareConfig holds details about calls to the GetGlobalMiddlewareConfig method.
+		GetGlobalMiddlewareConfig []struct {
+		}
 		// GetHandlers holds details about calls to the GetHandlers method.
 		GetHandlers []struct {
+			// Path is the path argument value.
+			Path string
 			// Config is the config argument value.
 			Config *service.PathConfig
+			// PathInfo is the pathInfo argument value.
+			PathInfo *openapi3.PathItem
 		}
 		// GetPathConfig holds details about calls to the GetPathConfig method.
 		GetPathConfig []struct {
@@ -98,30 +112,64 @@ func (mock *ServiceInterfaceMock) GetConfigCalls() []struct {
 	return calls
 }
 
+// GetGlobalMiddlewareConfig calls GetGlobalMiddlewareConfigFunc.
+func (mock *ServiceInterfaceMock) GetGlobalMiddlewareConfig() ([]*service.MiddlewareConfig, error) {
+	if mock.GetGlobalMiddlewareConfigFunc == nil {
+		panic("ServiceInterfaceMock.GetGlobalMiddlewareConfigFunc: method is nil but ServiceInterface.GetGlobalMiddlewareConfig was just called")
+	}
+	callInfo := struct {
+	}{}
+	lockServiceInterfaceMockGetGlobalMiddlewareConfig.Lock()
+	mock.calls.GetGlobalMiddlewareConfig = append(mock.calls.GetGlobalMiddlewareConfig, callInfo)
+	lockServiceInterfaceMockGetGlobalMiddlewareConfig.Unlock()
+	return mock.GetGlobalMiddlewareConfigFunc()
+}
+
+// GetGlobalMiddlewareConfigCalls gets all the calls that were made to GetGlobalMiddlewareConfig.
+// Check the length with:
+//     len(mockedServiceInterface.GetGlobalMiddlewareConfigCalls())
+func (mock *ServiceInterfaceMock) GetGlobalMiddlewareConfigCalls() []struct {
+} {
+	var calls []struct {
+	}
+	lockServiceInterfaceMockGetGlobalMiddlewareConfig.RLock()
+	calls = mock.calls.GetGlobalMiddlewareConfig
+	lockServiceInterfaceMockGetGlobalMiddlewareConfig.RUnlock()
+	return calls
+}
+
 // GetHandlers calls GetHandlersFunc.
-func (mock *ServiceInterfaceMock) GetHandlers(config *service.PathConfig) ([]http.HandlerFunc, error) {
+func (mock *ServiceInterfaceMock) GetHandlers(path string, config *service.PathConfig, pathInfo *openapi3.PathItem) ([]http.HandlerFunc, error) {
 	if mock.GetHandlersFunc == nil {
 		panic("ServiceInterfaceMock.GetHandlersFunc: method is nil but ServiceInterface.GetHandlers was just called")
 	}
 	callInfo := struct {
-		Config *service.PathConfig
+		Path     string
+		Config   *service.PathConfig
+		PathInfo *openapi3.PathItem
 	}{
-		Config: config,
+		Path:     path,
+		Config:   config,
+		PathInfo: pathInfo,
 	}
 	lockServiceInterfaceMockGetHandlers.Lock()
 	mock.calls.GetHandlers = append(mock.calls.GetHandlers, callInfo)
 	lockServiceInterfaceMockGetHandlers.Unlock()
-	return mock.GetHandlersFunc(config)
+	return mock.GetHandlersFunc(path, config, pathInfo)
 }
 
 // GetHandlersCalls gets all the calls that were made to GetHandlers.
 // Check the length with:
 //     len(mockedServiceInterface.GetHandlersCalls())
 func (mock *ServiceInterfaceMock) GetHandlersCalls() []struct {
-	Config *service.PathConfig
+	Path     string
+	Config   *service.PathConfig
+	PathInfo *openapi3.PathItem
 } {
 	var calls []struct {
-		Config *service.PathConfig
+		Path     string
+		Config   *service.PathConfig
+		PathInfo *openapi3.PathItem
 	}
 	lockServiceInterfaceMockGetHandlers.RLock()
 	calls = mock.calls.GetHandlers
@@ -166,6 +214,7 @@ func (mock *ServiceInterfaceMock) GetPathConfigCalls() []struct {
 
 var (
 	lockPluginInterfaceMockAddConfig        sync.RWMutex
+	lockPluginInterfaceMockAddPathConfig    sync.RWMutex
 	lockPluginInterfaceMockGetHandlerByName sync.RWMutex
 )
 
@@ -182,6 +231,9 @@ var _ service.PluginInterface = &PluginInterfaceMock{}
 //             AddConfigFunc: func(config json.RawMessage) error {
 // 	               panic("mock out the AddConfig method")
 //             },
+//             AddPathConfigFunc: func(handler string, config json.RawMessage) error {
+// 	               panic("mock out the AddPathConfig method")
+//             },
 //             GetHandlerByNameFunc: func(name string) http.HandlerFunc {
 // 	               panic("mock out the GetHandlerByName method")
 //             },
@@ -195,6 +247,9 @@ type PluginInterfaceMock struct {
 	// AddConfigFunc mocks the AddConfig method.
 	AddConfigFunc func(config json.RawMessage) error
 
+	// AddPathConfigFunc mocks the AddPathConfig method.
+	AddPathConfigFunc func(handler string, config json.RawMessage) error
+
 	// GetHandlerByNameFunc mocks the GetHandlerByName method.
 	GetHandlerByNameFunc func(name string) http.HandlerFunc
 
@@ -202,6 +257,13 @@ type PluginInterfaceMock struct {
 	calls struct {
 		// AddConfig holds details about calls to the AddConfig method.
 		AddConfig []struct {
+			// Config is the config argument value.
+			Config json.RawMessage
+		}
+		// AddPathConfig holds details about calls to the AddPathConfig method.
+		AddPathConfig []struct {
+			// Handler is the handler argument value.
+			Handler string
 			// Config is the config argument value.
 			Config json.RawMessage
 		}
@@ -241,6 +303,41 @@ func (mock *PluginInterfaceMock) AddConfigCalls() []struct {
 	lockPluginInterfaceMockAddConfig.RLock()
 	calls = mock.calls.AddConfig
 	lockPluginInterfaceMockAddConfig.RUnlock()
+	return calls
+}
+
+// AddPathConfig calls AddPathConfigFunc.
+func (mock *PluginInterfaceMock) AddPathConfig(handler string, config json.RawMessage) error {
+	if mock.AddPathConfigFunc == nil {
+		panic("PluginInterfaceMock.AddPathConfigFunc: method is nil but PluginInterface.AddPathConfig was just called")
+	}
+	callInfo := struct {
+		Handler string
+		Config  json.RawMessage
+	}{
+		Handler: handler,
+		Config:  config,
+	}
+	lockPluginInterfaceMockAddPathConfig.Lock()
+	mock.calls.AddPathConfig = append(mock.calls.AddPathConfig, callInfo)
+	lockPluginInterfaceMockAddPathConfig.Unlock()
+	return mock.AddPathConfigFunc(handler, config)
+}
+
+// AddPathConfigCalls gets all the calls that were made to AddPathConfig.
+// Check the length with:
+//     len(mockedPluginInterface.AddPathConfigCalls())
+func (mock *PluginInterfaceMock) AddPathConfigCalls() []struct {
+	Handler string
+	Config  json.RawMessage
+} {
+	var calls []struct {
+		Handler string
+		Config  json.RawMessage
+	}
+	lockPluginInterfaceMockAddPathConfig.RLock()
+	calls = mock.calls.AddPathConfig
+	lockPluginInterfaceMockAddPathConfig.RUnlock()
 	return calls
 }
 
