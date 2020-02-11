@@ -18,6 +18,7 @@ type MockHandler struct {
 func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
 	rw.Header().Add("Access-Control-Allow-Origin", "*")
+	rw.Header().Add("Content-Type", "text/html")
 	if r.Header.Get("X-Mock-Status-Code") != ""{
 		mockStatusCode, err := strconv.Atoi(r.Header.Get("X-Mock-Status-Code"))
 		if err != nil{
@@ -25,6 +26,7 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		}
 		rw.WriteHeader(mockStatusCode)
 	}
+
 	//tmpl, err := template.New("mock").Parse(h.content)
 	//if err != nil {
 	//	log.Errorf("error rendering mock : '%s'", err)
