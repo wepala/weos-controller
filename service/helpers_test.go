@@ -13,7 +13,7 @@ import (
 )
 
 func TestStartRecordingRequests(t *testing.T) {
-	//t.SkipNow()
+	t.SkipNow()
 	startRecordingRequests("x_mock_status_code", "localhost:8080")
 }
 

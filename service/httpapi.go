@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"reflect"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -20,6 +21,10 @@ type mockHandler struct {
 	pathResponses string
 	pathConfig  PathConfig
 }
+
+var (
+	currStatusCode int
+)
 
 func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
@@ -35,13 +40,39 @@ func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		log.Errorf("error rendering mock : '%v'", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	}
-	return nil
+}
+
+func NewMockHandler(pathInfo *openapi3.PathItem){
+	mockHandlers := make([]http.HandlerFunc, 1)
+	for method, operation := range pathInfo.Operations() {
+		var responseContent *openapi3.Content
+		var statusCode int
+		var err error
+
+		for statusCodeString, responseRef := range operation.Responses {
+			statusCode, err = strconv.Atoi(statusCodeString)
+			if err != nil {
+				log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)
+			} else {
+				responseContent = &responseRef.Value.Content
+				if responseContent != nil {
+					//mh, err := NewMockExampleHandler(statusCode, responseContent)
+					//if err != nil {
+					//	log.Errorf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created because '%s'", path, method, err)
+					//}
+					//mockHandlers[0] = mh.ServeHTTP
+					for key, responseMedia := range responseContent
+
+				}
+			}
+		}
+	}
 }
 
 func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*mockHandler, error) {
 	//check the content type and set the appropriate variable on the handler
 	keys := reflect.ValueOf(*content).MapKeys()
-
+	currStatusCode = statusCode
 	if len(keys) > 0 {
 		contentType := keys[0].String()
 		c := content.Get(contentType)

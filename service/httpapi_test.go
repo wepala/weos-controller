@@ -11,7 +11,6 @@ import (
 	"net/http/httputil"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"testing"
 )
@@ -127,18 +126,10 @@ func TestServeHTTP(t *testing.T){
 	handler.ServeHTTP(rw, request)
 
 	response := rw.Result()
-	statusCode := strconv.Itoa(response.StatusCode)
+	//statusCode := strconv.Itoa(response.StatusCode)
 
 	if response == nil{
 		t.Error("Response expected but returned nothing")
-	}
-
-	if request.Header.Get("X-MOCK-STATUS-CODE") == ""{
-		t.Error("Expected X-mock-status-code to have a value but returned nothing")
-	}
-
-	if request.Header.Get("X-MOCK-STATUS-CODE") != statusCode{
-		t.Errorf("Expected response code %s, got %s instead", request.Header.Get("X-MOCK-STATUS-CODE"), statusCode)
 	}
 
 	buf := new(bytes.Buffer)
