@@ -161,7 +161,7 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 		mockHandler.ServeHTTP(rw, request)
 
 		body, _ := ioutil.ReadAll(rw.Result().Body)
-		expectedResponse := loadHttpResponseFixture(filepath.Join("testdata/html/http", "x_mock_status_code.golden.http"), request, t)
+		expectedResponse := loadHttpResponseFixture(filepath.Join("testdata/html/http", "x_mock_multiple_examples.golden.http"), request, t)
 
 		if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
 			t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)

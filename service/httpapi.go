@@ -74,6 +74,15 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 								return
 							}
 						}
+					}else if c.Examples != nil{
+						for name, example := range c.Examples{
+							if r.Header.Get("X-Mock-Example") != ""{
+								if name == r.Header.Get("X-Mock-Example"){
+									rw.Write([]byte(example.Value.Value.(string)))
+									return
+								}
+							}
+						}
 					}
 				}
 			}
