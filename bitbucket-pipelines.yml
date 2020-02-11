@@ -1,4 +1,4 @@
-image: golang:stretch
+image: golang:1.13.4
 pipelines:
   default:
     - step:
