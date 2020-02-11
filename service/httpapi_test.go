@@ -3,6 +3,7 @@ package service_test
 import (
 	"bitbucket.org/wepala/weos-controller/service"
 	"flag"
+	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -116,10 +117,21 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 	request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_status_code.input.http"), t)
 	rw := httptest.NewRecorder()
 
-	mockHandler := service.MockHandler{}
+	loader := openapi3.NewSwaggerLoader()
+	config, err := loader.LoadSwaggerFromFile("testdata/api/x-mock-status-code.yaml")
+	if err != nil {
+		t.Fatalf("error loading %s: %s", "testdata/api/x-mock-status-code.yaml", err.Error())
+	}
+	mockHandler := service.MockHandler{
+		PathInfo: config.Paths.Find("/"),
+	}
 
 	mockHandler.ServeHTTP(rw, request)
 	if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
 		t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
+	}
+
+	if rw.Result().Header.Get("Content-Type") != "text/html" {
+		t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
 	}
 }
