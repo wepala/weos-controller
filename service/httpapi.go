@@ -14,23 +14,27 @@ import (
 	"strings"
 )
 
-type mockHandler struct {
-	statusCode  int
-	contentType string
-	content     string
+type MockHandler struct {
+	statusCode    int
+	contentType   string
+	content       string
 	pathResponses string
-	pathConfig  PathConfig
+	pathConfig    PathConfig
 }
 
-var (
-	currStatusCode int
-)
-
-func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
 	rw.Header().Add("Content-Type", h.contentType)
 	rw.Header().Add("Access-Control-Allow-Origin", "*")
-	rw.WriteHeader(h.statusCode)
+	if r.Header.Get("X-Mock-Status-Code") != ""{
+		mockStatusCode, err := strconv.Atoi(r.Header.Get("X-Mock-Status-Code"))
+		if err != nil{
+			log.Errorf("Error converting string to integer: %s", err.Error())
+		}
+		rw.WriteHeader(mockStatusCode)
+	}else {
+		rw.WriteHeader(h.statusCode)
+	}
 	tmpl, err := template.New("mock").Parse(h.content)
 	if err != nil {
 		log.Errorf("error rendering mock : '%s'", err)
@@ -42,37 +46,9 @@ func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func NewMockHandler(pathInfo *openapi3.PathItem){
-	mockHandlers := make([]http.HandlerFunc, 1)
-	for method, operation := range pathInfo.Operations() {
-		var responseContent *openapi3.Content
-		var statusCode int
-		var err error
-
-		for statusCodeString, responseRef := range operation.Responses {
-			statusCode, err = strconv.Atoi(statusCodeString)
-			if err != nil {
-				log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)
-			} else {
-				responseContent = &responseRef.Value.Content
-				if responseContent != nil {
-					//mh, err := NewMockExampleHandler(statusCode, responseContent)
-					//if err != nil {
-					//	log.Errorf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created because '%s'", path, method, err)
-					//}
-					//mockHandlers[0] = mh.ServeHTTP
-					for key, responseMedia := range responseContent
-
-				}
-			}
-		}
-	}
-}
-
-func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*mockHandler, error) {
+func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*MockHandler, error) {
 	//check the content type and set the appropriate variable on the handler
 	keys := reflect.ValueOf(*content).MapKeys()
-	currStatusCode = statusCode
 	if len(keys) > 0 {
 		contentType := keys[0].String()
 		c := content.Get(contentType)
@@ -81,7 +57,7 @@ func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*mockHand
 			switch x := c.Example.(type) {
 			case string:
 				log.Infof("type: %s", x)
-				return &mockHandler{
+				return &MockHandler{
 					statusCode: statusCode,
 					content:    c.Example.(string),
 				}, nil
@@ -98,7 +74,7 @@ func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*mockHand
 					//example := string(data)[11:len(string(data))-1]
 					log.Debugf("type: %s", exampleString)
 					log.Debugf("content-type: %s", contentType)
-					return &mockHandler{
+					return &MockHandler{
 						statusCode:  statusCode,
 						content:     string(exampleString),
 						contentType: contentType,
@@ -109,7 +85,7 @@ func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*mockHand
 		}
 	}
 
-	return &mockHandler{
+	return &MockHandler{
 		statusCode: statusCode,
 		content:    "This endpoint was not mocked",
 	}, nil

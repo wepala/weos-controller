@@ -2,7 +2,6 @@ package service_test
 
 import (
 	"bitbucket.org/wepala/weos-controller/service"
-	"bytes"
 	"flag"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -11,6 +10,7 @@ import (
 	"net/http/httputil"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -111,32 +111,15 @@ func runHttpServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 	}
 }
 
-func TestServeHTTP(t *testing.T){
-	var handler http.Handler
-	//setup html server
-
-	controllerService, _ := service.NewControllerService("testdata/api/x-mock-status-code.yaml", service.NewPluginLoader())
-	handler = service.NewHTTPServer(controllerService, "static")
-
-	rw := httptest.NewRecorder()
-
-	//send test request
+func TestMockHandler_ServeHTTP(t *testing.T) {
 	log.Debugf("Load input fixture: %s", "x_mock_status_code.input.http")
 	request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_status_code.input.http"), t)
-	handler.ServeHTTP(rw, request)
+	rw := httptest.NewRecorder()
 
-	response := rw.Result()
-	//statusCode := strconv.Itoa(response.StatusCode)
+	mockHandler := service.MockHandler{}
 
-	if response == nil{
-		t.Error("Response expected but returned nothing")
-	}
-
-	buf := new(bytes.Buffer)
-	buf.ReadFrom(response.Body)
-	newStr := buf.Bytes()
-
-	if string(newStr) != "<html>\n  <head>\n      <title>Landing Page</title>\n  </head>\n  <body>\n    This is a landing page\n  </body>\n</html>\n"{
-		t.Errorf("Incorrect example returned, expected %s, but got %s", "<html>\n  <head>\n      <title>Landing Page</title>\n  </head>\n  <body>\n    This is a landing page\n  </body>\n</html>\n", newStr)
+	mockHandler.ServeHTTP(rw, request)
+	if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
+		t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
 	}
 }
