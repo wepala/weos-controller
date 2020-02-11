@@ -133,6 +133,10 @@ func TestServeHTTP(t *testing.T){
 		t.Error("Response expected but returned nothing")
 	}
 
+	if request.Header.Get("X-MOCK-STATUS-CODE") == ""{
+		t.Error("Expected X-mock-status-code to have a value but returned nothing")
+	}
+
 	if request.Header.Get("X-MOCK-STATUS-CODE") != statusCode{
 		t.Errorf("Expected response code %s, got %s instead", request.Header.Get("X-MOCK-STATUS-CODE"), statusCode)
 	}
@@ -141,7 +145,7 @@ func TestServeHTTP(t *testing.T){
 	buf.ReadFrom(response.Body)
 	newStr := buf.Bytes()
 
-	if string(newStr) != "<html>\n  <head>\n      <title>X Mock Example Page</title>\n  </head>\n  <body>\n    This is a mocked page\n  </body>\n</html>\n"{
-		t.Errorf("Incorrect example returned, expected %s, but got %s", "<html>\n  <head>\n      <title>X Mock Example Page</title>\n  </head>\n  <body>\n    This is a mocked page\n  </body>\n</html>\n", newStr)
+	if string(newStr) != "<html>\n  <head>\n      <title>Landing Page</title>\n  </head>\n  <body>\n    This is a landing page\n  </body>\n</html>\n"{
+		t.Errorf("Incorrect example returned, expected %s, but got %s", "<html>\n  <head>\n      <title>Landing Page</title>\n  </head>\n  <body>\n    This is a landing page\n  </body>\n</html>\n", newStr)
 	}
 }

@@ -35,58 +35,53 @@ func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		log.Errorf("error rendering mock : '%v'", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	}
+	return nil
 }
 
-func NewMockExampleHandler(statusCode []int, cont []*openapi3.Content) ([]*mockHandler, error) {
+func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*mockHandler, error) {
 	//check the content type and set the appropriate variable on the handler
-	var mh []*mockHandler
-	for pos, content := range cont {
-		keys := reflect.ValueOf(*content).MapKeys()
+	keys := reflect.ValueOf(*content).MapKeys()
 
-		if len(keys) > 0 {
-			contentType := keys[0].String()
-			c := content.Get(contentType)
-			if c != nil && c.Example != nil {
+	if len(keys) > 0 {
+		contentType := keys[0].String()
+		c := content.Get(contentType)
+		if c != nil && (c.Example != nil || c.Examples != nil) {
 
-				switch x := c.Example.(type) {
-				case string:
-					log.Infof("type: %s", x)
-					mh = append(mh, &mockHandler{
-						statusCode: statusCode[pos],
-						content:    c.Example.(string),
-					})
-					continue
-				default:
-					if c.Extensions["example"] != nil {
-						//found that the Extensions property was a better way to access the raw data
-						example := c.Extensions["example"].(json.RawMessage)
-						exampleString, err := example.MarshalJSON()
-						if err != nil {
-							return nil, err
-						}
-						//trim {"example": from the front and "}" from the end
-
-						//example := string(data)[11:len(string(data))-1]
-						log.Debugf("type: %s", exampleString)
-						log.Debugf("content-type: %s", contentType)
-						mh = append(mh, &mockHandler{
-							statusCode:  statusCode[pos],
-							content:     string(exampleString),
-							contentType: contentType,
-						})
-						continue
+			switch x := c.Example.(type) {
+			case string:
+				log.Infof("type: %s", x)
+				return &mockHandler{
+					statusCode: statusCode,
+					content:    c.Example.(string),
+				}, nil
+			default:
+				if c.Extensions["example"] != nil {
+					//found that the Extensions property was a better way to access the raw data
+					example := c.Extensions["example"].(json.RawMessage)
+					exampleString, err := example.MarshalJSON()
+					if err != nil {
+						return nil, err
 					}
+					//trim {"example": from the front and "}" from the end
+
+					//example := string(data)[11:len(string(data))-1]
+					log.Debugf("type: %s", exampleString)
+					log.Debugf("content-type: %s", contentType)
+					return &mockHandler{
+						statusCode:  statusCode,
+						content:     string(exampleString),
+						contentType: contentType,
+					}, nil
 				}
 			}
-		}
 
-		mh = append(mh, &mockHandler{
-			statusCode: statusCode[pos],
-			content:    "This endpoint was not mocked",
-		})
-		continue
+		}
 	}
-	return mh, nil
+
+	return &mockHandler{
+		statusCode: statusCode,
+		content:    "This endpoint was not mocked",
+	}, nil
 }
 
 func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
