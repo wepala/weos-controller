@@ -7,6 +7,7 @@ import (
 	"github.com/urfave/negroni"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -17,6 +18,22 @@ type MockHandler struct {
 func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
 	rw.Header().Add("Access-Control-Allow-Origin", "*")
+	if r.Header.Get("X-Mock-Status-Code") != ""{
+		mockStatusCode, err := strconv.Atoi(r.Header.Get("X-Mock-Status-Code"))
+		if err != nil{
+			log.Errorf("Error converting string to integer: %s", err.Error())
+		}
+		rw.WriteHeader(mockStatusCode)
+	}
+	//tmpl, err := template.New("mock").Parse(h.content)
+	//if err != nil {
+	//	log.Errorf("error rendering mock : '%s'", err)
+	//	http.Error(rw, err.Error(), http.StatusInternalServerError)
+	//}
+	//if err := tmpl.Execute(rw, h.pathConfig.Data); err != nil {
+	//	log.Errorf("error rendering mock : '%v'", err)
+	//	http.Error(rw, err.Error(), http.StatusInternalServerError)
+	//}
 }
 
 func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
