@@ -134,4 +134,5 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 	if rw.Result().Header.Get("Content-Type") != "text/html" {
 		t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
 	}
+
 }
