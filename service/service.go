@@ -91,21 +91,16 @@ func (s *controllerService) GetHandlers(path string, config *PathConfig, pathInf
 		mockHandlers := make([]http.HandlerFunc, 1)
 		for method, operation := range pathInfo.Operations() {
 			var responseContent *openapi3.Content
-			var statusCode int
 			var err error
 
 			for statusCodeString, responseRef := range operation.Responses {
-				statusCode, err = strconv.Atoi(statusCodeString)
+				_, err = strconv.Atoi(statusCodeString)
 				if err != nil {
 					log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)
 				} else {
 					responseContent = &responseRef.Value.Content
 					if responseContent != nil {
-						mh, err := NewMockExampleHandler(statusCode, responseContent)
-						if err != nil {
-							log.Errorf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created because '%s'", path, method, err)
-						}
-						mockHandlers[0] = mh.ServeHTTP
+
 					}
 				}
 			}
