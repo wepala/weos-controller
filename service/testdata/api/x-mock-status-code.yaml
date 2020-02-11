@@ -76,3 +76,55 @@ paths:
                   value: Hello WorldHello World
               schema:
                 type: string
+  /databases:
+    get:
+      summary: Databases
+      responses:
+        '200':
+          description: About Page
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Database'
+components:
+  schemas:
+    Database:
+      title: Root Type for Database
+      description: WeOS Database
+      type: object
+      properties:
+        id:
+          type: string
+        wern:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        active:
+          type: boolean
+        creatorId:
+          type: string
+        createdDate:
+          format: date-time
+          type: string
+        modifiedDate:
+          format: date-time
+          type: string
+      required:
+        - id
+        - title
+      example:
+        id: 35a54035-753d-4123-bea2-ff3ee25b0eea
+        wern: 'weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea'
+        title: general
+        description: The default database for the account
+        active: true
+        creatorId: d4b7df67-7391-4869-9ba1-0f2952665baf
+        createdDate: '2020-01-22 19:10:25-07'
+        modifiedDate: '2020-01-22 19:10:25-07'
+        links:
+          - rel: self
+            href: /databases/35a54035-753d-4123-bea2-ff3ee25b0eea
+          - rel: tables
+            href: /tables/?databaseId=35a54035-753d-4123-bea2-ff3ee25b0eea

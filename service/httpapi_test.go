@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"bitbucket.org/wepala/weos-controller/service"
+	"encoding/json"
 	"flag"
 	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
@@ -161,7 +162,7 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 		mockHandler.ServeHTTP(rw, request)
 
 		body, _ := ioutil.ReadAll(rw.Result().Body)
-		expectedResponse := loadHttpResponseFixture(filepath.Join("testdata/html/http", "x_mock_status_code.golden.http"), request, t)
+		expectedResponse := loadHttpResponseFixture(filepath.Join("testdata/html/http", "x_mock_multiple_examples.golden.http"), request, t)
 
 		if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
 			t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
@@ -175,6 +176,45 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 		expectedBody, _ := ioutil.ReadAll(expectedResponse.Body)
 		if strings.TrimSpace(string(body)) != strings.TrimSpace(string(expectedBody)) {
 			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+		}
+	})
+
+	t.Run("test example on component", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_component_example.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_component_example.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/about"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
+			t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "application/json" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
+		}
+
+		database := &struct {
+			Id   string `json:"id"`
+			Wern string `json:"wern"`
+		}{}
+		err := json.Unmarshal(body, database)
+		if err != nil {
+			t.Errorf("expected json response")
+		}
+
+		if database.Id != "35a54035-753d-4123-bea2-ff3ee25b0eea" {
+			t.Errorf("expected the id on the response to be %s, got %s", "35a54035-753d-4123-bea2-ff3ee25b0eea", database.Id)
+		}
+
+		if database.Wern != "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea" {
+			t.Errorf("expected the id on the response to be %s, got %s", "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea", database.Wern)
 		}
 	})
 
