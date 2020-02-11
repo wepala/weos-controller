@@ -144,5 +144,4 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 	if strings.TrimSpace(string(body)) != strings.TrimSpace(string(expectedBody)) {
 		t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
 	}
-
 }
