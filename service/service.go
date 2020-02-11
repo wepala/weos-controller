@@ -90,16 +90,17 @@ func (s *controllerService) GetHandlers(path string, config *PathConfig, pathInf
 	if config == nil || len(handlers) == 0 || config.Mock {
 		mockHandlers := make([]http.HandlerFunc, 1)
 		for method, operation := range pathInfo.Operations() {
-			var responseContent *openapi3.Content
-			var statusCode int
-			var err error
+			var responseContent []*openapi3.Content
+			var statusCode []int
+			//var err error
 
 			for statusCodeString, responseRef := range operation.Responses {
-				statusCode, err = strconv.Atoi(statusCodeString)
+				statusNum, err := strconv.Atoi(statusCodeString)
+				statusCode = append(statusCode, statusNum)
 				if err != nil {
 					log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)
 				} else {
-					responseContent = &responseRef.Value.Content
+					responseContent = append(responseContent, &responseRef.Value.Content)
 				}
 			}
 
@@ -108,7 +109,9 @@ func (s *controllerService) GetHandlers(path string, config *PathConfig, pathInf
 				if err != nil {
 					log.Errorf("could not mock the response for the path '%s' for the operation '%s' because the mock handler could not be created because '%s'", path, method, err)
 				}
-				mockHandlers[0] = mh.ServeHTTP
+				for _, mock := range mh {
+					mockHandlers[0] = mock.ServeHTTP
+				}
 			}
 		}
 		return mockHandlers, nil

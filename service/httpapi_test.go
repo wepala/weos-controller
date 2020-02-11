@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"bitbucket.org/wepala/weos-controller/service"
+	"bytes"
 	"flag"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"net/http/httputil"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -107,5 +109,39 @@ func runHttpServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 				t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
 			}
 		})
+	}
+}
+
+func TestServeHTTP(t *testing.T){
+	var handler http.Handler
+	//setup html server
+
+	controllerService, _ := service.NewControllerService("testdata/api/x-mock-status-code.yaml", service.NewPluginLoader())
+	handler = service.NewHTTPServer(controllerService, "static")
+
+	rw := httptest.NewRecorder()
+
+	//send test request
+	log.Debugf("Load input fixture: %s", "x_mock_status_code.input.http")
+	request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_status_code.input.http"), t)
+	handler.ServeHTTP(rw, request)
+
+	response := rw.Result()
+	statusCode := strconv.Itoa(response.StatusCode)
+
+	if response == nil{
+		t.Error("Response expected but returned nothing")
+	}
+
+	if request.Header.Get("X-MOCK-STATUS-CODE") != statusCode{
+		t.Errorf("Expected response code %s, got %s instead", request.Header.Get("X-MOCK-STATUS-CODE"), statusCode)
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(response.Body)
+	newStr := buf.Bytes()
+
+	if string(newStr) != "<html>\n  <head>\n      <title>X Mock Example Page</title>\n  </head>\n  <body>\n    This is a mocked page\n  </body>\n</html>\n"{
+		t.Errorf("Incorrect example returned, expected %s, but got %s", "<html>\n  <head>\n      <title>X Mock Example Page</title>\n  </head>\n  <body>\n    This is a mocked page\n  </body>\n</html>\n", newStr)
 	}
 }
