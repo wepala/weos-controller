@@ -113,35 +113,69 @@ func runHttpServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 }
 
 func TestMockHandler_ServeHTTP(t *testing.T) {
-	log.Debugf("Load input fixture: %s", "x_mock_status_code.input.http")
-	request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_status_code.input.http"), t)
-	rw := httptest.NewRecorder()
-
 	loader := openapi3.NewSwaggerLoader()
 	config, err := loader.LoadSwaggerFromFile("testdata/api/x-mock-status-code.yaml")
+
 	if err != nil {
 		t.Fatalf("error loading %s: %s", "testdata/api/x-mock-status-code.yaml", err.Error())
 	}
-	mockHandler := service.MockHandler{
-		PathInfo: config.Paths.Find("/"),
-	}
 
-	mockHandler.ServeHTTP(rw, request)
+	t.Run("test basic example", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
 
-	body, _ := ioutil.ReadAll(rw.Result().Body)
-	expectedResponse := loadHttpResponseFixture(filepath.Join("testdata/html/http", "x_mock_status_code.golden.http"), request, t)
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
 
-	if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
-		t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
-	}
+		mockHandler.ServeHTTP(rw, request)
 
-	if rw.Result().Header.Get("Content-Type") != "text/html" {
-		t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
-	}
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+		expectedResponse := loadHttpResponseFixture(filepath.Join("testdata/html/http", "x_mock_status_code.golden.http"), request, t)
 
-	//confirm the body
-	expectedBody, _ := ioutil.ReadAll(expectedResponse.Body)
-	if strings.TrimSpace(string(body)) != strings.TrimSpace(string(expectedBody)) {
-		t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
-	}
+		if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
+			t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "text/html" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
+		}
+
+		//confirm the body
+		expectedBody, _ := ioutil.ReadAll(expectedResponse.Body)
+		if strings.TrimSpace(string(body)) != strings.TrimSpace(string(expectedBody)) {
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+		}
+	})
+
+	t.Run("test multiple examples", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_multiple_examples.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_multiple_examples.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/about"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+		expectedResponse := loadHttpResponseFixture(filepath.Join("testdata/html/http", "x_mock_status_code.golden.http"), request, t)
+
+		if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
+			t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "text/html" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
+		}
+
+		//confirm the body
+		expectedBody, _ := ioutil.ReadAll(expectedResponse.Body)
+		if strings.TrimSpace(string(body)) != strings.TrimSpace(string(expectedBody)) {
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+		}
+	})
+
 }

@@ -72,15 +72,7 @@ paths:
                         This is a landing page
                       </body>
                     </html>
-                X-MOCK-EXAMPLE:
-                  value:
-                    <html>
-                      <head>
-                          <title>X Mock Example Page</title>
-                      </head>
-                      <body>
-                        This is a mocked page
-                      </body>
-                    </html>
+                Example2:
+                  value: Hello WorldHello World
               schema:
                 type: string
