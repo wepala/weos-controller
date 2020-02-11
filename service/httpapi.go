@@ -13,15 +13,15 @@ import (
 	"strings"
 )
 
-type mockHandler struct {
-	statusCode  int
-	contentType string
-	content     string
+type MockHandler struct {
+	statusCode    int
+	contentType   string
+	content       string
 	pathResponses string
-	pathConfig  PathConfig
+	pathConfig    PathConfig
 }
 
-func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
 	rw.Header().Add("Content-Type", h.contentType)
 	rw.Header().Add("Access-Control-Allow-Origin", "*")
@@ -35,10 +35,9 @@ func (h *mockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		log.Errorf("error rendering mock : '%v'", err)
 		http.Error(rw, err.Error(), http.StatusInternalServerError)
 	}
-	return nil
 }
 
-func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*mockHandler, error) {
+func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*MockHandler, error) {
 	//check the content type and set the appropriate variable on the handler
 	keys := reflect.ValueOf(*content).MapKeys()
 
@@ -50,7 +49,7 @@ func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*mockHand
 			switch x := c.Example.(type) {
 			case string:
 				log.Infof("type: %s", x)
-				return &mockHandler{
+				return &MockHandler{
 					statusCode: statusCode,
 					content:    c.Example.(string),
 				}, nil
@@ -67,7 +66,7 @@ func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*mockHand
 					//example := string(data)[11:len(string(data))-1]
 					log.Debugf("type: %s", exampleString)
 					log.Debugf("content-type: %s", contentType)
-					return &mockHandler{
+					return &MockHandler{
 						statusCode:  statusCode,
 						content:     string(exampleString),
 						contentType: contentType,
@@ -78,7 +77,7 @@ func NewMockExampleHandler(statusCode int, content *openapi3.Content) (*mockHand
 		}
 	}
 
-	return &mockHandler{
+	return &MockHandler{
 		statusCode: statusCode,
 		content:    "This endpoint was not mocked",
 	}, nil
