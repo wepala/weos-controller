@@ -86,12 +86,22 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 					}
 				}
 				if contentType == "application/json"{
-					body, err := json.Marshal(c.Schema.Value.Example)
-					if err != nil{
-						log.Errorf("Error mashalling json, %q", err.Error())
-						return
+					if c.Schema.Value.Example != nil {
+						body, err := json.Marshal(c.Schema.Value.Example)
+						if err != nil {
+							log.Errorf("Error mashalling json, %q", err.Error())
+							return
+						}
+						rw.Write(body)
+					}else{
+						body, err := json.Marshal(c.Schema.Value.Items.Value.Example)
+						if err != nil {
+							log.Errorf("Error mashalling json, %q", err.Error())
+							return
+						}
+						rw.Write(body)
 					}
-					rw.Write(body)
+
 					return
 				}
 			}
