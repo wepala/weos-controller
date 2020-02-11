@@ -127,12 +127,22 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 	}
 
 	mockHandler.ServeHTTP(rw, request)
+
+	body, _ := ioutil.ReadAll(rw.Result().Body)
+	expectedResponse := loadHttpResponseFixture(filepath.Join("testdata/html/http", "x_mock_status_code.golden.http"), request, t)
+
 	if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
 		t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
 	}
 
 	if rw.Result().Header.Get("Content-Type") != "text/html" {
 		t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
+	}
+
+	//confirm the body
+	expectedBody, _ := ioutil.ReadAll(expectedResponse.Body)
+	if strings.TrimSpace(string(body)) != strings.TrimSpace(string(expectedBody)) {
+		t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
 	}
 
 }
