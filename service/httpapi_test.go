@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"bitbucket.org/wepala/weos-controller/service"
+	"bytes"
 	"flag"
 	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
@@ -133,5 +134,13 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 
 	if rw.Result().Header.Get("Content-Type") != "text/html" {
 		t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
+	}
+
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(rw.Result().Body)
+	newStr := buf.Bytes()
+
+	if !strings.Contains(string(newStr), "Hello") {
+		t.Errorf("wrong output, expected %s but got %s", "<html>\n  <body>\n    Hello\n  </body>\n</html>\n", string(newStr))
 	}
 }
