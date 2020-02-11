@@ -19,28 +19,21 @@ type MockHandler struct {
 
 func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
-	rw.Header().Add("Access-Control-Allow-Origin", "*")
-	rw.Header().Add("Content-Type", "text/html")
-	mockStausCode := r.Header.Get("X-Mock-Status-Code")
-	if mockStausCode != ""{
-		mockStatusCode, err := strconv.Atoi(mockStausCode)
-		if err != nil{
+	mockStatusVal := 200
+	mockStatusCode := r.Header.Get("X-Mock-Status-Code")
+	var err error
+	if mockStatusCode != "" {
+		mockStatusVal, err = strconv.Atoi(mockStatusCode)
+		if err != nil {
 			log.Errorf("Error converting string to integer: %s", err.Error())
 		}
-		rw.WriteHeader(mockStatusCode)
 	}
-
-	for method, operation := range h.PathInfo.Operations() {
+	for _, operation := range h.PathInfo.Operations() {
 		var responseContent *openapi3.Content
-		var err error
 
 		for statusCodeString, responseRef := range operation.Responses {
-			_, err = strconv.Atoi(statusCodeString)
-			if err != nil {
-				log.Debugf("could not mock the response for the path for the operation '%s' because the code statusCode %s could not be converted to an integer", method, statusCodeString)
-			}
 			responseContent = &responseRef.Value.Content
-			if statusCodeString != mockStausCode{
+			if statusCodeString != mockStatusCode{
 				continue
 			}
 
@@ -49,6 +42,9 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			if len(keys) > 0 {
 				contentType := keys[0].String()
 				c := responseContent.Get(contentType)
+				rw.Header().Add("Access-Control-Allow-Origin", "*")
+				rw.Header().Add("Content-Type", contentType)
+				rw.WriteHeader(mockStatusVal)
 				if c != nil && (c.Example != nil || c.Examples != nil) {
 					if c.Example != nil {
 						switch x := c.Example.(type) {
@@ -65,7 +61,6 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 									log.Errorf("Error marshalling json: %s", err.Error())
 									return
 								}
-								//trim {"example": from the front and "}" from the end
 
 								//example := string(data)[11:len(string(data))1]
 								log.Debugf("type: %s", exampleString)
@@ -75,15 +70,29 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 							}
 						}
 					}else if c.Examples != nil{
-						for name, example := range c.Examples{
-							if r.Header.Get("X-Mock-Example") != ""{
+						if r.Header.Get("X-Mock-Example") != ""{
+							for name, example := range c.Examples{
 								if name == r.Header.Get("X-Mock-Example"){
 									rw.Write([]byte(example.Value.Value.(string)))
 									return
 								}
 							}
+						}else{
+							for _, example := range c.Examples {
+								rw.Write([]byte(example.Value.Value.(string)))
+								return
+							}
 						}
 					}
+				}
+				if contentType == "application/json"{
+					body, err := json.Marshal(c.Schema.Value.Example)
+					if err != nil{
+						log.Errorf("Error mashalling json, %q", err.Error())
+						return
+					}
+					rw.Write(body)
+					return
 				}
 			}
 			rw.Write([]byte("This endpoint is not mocked"))

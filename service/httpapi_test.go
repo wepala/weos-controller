@@ -185,7 +185,7 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 		rw := httptest.NewRecorder()
 
 		mockHandler := service.MockHandler{
-			PathInfo: config.Paths.Find("/about"),
+			PathInfo: config.Paths.Find("/databases"),
 		}
 
 		mockHandler.ServeHTTP(rw, request)
@@ -197,16 +197,17 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 		}
 
 		if rw.Result().Header.Get("Content-Type") != "application/json" {
-			t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
+			t.Errorf("expected the Content-Type to be %s, got %s", "application/json", rw.Result().Header.Get("Content-Type"))
 		}
 
 		database := &struct {
 			Id   string `json:"id"`
 			Wern string `json:"wern"`
 		}{}
+
 		err := json.Unmarshal(body, database)
 		if err != nil {
-			t.Errorf("expected json response")
+			t.Errorf("expected json response, %q", err.Error())
 		}
 
 		if database.Id != "35a54035-753d-4123-bea2-ff3ee25b0eea" {
