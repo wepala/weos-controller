@@ -74,12 +74,6 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 								return
 							}
 						}
-					}else if c.Examples != nil{
-						for name, example := range c.Examples{
-							if r.Header.Get("X-mock-example") != ""{
-								log.Debugf("%s: %s", name, example)
-							}
-						}
 					}
 				}
 			}

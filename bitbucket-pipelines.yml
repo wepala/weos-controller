@@ -8,11 +8,7 @@ pipelines:
           - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
           - cd "${PACKAGE_PATH}"
           - go version
-          - make
-          - go run -ldflags "-X main.version=${BITBUCKET_BRANCH} -X main.build=${BITBUCKET_BUILD_NUMBER}" main.go
-          - go build  -v -o weos-controller -ldflags "-X main.version=${BITBUCKET_BRANCH} -X main.build=${BITBUCKET_BUILD_NUMBER}" main.go
-          - chmod u+x weos-controller
-          - chmod o+x weos-controller
+          - go test ./...
   branches:
     master:
       - step:

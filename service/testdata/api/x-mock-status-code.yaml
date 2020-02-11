@@ -26,12 +26,7 @@ paths:
           description: Landing page
           content:
             text/html:
-              example: |
-                <html>
-                  <body>
-                    Hello
-                  </body>
-                </html>
+              example: Hello WorldHello World
               schema:
                 type: string
         '202':
