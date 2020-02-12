@@ -10,18 +10,16 @@ paths:
         '200':
           description: Landing page
           content:
-            text/html:
-              example: |
-                <html>
-                  <head>
-                      <title>Landing Page</title>
-                  </head>
-                  <body>
-                    This is a landing page
-                  </body>
-                </html>
+            application/json:
+              example:
+                id: someid
+                wern: somewern
               schema:
-                type: string
+                $ref: '#/components/schemas/Database'
+              text/html:
+                example: test
+                schema:
+                  type: string
         '201':
           description: Landing page
           content:
