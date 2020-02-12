@@ -93,15 +93,20 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 							return
 						}
 						rw.Write(body)
-					} else {
-						body, err := json.Marshal(c.Schema.Value.Items.Value.Example)
+					} else if c.Schema.Value.Items.Value.Example != nil {
+						arrayLength, err := strconv.Atoi(r.Header.Get("X-Mock-Example-Length"))
+
+						exampleValue := c.Schema.Value.Items.Value.Example
+						exampleArray := make([]interface{}, arrayLength)
+						exampleArray[0] = exampleValue
+						body, err := json.Marshal(exampleArray)
+						//fmt.Println(c.Schema.Value.Type)
 						if err != nil {
 							log.Errorf("Error mashalling json, %q", err.Error())
 							return
 						}
 						rw.Write(body)
 					}
-
 					return
 				}
 			}
