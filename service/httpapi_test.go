@@ -280,7 +280,7 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 
 }
 
-func TestMockHandler_ServeHTTPErros(t *testing.T) {
+func TestMockHandler_ServeHTTPErrors(t *testing.T) {
 	loader := openapi3.NewSwaggerLoader()
 	config, err := loader.LoadSwaggerFromFile("testdata/api/x-mock-status-code.yaml")
 
