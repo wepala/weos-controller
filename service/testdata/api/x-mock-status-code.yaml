@@ -25,10 +25,12 @@ paths:
         '201':
           description: Landing page
           content:
-            text/html:
-              example: Hello WorldHello World
+            application/json:
+              example:
+                id: someid
+                wern: somewern
               schema:
-                type: string
+                $ref: '#/components/schemas/Database'
         '202':
           description: Landing page
           content:
