@@ -126,7 +126,7 @@ func TestControllerService_GetHandlers(t *testing.T) {
 	}
 
 	//use path config to get handlers
-	handlers, _ := s.GetHandlers("", pathConfig, nil)
+	handlers, _ := s.GetHandlers(pathConfig, nil)
 	if len(handlers) != 2 {
 		t.Errorf("expected %d handlers to be loaded: got %d [%s]", 2, len(handlers), strings.Join(handlerNames, ","))
 	}
@@ -221,7 +221,7 @@ func TestControllerService_HandlerPriority(t *testing.T) {
 	}
 
 	//use path config to get handlers
-	handlers, _ := s.GetHandlers("/multiple-handlers", pathConfig, s.GetConfig().Paths["/"])
+	handlers, _ := s.GetHandlers(pathConfig, &service.MockHandler{PathInfo: s.GetConfig().Paths["/"]})
 	if len(handlers) != 3 {
 		t.Errorf("expected %d handlers to be loaded: got %d [%s]", 3, len(handlers), strings.Join(handlerNames, ","))
 	}
@@ -311,7 +311,7 @@ func TestControllerService_GlobalHandlers(t *testing.T) {
 	}
 
 	//use path config to get handlers
-	handlers, _ := s.GetHandlers("/", pathConfig, s.GetConfig().Paths["/"])
+	handlers, _ := s.GetHandlers(pathConfig, &service.MockHandler{PathInfo: s.GetConfig().Paths["/"]})
 	if len(handlers) != 1 {
 		t.Errorf("expected %d handlers to be loaded: got %d [%s]", 1, len(handlers), strings.Join(handlerNames, ","))
 	}
@@ -343,7 +343,7 @@ func Test_WEOS_168(t *testing.T) {
 		}
 
 		//use path config to get handlers
-		handlers, _ := s.GetHandlers("/", pathConfig, s.GetConfig().Paths["/"])
+		handlers, _ := s.GetHandlers(pathConfig, &service.MockHandler{PathInfo: s.GetConfig().Paths["/"]})
 
 		if len(handlers) != 1 {
 			t.Errorf("expected %d handlers to be loaded, got %d", 1, len(handlers))
@@ -396,7 +396,7 @@ func Test_WEOS_168(t *testing.T) {
 		}
 
 		//use path config to get handlers
-		handlers, _ := s.GetHandlers("/about", pathConfig, s.GetConfig().Paths["/about"])
+		handlers, _ := s.GetHandlers(pathConfig, &service.MockHandler{PathInfo: s.GetConfig().Paths["/about"]})
 
 		if len(handlers) != 1 {
 			t.Errorf("expected %d handlers to be loaded, got %d", 1, len(handlers))

@@ -205,6 +205,10 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 			Wern string `json:"wern"`
 		}{}
 
+		if rw.Result().Header.Get("Content-Type") != "application/json" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "application/json", rw.Result().Header.Get("Content-Type"))
+		}
+
 		err := json.Unmarshal(body, database)
 		if err != nil {
 			t.Errorf("expected json response, %q", err.Error())
@@ -216,6 +220,50 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 
 		if database.Wern != "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea" {
 			t.Errorf("expected the id on the response to be %s, got %s", "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea", database.Wern)
+		}
+	})
+
+	t.Run("test example on component when response is an array", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_array_component_example.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_array_component_example.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/databases"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
+			t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "application/json" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "application/json", rw.Result().Header.Get("Content-Type"))
+		}
+
+		var database []*struct {
+			Id   string `json:"id"`
+			Wern string `json:"wern"`
+		}
+
+		err := json.Unmarshal(body, &database)
+		if err != nil {
+			t.Errorf("expected json response, %q", err.Error())
+		}
+
+		if strconv.Itoa(len(database)) != request.Header.Get("X-Mock-Example-Length") {
+			t.Errorf("expected the length of the result to be %s, got %d", request.Header.Get("X-Mock-Example-Length"), len(database))
+		}
+
+		if database[5].Id != "35a54035-753d-4123-bea2-ff3ee25b0eea" {
+			t.Errorf("expected the id on the response to be %s, got %s", "35a54035-753d-4123-bea2-ff3ee25b0eea", database[0].Id)
+		}
+
+		if database[5].Wern != "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea" {
+			t.Errorf("expected the id on the response to be %s, got %s", "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea", database[0].Wern)
 		}
 	})
 

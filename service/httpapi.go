@@ -33,7 +33,7 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 
 		for statusCodeString, responseRef := range operation.Responses {
 			responseContent = &responseRef.Value.Content
-			if statusCodeString != mockStatusCode{
+			if statusCodeString != mockStatusCode {
 				continue
 			}
 
@@ -69,15 +69,15 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 								return
 							}
 						}
-					}else if c.Examples != nil{
-						if r.Header.Get("X-Mock-Example") != ""{
-							for name, example := range c.Examples{
-								if name == r.Header.Get("X-Mock-Example"){
+					} else if c.Examples != nil {
+						if r.Header.Get("X-Mock-Example") != "" {
+							for name, example := range c.Examples {
+								if name == r.Header.Get("X-Mock-Example") {
 									rw.Write([]byte(example.Value.Value.(string)))
 									return
 								}
 							}
-						}else{
+						} else {
 							for _, example := range c.Examples {
 								rw.Write([]byte(example.Value.Value.(string)))
 								return
@@ -85,7 +85,7 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 						}
 					}
 				}
-				if contentType == "application/json"{
+				if contentType == "application/json" {
 					if c.Schema.Value.Example != nil {
 						body, err := json.Marshal(c.Schema.Value.Example)
 						if err != nil {
@@ -93,7 +93,7 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 							return
 						}
 						rw.Write(body)
-					}else{
+					} else {
 						body, err := json.Marshal(c.Schema.Value.Items.Value.Example)
 						if err != nil {
 							log.Errorf("Error mashalling json, %q", err.Error())
@@ -142,7 +142,7 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 				if err != nil {
 					log.Errorf("error encountered getting the path config for the route '%s', got: '%s'", path, err.Error())
 				}
-				handlers, err := service.GetHandlers(path, pathConfig, pathObject)
+				handlers, err := service.GetHandlers(pathConfig, &MockHandler{PathInfo: pathObject})
 				if err != nil {
 					log.Errorf("error encountered retrieving the handlers for the route '%s', got: '%s'", path, err.Error())
 				}

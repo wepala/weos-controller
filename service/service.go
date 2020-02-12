@@ -8,7 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"sort"
-	"strconv"
 	"strings"
 )
 
@@ -71,7 +70,7 @@ func (s *controllerService) GetConfig() *openapi3.Swagger {
 	return s.config
 }
 
-func (s *controllerService) GetHandlers(path string, config *PathConfig, pathInfo *openapi3.PathItem) ([]http.HandlerFunc, error) {
+func (s *controllerService) GetHandlers(config *PathConfig, mockHandler http.Handler) ([]http.HandlerFunc, error) {
 	globalHandlers, err := s.GetGlobalMiddlewareConfig()
 	var middlewareConfig []*MiddlewareConfig
 
@@ -88,24 +87,7 @@ func (s *controllerService) GetHandlers(path string, config *PathConfig, pathInf
 
 	//WEOS-168 if there are no handlers or the config has mock set to true return mock handlers
 	if config == nil || len(handlers) == 0 || config.Mock {
-		mockHandlers := make([]http.HandlerFunc, 1)
-		for method, operation := range pathInfo.Operations() {
-			var responseContent *openapi3.Content
-			var err error
-
-			for statusCodeString, responseRef := range operation.Responses {
-				_, err = strconv.Atoi(statusCodeString)
-				if err != nil {
-					log.Debugf("could not mock the response for the path '%s' for the operation '%s' because the code statusCode %s could not be converted to an integer", path, method, statusCodeString)
-				} else {
-					responseContent = &responseRef.Value.Content
-					if responseContent != nil {
-
-					}
-				}
-			}
-		}
-		return mockHandlers, nil
+		return []http.HandlerFunc{mockHandler.ServeHTTP}, nil
 	} else { // otherwise let's load the plugins
 		sort.Sort(NewMiddlewareConfigSorter(middlewareConfig))
 		for key, mc := range middlewareConfig {
@@ -137,7 +119,7 @@ var api openapi3.Swagger
 type ServiceInterface interface {
 	GetPathConfig(path string, operation string) (*PathConfig, error)
 	GetConfig() *openapi3.Swagger
-	GetHandlers(path string, config *PathConfig, pathInfo *openapi3.PathItem) ([]http.HandlerFunc, error)
+	GetHandlers(config *PathConfig, mockHandler http.Handler) ([]http.HandlerFunc, error)
 	GetGlobalMiddlewareConfig() ([]*MiddlewareConfig, error)
 }
 
