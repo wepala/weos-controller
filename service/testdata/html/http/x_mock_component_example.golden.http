@@ -1,6 +1,6 @@
 HTTP/1.1 200 OK
 Connection: close
-Access-Control-Allow-Origin: *
+Access-Control-Allow-Origin: 
 Content-Type: application/json
 
 {"active":true,"createdDate":"2020-01-22 19:10:25-07","creatorId":"d4b7df67-7391-4869-9ba1-0f2952665baf","description":"The default database for the account","id":"35a54035-753d-4123-bea2-ff3ee25b0eea","links":[{"href":"/databases/35a54035-753d-4123-bea2-ff3ee25b0eea","rel":"self"},{"href":"/tables/?databaseId=35a54035-753d-4123-bea2-ff3ee25b0eea","rel":"tables"}],"modifiedDate":"2020-01-22 19:10:25-07","title":"general","wern":"weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea"}

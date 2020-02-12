@@ -19,32 +19,71 @@ type MockHandler struct {
 
 func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
-	mockStatusVal := 200
+	var mockStatusVal int
+	var mockExampleLengthVal int
+
+	showStatusCodeError := false
+	showExampleError := false
+	showContentType := false
+
 	mockStatusCode := r.Header.Get("X-Mock-Status-Code")
+	mockContentType := r.Header.Get("X-Mock-Content-Type")
+	mockExample := r.Header.Get("X-Mock-Example")
+	mockExampleLength := r.Header.Get("X-Mock-Example-Length")
+
 	var err error
+
 	if mockStatusCode != "" {
+		showStatusCodeError = true
 		mockStatusVal, err = strconv.Atoi(mockStatusCode)
 		if err != nil {
 			log.Errorf("Error converting string to integer: %s", err.Error())
 		}
 	}
+
+	if mockExampleLength != "" {
+		mockExampleLengthVal, err = strconv.Atoi(mockExampleLength)
+		if err != nil {
+			log.Errorf("Error converting string to integer: %s", err.Error())
+		}
+	}
+
+	if mockContentType != "" {
+		showContentType = true
+	}
+
+	if mockExample != "" {
+		showExampleError = true
+	}
+
 	for _, operation := range h.PathInfo.Operations() {
 		var responseContent *openapi3.Content
 
 		for statusCodeString, responseRef := range operation.Responses {
 			responseContent = &responseRef.Value.Content
-			if statusCodeString != mockStatusCode {
-				continue
+			if showStatusCodeError {
+				if statusCodeString != mockStatusCode {
+					continue
+				}
 			}
-
 			keys := reflect.ValueOf(*responseContent).MapKeys()
-
 			if len(keys) > 0 {
 				contentType := keys[0].String()
-				c := responseContent.Get(contentType)
-				rw.Header().Add("Access-Control-Allow-Origin", h.PathInfo.Parameters.GetByInAndName("header", "Options"))
-				rw.Header().Add("Content-Type", contentType)
-				rw.WriteHeader(mockStatusVal)
+				var c *openapi3.MediaType
+				rw.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Options"))
+				if showContentType {
+					rw.Header().Add("Content-Type", mockContentType)
+					c = responseContent.Get(mockContentType)
+				}else{
+					rw.Header().Add("Content-Type", contentType)
+					c = responseContent.Get(contentType)
+				}
+				if showStatusCodeError {
+					rw.WriteHeader(mockStatusVal)
+				}else{
+					rw.WriteHeader(200)
+				}
+
 				if c != nil && (c.Example != nil || c.Examples != nil) {
 					if c.Example != nil {
 						switch x := c.Example.(type) {
@@ -70,9 +109,9 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 							}
 						}
 					} else if c.Examples != nil {
-						if r.Header.Get("X-Mock-Example") != "" {
+						if showExampleError {
 							for name, example := range c.Examples {
-								if name == r.Header.Get("X-Mock-Example") {
+								if name == mockExample {
 									rw.Write([]byte(example.Value.Value.(string)))
 									return
 								}
@@ -94,7 +133,7 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 						}
 						rw.Write(body)
 					} else if c.Schema.Value.Items.Value.Example != nil {
-						arrayLength, err := strconv.Atoi(r.Header.Get("X-Mock-Example-Length"))
+						arrayLength := mockExampleLengthVal
 
 						exampleValue := c.Schema.Value.Items.Value.Example
 						exampleArray := make([]interface{}, arrayLength)
@@ -110,7 +149,17 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
-			rw.Write([]byte("This endpoint is not mocked"))
+
+		}
+		rw.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Options"))
+		rw.Header().Add("Content-Type", "text/plain")
+		if showExampleError{
+			rw.WriteHeader(mockStatusVal)
+			rw.Write([]byte("There is no mocked response with example named " + mockExample))
+			return
+		}else if showStatusCodeError{
+			rw.WriteHeader(200)
+			rw.Write([]byte("There is no mocked response for status code " + mockStatusCode))
 			return
 		}
 	}

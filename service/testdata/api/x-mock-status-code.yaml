@@ -16,10 +16,10 @@ paths:
                 wern: somewern
               schema:
                 $ref: '#/components/schemas/Database'
-              text/html:
-                example: test
-                schema:
-                  type: string
+            text/html:
+              example: test
+              schema:
+                type: string
         '201':
           description: Landing page
           content:

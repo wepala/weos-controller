@@ -195,8 +195,8 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(rw.Result().Body)
 
-		if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
-			t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
+		if strconv.Itoa(rw.Result().StatusCode) != "200" {
+			t.Errorf("expected the response code to be %s, got %d", "200", rw.Result().StatusCode) //changed as there was no status code defined in input file
 		}
 
 		if rw.Result().Header.Get("Content-Type") != "text/html" {
@@ -375,8 +375,8 @@ func TestMockHandler_ServeHTTPErrors(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(rw.Result().Body)
 
-		if rw.Result().Header.Get("Content-Type") != "text/plain" {
-			t.Errorf("expected the Content-Type to be %s, got %s", "text/plain", rw.Result().Header.Get("Content-Type"))
+		if rw.Result().Header.Get("Content-Type") != "text/html" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
 		}
 
 		//confirm the body
