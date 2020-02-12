@@ -261,10 +261,6 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 			Wern string `json:"wern"`
 		}{}
 
-		if rw.Result().Header.Get("Content-Type") != "application/json" {
-			t.Errorf("expected the Content-Type to be %s, got %s", "application/json", rw.Result().Header.Get("Content-Type"))
-		}
-
 		err := json.Unmarshal(body, database)
 		if err != nil {
 			t.Errorf("expected json response, %q", err.Error())

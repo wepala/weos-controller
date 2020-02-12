@@ -70,7 +70,8 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			if len(keys) > 0 {
 				contentType := keys[0].String()
 				var c *openapi3.MediaType
-				rw.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Options"))
+				rw.Header().Add("Access-Control-Allow-Origin", "*")
+				rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
 				if showContentType {
 					rw.Header().Add("Content-Type", mockContentType)
 					c = responseContent.Get(mockContentType)
@@ -102,8 +103,8 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 								}
 
 								//example := string(data)[11:len(string(data))1]
-								log.Debugf("type: %s", exampleString)
-								log.Debugf("contenttype: %s", contentType)
+								log.Infof("type: %s", exampleString)
+								log.Infof("contenttype: %s", contentType)
 								rw.Write(exampleString)
 								return
 							}
@@ -151,7 +152,8 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			}
 
 		}
-		rw.Header().Add("Access-Control-Allow-Origin", r.Header.Get("Options"))
+		//rw.Header().Add("Access-Control-Allow-Origin", "*")
+		//rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
 		rw.Header().Add("Content-Type", "text/plain")
 		if showExampleError{
 			rw.WriteHeader(mockStatusVal)
