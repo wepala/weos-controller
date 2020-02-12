@@ -279,3 +279,41 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 	})
 
 }
+
+func TestMockHandler_ServeHTTPErros(t *testing.T) {
+	loader := openapi3.NewSwaggerLoader()
+	config, err := loader.LoadSwaggerFromFile("testdata/api/x-mock-status-code.yaml")
+
+	if err != nil {
+		t.Fatalf("error loading %s: %s", "testdata/api/x-mock-status-code.yaml", err.Error())
+	}
+
+	t.Run("test undefined status code ", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_missing_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_missing_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if strconv.Itoa(rw.Result().StatusCode) == request.Header.Get("X-Mock-Status-Code") {
+			t.Errorf("expected the response code to be %s, got %d", "200", rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "text/plain" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "text/plain", rw.Result().Header.Get("Content-Type"))
+		}
+
+		//confirm the body
+		expectedBody := "This endpoint is not mocked"
+		if strings.TrimSpace(string(body)) != strings.TrimSpace(expectedBody) {
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+		}
+
+	})
+}
