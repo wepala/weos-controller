@@ -18,7 +18,7 @@ import (
 )
 
 //go:generate moq -out testing_mocks_test.go -pkg service_test . ServiceInterface
-
+/*
 var mockServerTests = []*HTTPTest{
 	{
 		name:        "about_page_OPTION",
@@ -40,13 +40,33 @@ var mockServerTests = []*HTTPTest{
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/apollo-api.yaml",
 	},
-}
+}*/
 
 var httpServerTests = []*HTTPTest{
 	{
 		name:        "about_page_200",
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/basic-site-api." + runtime.GOOS + ".yml",
+	},
+	{
+		name:		 "x_mock_status_code",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/x-mock-status-code.yaml",
+	},
+	{
+		name:		 "x_mock_multiple_examples",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/x-mock-status-code.yaml",
+	},
+	{
+		name:		 "x_mock_component_example",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/x-mock-status-code.yaml",
+	},
+	{
+		name:		 "x_mock_array_component_example",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/x-mock-status-code.yaml",
 	},
 }
 

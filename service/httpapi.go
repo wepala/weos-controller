@@ -42,7 +42,7 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			if len(keys) > 0 {
 				contentType := keys[0].String()
 				c := responseContent.Get(contentType)
-				rw.Header().Add("Access-Control-Allow-Origin", "*")
+				rw.Header().Add("Access-Control-Allow-Origin", h.PathInfo.Parameters.GetByInAndName("header", "Options"))
 				rw.Header().Add("Content-Type", contentType)
 				rw.WriteHeader(mockStatusVal)
 				if c != nil && (c.Example != nil || c.Examples != nil) {

@@ -1,6 +1,6 @@
-HTTP/1.1 200 OK
+HTTP/1.1 201 Created
 Connection: close
 Access-Control-Allow-Origin: *
-Access-Control-Allow-Methods: GET, OPTIONS
+Content-Type: application/json
 
-Hello WorldHello World
+{"id":"someid","wern":"somewern"}
