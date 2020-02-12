@@ -93,6 +93,20 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Database'
+    options:
+      summary: This is called automically by the browser to do a CORS check
+      responses:
+        '200':
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: "*"
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+                example: "Authorization, Content-Type"
+
 components:
   schemas:
     Database:

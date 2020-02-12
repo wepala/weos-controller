@@ -323,6 +323,42 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 		}
 	})
 
+	t.Run("test that CORs headers are NOT automatically set", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		if rw.Result().Header.Get("Access-Control-Allow-Origin") != "" {
+			t.Error("no response headers was expected")
+		}
+	})
+
+	t.Run("test defined headers are returned in response", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_header_example.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_header_example.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		if rw.Result().Header.Get("Access-Control-Allow-Origin") != "*" {
+			t.Errorf("expected header Access-Control-Allow-Origin to be %s, got %s", "*", rw.Result().Header.Get("Access-Control-Allow-Origin"))
+		}
+
+		if rw.Result().Header.Get("Access-Control-Allow-Headers") != "Authorization, Content-Type" {
+			t.Errorf("expected header Access-Control-Allow-Headers to be %s, got %s", "Authorization, Content-Type", rw.Result().Header.Get("Access-Control-Allow-Headers"))
+		}
+	})
+
 }
 
 func TestMockHandler_ServeHTTPErrors(t *testing.T) {
