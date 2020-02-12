@@ -269,11 +269,11 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 			t.Errorf("expected the length of the result to be %s, got %d", request.Header.Get("X-Mock-Example-Length"), len(database))
 		}
 
-		if database[5].Id != "35a54035-753d-4123-bea2-ff3ee25b0eea" {
+		if database[0].Id != "35a54035-753d-4123-bea2-ff3ee25b0eea" {
 			t.Errorf("expected the id on the response to be %s, got %s", "35a54035-753d-4123-bea2-ff3ee25b0eea", database[0].Id)
 		}
 
-		if database[5].Wern != "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea" {
+		if database[0].Wern != "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea" {
 			t.Errorf("expected the id on the response to be %s, got %s", "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea", database[0].Wern)
 		}
 	})
