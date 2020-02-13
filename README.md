@@ -82,6 +82,7 @@ There are a few options you can use when making a mock request
 1. `X-Mock-Status-Code` - Use this to specify the response code you'd like to receive (this is if the path has multiple responses defined)
 1. `X-Mock-Example` - Use this to specify which example should be used (this is when the `examples` option is used on the response)
 1. `X-Mock-Example-Length` - Use this to specify the amount of items to return (this is useful when the response is an array)
+1. `X-Mock-Content-Type` - Use this to specify the content type desired. (This is required if there are multiple content types defined)
 
 ### Contribution guidelines ###
 

@@ -507,10 +507,6 @@ func TestMockHandler_ServeHTTPErrors(t *testing.T) {
 
 		body, _ := ioutil.ReadAll(rw.Result().Body)
 
-		if rw.Result().Header.Get("Content-Type") != "text/html" {
-			t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
-		}
-
 		//confirm the body
 		expectedBody := "There are multiple examples defined. Please specify one using the X-Mock-Example header"
 		if strings.TrimSpace(string(body)) != strings.TrimSpace(expectedBody) {
@@ -518,4 +514,26 @@ func TestMockHandler_ServeHTTPErrors(t *testing.T) {
 		}
 
 	})
+
+	t.Run("test multiple content types defined none specified", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_no_content_type.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_content_type.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		//confirm the body
+		expectedBody := "There are multiple content types defined. Please specify one using the X-Mock-Content-Type header"
+		if strings.TrimSpace(string(body)) != strings.TrimSpace(expectedBody) {
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+		}
+
+	})
+
 }
