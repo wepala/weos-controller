@@ -258,8 +258,8 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 					rw.Header().Add("Access-Control-Allow-Origin", responseRef.Value.Headers["Access-Control-Allow-Origin"].Value.Schema.Value.Example.(string))
 					rw.Header().Add("Access-Control-Allow-Headers", responseRef.Value.Headers["Access-Control-Allow-Origin"].Value.Schema.Value.Example.(string))
 				}else{
-					rw.Header().Add("Access-Control-Allow-Origin", "")
-					rw.Header().Add("Access-Control-Allow-Headers", "")
+					rw.Header().Add("Access-Control-Allow-Origin", "*")
+					rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
 				}
 
 				if showContentType {
