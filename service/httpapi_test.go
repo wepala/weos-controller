@@ -50,22 +50,22 @@ var httpServerTests = []*HTTPTest{
 		apiFixture:  "testdata/api/basic-site-api." + runtime.GOOS + ".yml",
 	},
 	{
-		name:		 "x_mock_status_code",
+		name:        "x_mock_status_code",
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/x-mock-status-code.yaml",
 	},
 	{
-		name:		 "x_mock_multiple_examples",
+		name:        "x_mock_multiple_examples",
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/x-mock-status-code.yaml",
 	},
 	{
-		name:		 "x_mock_component_example",
+		name:        "x_mock_component_example",
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/x-mock-status-code.yaml",
 	},
 	{
-		name:		 "x_mock_array_component_example",
+		name:        "x_mock_array_component_example",
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/x-mock-status-code.yaml",
 	},
@@ -352,6 +352,46 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 
 		if rw.Result().Header.Get("Access-Control-Allow-Headers") != "Authorization, Content-Type" {
 			t.Errorf("expected header Access-Control-Allow-Headers to be %s, got %s", "Authorization, Content-Type", rw.Result().Header.Get("Access-Control-Allow-Headers"))
+		}
+	})
+
+	t.Run("test no status code hits default", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if rw.Result().StatusCode != 200 {
+			t.Errorf("expected the response code to be %d, got %d", 200, rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "application/json" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "application/json", rw.Result().Header.Get("Content-Type"))
+		}
+
+		database := &struct {
+			Id   string `json:"id"`
+			Wern string `json:"wern"`
+		}{}
+
+		err := json.Unmarshal(body, database)
+		if err != nil {
+			t.Errorf("expected json response, %q", err.Error())
+		}
+
+		if database.Id != "default" {
+			t.Errorf("expected the id on the response to be %s, got %s", "someid", database.Id)
+		}
+
+		if database.Wern != "default" {
+			t.Errorf("expected the id on the response to be %s, got %s", "somewern", database.Wern)
 		}
 	})
 

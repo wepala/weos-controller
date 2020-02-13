@@ -93,6 +93,15 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Database'
+        default:
+          description: About Page
+          content:
+            application/json:
+              example:
+                id: default
+                wern: default
+              schema:
+                $ref: '#/components/schemas/Database'
     options:
       summary: This is called automically by the browser to do a CORS check
       responses:
