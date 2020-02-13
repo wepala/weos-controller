@@ -200,10 +200,8 @@ func(h *MockHandler) getMockResponses (responseContent *openapi3.Content, rw htt
 								}
 							}
 						} else {
-							for _, example := range c.Examples {
-								rw.Write([]byte(example.Value.Value.(string)))
-								return true
-							}
+							rw.Write([]byte("There are multiple examples defined. Please specify one using the X-Mock-Example header"))
+							return true
 						}
 					}
 				}
