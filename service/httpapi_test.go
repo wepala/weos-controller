@@ -386,11 +386,11 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 		}
 
 		if database.Id != "default" {
-			t.Errorf("expected the id on the response to be %s, got %s", "someid", database.Id)
+			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Id)
 		}
 
 		if database.Wern != "default" {
-			t.Errorf("expected the id on the response to be %s, got %s", "somewern", database.Wern)
+			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Wern)
 		}
 	})
 
