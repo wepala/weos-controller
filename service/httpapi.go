@@ -59,99 +59,113 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	for _, operation := range h.PathInfo.Operations() {
 		var responseContent *openapi3.Content
 
+
 		for statusCodeString, responseRef := range operation.Responses {
 			responseContent = &responseRef.Value.Content
-			if showStatusCodeError {
-				if statusCodeString != mockStatusCode {
-					continue
-				}
-			}
-			keys := reflect.ValueOf(*responseContent).MapKeys()
-			if len(keys) > 0 {
-				contentType := keys[0].String()
-				var c *openapi3.MediaType
-				rw.Header().Add("Access-Control-Allow-Origin", "*")
-				rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
-				if showContentType {
-					rw.Header().Add("Content-Type", mockContentType)
-					c = responseContent.Get(mockContentType)
-				}else{
-					rw.Header().Add("Content-Type", contentType)
-					c = responseContent.Get(contentType)
-				}
-				if showStatusCodeError {
-					rw.WriteHeader(mockStatusVal)
-				}else{
-					rw.WriteHeader(200)
-				}
-
-				if c != nil && (c.Example != nil || c.Examples != nil) {
-					if c.Example != nil {
-						switch x := c.Example.(type) {
-						case string:
-							log.Infof("type: %s", x)
-							rw.Write([]byte(c.Example.(string)))
-							return
-						default:
-							if c.Extensions["example"] != nil {
-								//found that the Extensions property was a better way to access the raw data
-								example := c.Extensions["example"].(json.RawMessage)
-								exampleString, err := example.MarshalJSON()
-								if err != nil {
-									log.Errorf("Error marshalling json: %s", err.Error())
-									return
+			if (statusCodeString == mockStatusCode && showStatusCodeError) || (!showStatusCodeError){
+				keys := reflect.ValueOf(*responseContent).MapKeys()
+				if len(keys) > 0 {
+					for _, key := range keys {
+						contentType := key.String()
+						if (showContentType && contentType == mockContentType) || (!showContentType) {
+							var c *openapi3.MediaType
+							if h.PathInfo.GetOperation("OPTIONS") != nil {
+								if h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal) != nil {
+									rw.Header().Add("Access-Control-Allow-Origin", h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal).Value.Headers["Access-Control-Allow-Origin"].Value.Schema.Value.Example.(string))
+									rw.Header().Add("Access-Control-Allow-Headers", h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal).Value.Headers["Access-Control-Allow-Headers"].Value.Schema.Value.Example.(string))
+								} else {
+									rw.Header().Add("Access-Control-Allow-Origin", "*")
+									rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
 								}
-
-								//example := string(data)[11:len(string(data))1]
-								log.Infof("type: %s", exampleString)
-								log.Infof("contenttype: %s", contentType)
-								rw.Write(exampleString)
-								return
+							} else {
+								rw.Header().Add("Access-Control-Allow-Origin", "")
+								rw.Header().Add("Access-Control-Allow-Headers", "")
 							}
-						}
-					} else if c.Examples != nil {
-						if showExampleError {
-							for name, example := range c.Examples {
-								if name == mockExample {
-									rw.Write([]byte(example.Value.Value.(string)))
-									return
+
+							if showContentType {
+								rw.Header().Add("Content-Type", mockContentType)
+								c = responseContent.Get(mockContentType)
+							} else {
+								rw.Header().Add("Content-Type", contentType)
+								c = responseContent.Get(contentType)
+							}
+
+							if showStatusCodeError {
+								rw.WriteHeader(mockStatusVal)
+							} else {
+								rw.WriteHeader(200)
+							}
+
+							if c != nil && (c.Example != nil || c.Examples != nil) {
+								if c.Example != nil {
+									switch x := c.Example.(type) {
+									case string:
+										log.Infof("type: %s", x)
+										rw.Write([]byte(c.Example.(string)))
+										return
+									default:
+										if c.Extensions["example"] != nil {
+											//found that the Extensions property was a better way to access the raw data
+											example := c.Extensions["example"].(json.RawMessage)
+											exampleString, err := example.MarshalJSON()
+											if err != nil {
+												log.Errorf("Error marshalling json: %s", err.Error())
+												return
+											}
+
+											//example := string(data)[11:len(string(data))1]
+											log.Infof("type: %s", exampleString)
+											log.Infof("contenttype: %s", contentType)
+											rw.Write(exampleString)
+											return
+										}
+									}
+								} else if c.Examples != nil {
+									if showExampleError {
+										for name, example := range c.Examples {
+											if name == mockExample {
+												rw.Write([]byte(example.Value.Value.(string)))
+												return
+											}
+										}
+									} else {
+										for _, example := range c.Examples {
+											rw.Write([]byte(example.Value.Value.(string)))
+											return
+										}
+									}
 								}
 							}
-						} else {
-							for _, example := range c.Examples {
-								rw.Write([]byte(example.Value.Value.(string)))
+							if contentType == "application/json" {
+								if c.Schema.Value.Example != nil {
+									body, err := json.Marshal(c.Schema.Value.Example)
+									if err != nil {
+										log.Errorf("Error mashalling json, %q", err.Error())
+										return
+									}
+									rw.Write(body)
+								} else if c.Schema.Value.Items.Value.Example != nil {
+									arrayLength := mockExampleLengthVal
+
+									exampleValue := c.Schema.Value.Items.Value.Example
+									exampleArray := make([]interface{}, arrayLength)
+									exampleArray[0] = exampleValue
+									body, err := json.Marshal(exampleArray)
+									//fmt.Println(c.Schema.Value.Type)
+									if err != nil {
+										log.Errorf("Error mashalling json, %q", err.Error())
+										return
+									}
+									rw.Write(body)
+								}
 								return
 							}
 						}
 					}
 				}
-				if contentType == "application/json" {
-					if c.Schema.Value.Example != nil {
-						body, err := json.Marshal(c.Schema.Value.Example)
-						if err != nil {
-							log.Errorf("Error mashalling json, %q", err.Error())
-							return
-						}
-						rw.Write(body)
-					} else if c.Schema.Value.Items.Value.Example != nil {
-						arrayLength := mockExampleLengthVal
-
-						exampleValue := c.Schema.Value.Items.Value.Example
-						exampleArray := make([]interface{}, arrayLength)
-						exampleArray[0] = exampleValue
-						body, err := json.Marshal(exampleArray)
-						//fmt.Println(c.Schema.Value.Type)
-						if err != nil {
-							log.Errorf("Error mashalling json, %q", err.Error())
-							return
-						}
-						rw.Write(body)
-					}
-					return
-				}
 			}
-
 		}
+
 		//rw.Header().Add("Access-Control-Allow-Origin", "*")
 		//rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
 		rw.Header().Add("Content-Type", "text/plain")
