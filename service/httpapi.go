@@ -20,6 +20,84 @@ type MockHandler struct {
 func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
 	var mockStatusVal int
+	ok := false
+	showStatusCodeError := false
+	showExampleError := false
+
+	mockStatusCode := r.Header.Get("X-Mock-Status-Code")
+	mockExample := r.Header.Get("X-Mock-Example")
+
+	var err error
+
+	if mockStatusCode != "" {
+		showStatusCodeError = true
+		mockStatusVal, err = strconv.Atoi(mockStatusCode)
+		if err != nil {
+			log.Errorf("Error converting string to integer: %s", err.Error())
+		}
+	}
+
+	if mockExample != "" {
+		showExampleError = true
+	}
+
+	for _, operation := range h.PathInfo.Operations() {
+		var responseContent *openapi3.Content
+
+		if showStatusCodeError {
+			for statusCodeString, responseRef := range operation.Responses {
+				responseContent = &responseRef.Value.Content
+				if statusCodeString == mockStatusCode {
+					ok = h.getMockResponses(responseContent, rw, r)
+				}
+			}
+		} else if !showStatusCodeError {
+			var defaultResponse *openapi3.ResponseRef
+			if operation.Responses.Default() != nil {
+				defaultResponse = operation.Responses.Default()
+			} else {
+				if operation.Responses.Get(200) != nil {
+					defaultResponse = operation.Responses.Get(200)
+				} else {
+					rw.Write([]byte("Error: Cannot mock this endpoint"))
+					return
+				}
+			}
+			ok = h.getMockResponses(&defaultResponse.Value.Content, rw, r)
+		}
+		if ok {
+			break
+		}
+	}
+		//rw.Header().Add("Access-Control-Allow-Origin", "*")
+		//rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
+	if !ok {
+		rw.Header().Add("Content-Type", "text/plain")
+		if showExampleError {
+			rw.WriteHeader(mockStatusVal)
+			rw.Write([]byte("There is no mocked response with example named " + mockExample))
+			return
+		} else if showStatusCodeError {
+			rw.WriteHeader(200)
+			rw.Write([]byte("There is no mocked response for status code " + mockStatusCode))
+			return
+		}
+	}
+
+
+	//tmpl, err := template.New("mock").Parse(h.content)
+	//if err != nil {
+	//	log.Errorf("error rendering mock : '%s'", err)
+	//	http.Error(rw, err.Error(), http.StatusInternalServerError)
+	//}
+	//if err := tmpl.Execute(rw, h.pathConfig.Data); err != nil {
+	//	log.Errorf("error rendering mock : '%v'", err)
+	//	http.Error(rw, err.Error(), http.StatusInternalServerError)
+	//}
+}
+
+func(h *MockHandler) getMockResponses (responseContent *openapi3.Content, rw http.ResponseWriter, r *http.Request) bool{
+	var mockStatusVal int
 	var mockExampleLengthVal int
 
 	showStatusCodeError := false
@@ -56,139 +134,107 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 		showExampleError = true
 	}
 
-	for _, operation := range h.PathInfo.Operations() {
-		var responseContent *openapi3.Content
+	keys := reflect.ValueOf(*responseContent).MapKeys()
+	if len(keys) > 0 {
+		for _, key := range keys {
+			contentType := key.String()
+			if (showContentType && contentType == mockContentType) || (!showContentType) {
+				var c *openapi3.MediaType
+				if h.PathInfo.GetOperation("OPTIONS") != nil {
+					if h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal) != nil {
+						rw.Header().Add("Access-Control-Allow-Origin", h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal).Value.Headers["Access-Control-Allow-Origin"].Value.Schema.Value.Example.(string))
+						rw.Header().Add("Access-Control-Allow-Headers", h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal).Value.Headers["Access-Control-Allow-Headers"].Value.Schema.Value.Example.(string))
+					} else {
+						rw.Header().Add("Access-Control-Allow-Origin", "*")
+						rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
+					}
+				} else {
+					rw.Header().Add("Access-Control-Allow-Origin", "")
+					rw.Header().Add("Access-Control-Allow-Headers", "")
+				}
 
+				if showContentType {
+					rw.Header().Add("Content-Type", mockContentType)
+					c = responseContent.Get(mockContentType)
+				} else {
+					rw.Header().Add("Content-Type", contentType)
+					c = responseContent.Get(contentType)
+				}
 
-		for statusCodeString, responseRef := range operation.Responses {
-			responseContent = &responseRef.Value.Content
-			if (statusCodeString == mockStatusCode && showStatusCodeError) || (!showStatusCodeError){
-				keys := reflect.ValueOf(*responseContent).MapKeys()
-				if len(keys) > 0 {
-					for _, key := range keys {
-						contentType := key.String()
-						if (showContentType && contentType == mockContentType) || (!showContentType) {
-							var c *openapi3.MediaType
-							if h.PathInfo.GetOperation("OPTIONS") != nil {
-								if h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal) != nil {
-									rw.Header().Add("Access-Control-Allow-Origin", h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal).Value.Headers["Access-Control-Allow-Origin"].Value.Schema.Value.Example.(string))
-									rw.Header().Add("Access-Control-Allow-Headers", h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal).Value.Headers["Access-Control-Allow-Headers"].Value.Schema.Value.Example.(string))
-								} else {
-									rw.Header().Add("Access-Control-Allow-Origin", "*")
-									rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
+				if showStatusCodeError {
+					rw.WriteHeader(mockStatusVal)
+				} else {
+					rw.WriteHeader(200)
+				}
+
+				if c != nil && (c.Example != nil || c.Examples != nil) {
+					if c.Example != nil {
+						switch x := c.Example.(type) {
+						case string:
+							log.Infof("type: %s", x)
+							rw.Write([]byte(c.Example.(string)))
+							return true
+						default:
+							if c.Extensions["example"] != nil {
+								//found that the Extensions property was a better way to access the raw data
+								example := c.Extensions["example"].(json.RawMessage)
+								exampleString, err := example.MarshalJSON()
+								if err != nil {
+									log.Errorf("Error marshalling json: %s", err.Error())
+									return false
 								}
-							} else {
-								rw.Header().Add("Access-Control-Allow-Origin", "")
-								rw.Header().Add("Access-Control-Allow-Headers", "")
+
+								//example := string(data)[11:len(string(data))1]
+								log.Infof("type: %s", exampleString)
+								log.Infof("contenttype: %s", contentType)
+								rw.Write(exampleString)
+								return true
 							}
-
-							if showContentType {
-								rw.Header().Add("Content-Type", mockContentType)
-								c = responseContent.Get(mockContentType)
-							} else {
-								rw.Header().Add("Content-Type", contentType)
-								c = responseContent.Get(contentType)
-							}
-
-							if showStatusCodeError {
-								rw.WriteHeader(mockStatusVal)
-							} else {
-								rw.WriteHeader(200)
-							}
-
-							if c != nil && (c.Example != nil || c.Examples != nil) {
-								if c.Example != nil {
-									switch x := c.Example.(type) {
-									case string:
-										log.Infof("type: %s", x)
-										rw.Write([]byte(c.Example.(string)))
-										return
-									default:
-										if c.Extensions["example"] != nil {
-											//found that the Extensions property was a better way to access the raw data
-											example := c.Extensions["example"].(json.RawMessage)
-											exampleString, err := example.MarshalJSON()
-											if err != nil {
-												log.Errorf("Error marshalling json: %s", err.Error())
-												return
-											}
-
-											//example := string(data)[11:len(string(data))1]
-											log.Infof("type: %s", exampleString)
-											log.Infof("contenttype: %s", contentType)
-											rw.Write(exampleString)
-											return
-										}
-									}
-								} else if c.Examples != nil {
-									if showExampleError {
-										for name, example := range c.Examples {
-											if name == mockExample {
-												rw.Write([]byte(example.Value.Value.(string)))
-												return
-											}
-										}
-									} else {
-										for _, example := range c.Examples {
-											rw.Write([]byte(example.Value.Value.(string)))
-											return
-										}
-									}
+						}
+					} else if c.Examples != nil {
+						if showExampleError {
+							for name, example := range c.Examples {
+								if name == mockExample {
+									rw.Write([]byte(example.Value.Value.(string)))
+									return true
 								}
 							}
-							if contentType == "application/json" {
-								if c.Schema.Value.Example != nil {
-									body, err := json.Marshal(c.Schema.Value.Example)
-									if err != nil {
-										log.Errorf("Error mashalling json, %q", err.Error())
-										return
-									}
-									rw.Write(body)
-								} else if c.Schema.Value.Items.Value.Example != nil {
-									arrayLength := mockExampleLengthVal
-
-									exampleValue := c.Schema.Value.Items.Value.Example
-									exampleArray := make([]interface{}, arrayLength)
-									exampleArray[0] = exampleValue
-									body, err := json.Marshal(exampleArray)
-									//fmt.Println(c.Schema.Value.Type)
-									if err != nil {
-										log.Errorf("Error mashalling json, %q", err.Error())
-										return
-									}
-									rw.Write(body)
-								}
-								return
+						} else {
+							for _, example := range c.Examples {
+								rw.Write([]byte(example.Value.Value.(string)))
+								return true
 							}
 						}
 					}
 				}
+				if contentType == "application/json" {
+					if c.Schema.Value.Example != nil {
+						body, err := json.Marshal(c.Schema.Value.Example)
+						if err != nil {
+							log.Errorf("Error mashalling json, %q", err.Error())
+							return false
+						}
+						rw.Write(body)
+					} else if c.Schema.Value.Items.Value.Example != nil {
+						arrayLength := mockExampleLengthVal
+
+						exampleValue := c.Schema.Value.Items.Value.Example
+						exampleArray := make([]interface{}, arrayLength)
+						exampleArray[0] = exampleValue
+						body, err := json.Marshal(exampleArray)
+						//fmt.Println(c.Schema.Value.Type)
+						if err != nil {
+							log.Errorf("Error mashalling json, %q", err.Error())
+							return false
+						}
+						rw.Write(body)
+					}
+					return true
+				}
 			}
 		}
-
-		//rw.Header().Add("Access-Control-Allow-Origin", "*")
-		//rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
-		rw.Header().Add("Content-Type", "text/plain")
-		if showExampleError{
-			rw.WriteHeader(mockStatusVal)
-			rw.Write([]byte("There is no mocked response with example named " + mockExample))
-			return
-		}else if showStatusCodeError{
-			rw.WriteHeader(200)
-			rw.Write([]byte("There is no mocked response for status code " + mockStatusCode))
-			return
-		}
 	}
-
-	//tmpl, err := template.New("mock").Parse(h.content)
-	//if err != nil {
-	//	log.Errorf("error rendering mock : '%s'", err)
-	//	http.Error(rw, err.Error(), http.StatusInternalServerError)
-	//}
-	//if err := tmpl.Execute(rw, h.pathConfig.Data); err != nil {
-	//	log.Errorf("error rendering mock : '%v'", err)
-	//	http.Error(rw, err.Error(), http.StatusInternalServerError)
-	//}
+	return false
 }
 
 func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
