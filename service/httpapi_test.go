@@ -360,7 +360,7 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 		rw := httptest.NewRecorder()
 
 		mockHandler := service.MockHandler{
-			PathInfo: config.Paths.Find("/"),
+			PathInfo: config.Paths.Find("/databases"),
 		}
 
 		mockHandler.ServeHTTP(rw, request)
@@ -373,6 +373,42 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 
 		if rw.Result().Header.Get("Content-Type") != "application/json" {
 			t.Errorf("expected the Content-Type to be %s, got %s", "application/json", rw.Result().Header.Get("Content-Type"))
+		}
+
+		database := &struct {
+			Id   string `json:"id"`
+			Wern string `json:"wern"`
+		}{}
+
+		err := json.Unmarshal(body, database)
+		if err != nil {
+			t.Errorf("expected json response, %q", err.Error())
+		}
+
+		if database.Id != "default" {
+			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Id)
+		}
+
+		if database.Wern != "default" {
+			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Wern)
+		}
+	})
+
+	t.Run("test no status code hits 200", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code_no_default.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code_no_default.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/nodefault"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if rw.Result().StatusCode != 200 {
+			t.Errorf("expected the response code to be %d, got %d", 200, rw.Result().StatusCode)
 		}
 
 		database := &struct {

@@ -117,6 +117,48 @@ paths:
                 type: string
                 example: "Authorization, Content-Type"
 
+  /nodefault:
+    get:
+      summary: Databases
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Database'
+        '200':
+          description: About Page
+          content:
+            application/json:
+              example:
+                id: default
+                wern: default
+              schema:
+                $ref: '#/components/schemas/Database'
+        '201':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Database'
+        '202':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Database'
+        '203':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Database'
+
 components:
   schemas:
     Database:
