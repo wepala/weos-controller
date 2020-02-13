@@ -161,13 +161,13 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 
 				//attach headers
 				if responseRef.Value.Headers != nil {
-					rw.Header().Add("Access-Control-Allow-Origin", responseRef.Value.Headers["Access-Control-Allow-Origin"].Value.Schema.Value.Example.(string))
-					rw.Header().Add("Access-Control-Allow-Headers", responseRef.Value.Headers["Access-Control-Allow-Origin"].Value.Schema.Value.Example.(string))
+					for key, headerVal := range responseRef.Value.Headers{
+						rw.Header().Add(key, headerVal.Value.Schema.Value.Example.(string))
+					}
 				}else{
 					rw.Header().Add("Access-Control-Allow-Origin", "")
 					rw.Header().Add("Access-Control-Allow-Headers", "")
 				}
-
 				//if a content type was pulled from the headers, set it here, otherwise use the one from the key
 					if showContentType {
 					rw.Header().Add("Content-Type", mockContentType)
@@ -255,8 +255,9 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 				//if there is no content type that was pulled from the headers
 			}else if !showContentType{
 				if responseRef.Value.Headers != nil {
-					rw.Header().Add("Access-Control-Allow-Origin", responseRef.Value.Headers["Access-Control-Allow-Origin"].Value.Schema.Value.Example.(string))
-					rw.Header().Add("Access-Control-Allow-Headers", responseRef.Value.Headers["Access-Control-Allow-Origin"].Value.Schema.Value.Example.(string))
+					for key, headerVal := range responseRef.Value.Headers{
+						rw.Header().Add(key, headerVal.Value.Schema.Value.Example.(string))
+					}
 				}else{
 					rw.Header().Add("Access-Control-Allow-Origin", "*")
 					rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
