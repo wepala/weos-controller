@@ -8,4 +8,5 @@ Content-Type: application/json
 Postman-Token: a5132608-f1bc-42d5-99f7-27ed5ca8e7e9
 User-Agent: PostmanRuntime/7.22.0
 X-Mock-Example: Example2
+X-Mock-Content-Type: text/html
 

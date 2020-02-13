@@ -138,7 +138,7 @@ func(h *MockHandler) getMockResponses (responseContent *openapi3.Content, rw htt
 	if len(keys) > 0 {
 		for _, key := range keys {
 			contentType := key.String()
-			if (showContentType && contentType == mockContentType) || (!showContentType) {
+			if showContentType && contentType == mockContentType {
 				var c *openapi3.MediaType
 				if h.PathInfo.GetOperation("OPTIONS") != nil {
 					if h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal) != nil {
@@ -229,6 +229,28 @@ func(h *MockHandler) getMockResponses (responseContent *openapi3.Content, rw htt
 					}
 					return true
 				}
+			}else if !showContentType{
+				if h.PathInfo.GetOperation("OPTIONS") != nil {
+					if h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal) != nil {
+						rw.Header().Add("Access-Control-Allow-Origin", h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal).Value.Headers["Access-Control-Allow-Origin"].Value.Schema.Value.Example.(string))
+						rw.Header().Add("Access-Control-Allow-Headers", h.PathInfo.GetOperation("OPTIONS").Responses.Get(mockStatusVal).Value.Headers["Access-Control-Allow-Headers"].Value.Schema.Value.Example.(string))
+					} else {
+						rw.Header().Add("Access-Control-Allow-Origin", "*")
+						rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
+					}
+				} else {
+					rw.Header().Add("Access-Control-Allow-Origin", "")
+					rw.Header().Add("Access-Control-Allow-Headers", "")
+				}
+
+				if showContentType {
+					rw.Header().Add("Content-Type", mockContentType)
+				} else {
+					rw.Header().Add("Content-Type", contentType)
+				}
+
+				rw.Write([]byte("There are multiple content types defined. Please specify one using the X-Mock-Content-Type header"))
+				return true
 			}
 		}
 	}
