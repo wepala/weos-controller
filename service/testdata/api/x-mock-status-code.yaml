@@ -45,6 +45,7 @@ paths:
     get:
       summary: About Page
       x-weos-config:
+        mock: true
         plugins:
           - &weosPlugin
             filename: testdata/plugins/test.linux.so

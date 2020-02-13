@@ -12,7 +12,6 @@ import (
 	"net/http/httptest"
 	"net/http/httputil"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -44,11 +43,11 @@ var mockServerTests = []*HTTPTest{
 }*/
 
 var httpServerTests = []*HTTPTest{
-	{
-		name:        "about_page_200",
-		testDataDir: "testdata/html/http",
-		apiFixture:  "testdata/api/basic-site-api." + runtime.GOOS + ".yml",
-	},
+	//{
+	//	name:        "about_page_200",
+	//	testDataDir: "testdata/html/http",
+	//	apiFixture:  "testdata/api/basic-site-api." + runtime.GOOS + ".yml",
+	//},
 	{
 		name:        "x_mock_status_code",
 		testDataDir: "testdata/html/http",
@@ -206,7 +205,7 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 		//confirm the body
 		expectedBody := "test"
 		if strings.TrimSpace(string(body)) != strings.TrimSpace(expectedBody) {
-			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(expectedBody), strings.TrimSpace(string(body)))
 		}
 	})
 
@@ -341,7 +340,7 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 		rw := httptest.NewRecorder()
 
 		mockHandler := service.MockHandler{
-			PathInfo: config.Paths.Find("/"),
+			PathInfo: config.Paths.Find("/databases"),
 		}
 
 		mockHandler.ServeHTTP(rw, request)
