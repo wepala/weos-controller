@@ -99,6 +99,10 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 			rw.WriteHeader(200)
 			rw.Write([]byte("There is no mocked response for status code " + mockStatusCode))
 			return
+		} else {
+			rw.WriteHeader(200)
+			rw.Write([]byte("This endpoint was not mocked"))
+			return
 		}
 	}
 }
@@ -205,8 +209,6 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 									return false
 								}
 
-								log.Infof("type: %s", exampleString)
-								log.Infof("contenttype: %s", contentType)
 								rw.Write(exampleString)
 								return true
 							}
@@ -238,7 +240,8 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 							return false
 						}
 						rw.Write(body)
-					} else if c.Schema.Value.Items.Value.Example != nil {
+						return true
+					} else if c.Schema.Value.Items != nil {
 						arrayLength := mockExampleLengthVal
 
 						exampleValue := c.Schema.Value.Items.Value.Example
@@ -250,8 +253,9 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 							return false
 						}
 						rw.Write(body)
+						return true
 					}
-					return true
+					return false
 				}
 				//if there is no content type that was pulled from the headers
 			}

@@ -537,3 +537,167 @@ func TestMockHandler_ServeHTTPErrors(t *testing.T) {
 	})
 
 }
+
+func TestOtherSwaggerFiles(t *testing.T)  {
+	t.Run("test callback example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/callback-example.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/callback-example.yaml", err.Error())
+	}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/streams"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+
+	t.Run("test api example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/api-with-examples.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/api-with-examples.yaml", err.Error())
+		}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+
+	t.Run("test petstore expanded example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/petstore-expanded.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/petstore-expanded.yaml", err.Error())
+		}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/pets"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+
+	t.Run("test petstore example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/petstore.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/petstore.yaml", err.Error())
+		}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/pets"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+
+	t.Run("test uspto example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/uspto.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/uspto.yaml", err.Error())
+		}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+
+	t.Run("test link example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/link-example.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/link-example.yaml", err.Error())
+		}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/2.0/users/{username}"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+}
