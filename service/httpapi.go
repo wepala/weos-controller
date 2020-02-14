@@ -160,7 +160,9 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 	//attach headers
 	if responseRef.Value.Headers != nil {
 		for key, headerVal := range responseRef.Value.Headers{
-			rw.Header().Add(key, headerVal.Value.Schema.Value.Example.(string))
+			if headerVal.Value.Schema.Value.Example != nil {
+				rw.Header().Add(key, headerVal.Value.Schema.Value.Example.(string))
+			}
 		}
 	}
 
@@ -220,6 +222,12 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 							for name, example := range c.Examples {
 								if name == mockExample {
 									//write that specified example
+									if contentType == "application/json" {
+										val, _ := example.Value.MarshalJSON()
+										log.Info(string(val))
+										rw.Write(val)
+										return true
+									}
 									rw.Write([]byte(example.Value.Value.(string)))
 									return true
 								}
@@ -241,11 +249,14 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 						}
 						rw.Write(body)
 						return true
-					} else if c.Schema.Value.Items != nil {
+					} else if c.Schema.Value.Items != nil && mockExampleLengthVal != 0{
 						arrayLength := mockExampleLengthVal
 
 						exampleValue := c.Schema.Value.Items.Value.Example
 						exampleArray := make([]interface{}, arrayLength)
+						//for x := 0; x < arrayLength; x++{
+						//	exampleArray[x] = exampleValue
+						//}
 						exampleArray[0] = exampleValue
 						body, err := json.Marshal(exampleArray)
 						if err != nil {
