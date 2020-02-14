@@ -63,6 +63,9 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 				if statusCodeString == mockStatusCode {
 					ok = h.getMockResponses(responseReference, rw, r)
 				}
+				if ok{
+					break
+				}
 			}
 			//else if a status code was not retrieved from the header
 		} else if !showStatusCodeError {
@@ -149,25 +152,26 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 	//store all the kets from the content
 	keys := reflect.ValueOf(*responseContent).MapKeys()
 
+
+	//attach headers
+	if responseRef.Value.Headers != nil {
+		for key, headerVal := range responseRef.Value.Headers{
+			rw.Header().Add(key, headerVal.Value.Schema.Value.Example.(string))
+		}
+	}else{
+		rw.Header().Add("Access-Control-Allow-Origin", "")
+		rw.Header().Add("Access-Control-Allow-Headers", "")
+	}
+
 	//if there is at least 1 key, we start the process
-	if len(keys) > 0 {
+	if (len(keys) == 1) || (len(keys) > 1 && showContentType) {
 		for _, key := range keys {
 			//retrieve the content type
 			contentType := key.String()
-
 			//if a content type was pulled from the headers and it matches the current content type from the keys
-			if showContentType && contentType == mockContentType {
+			if (showContentType && contentType == mockContentType) || (!showContentType) {
 				var c *openapi3.MediaType
 
-				//attach headers
-				if responseRef.Value.Headers != nil {
-					for key, headerVal := range responseRef.Value.Headers{
-						rw.Header().Add(key, headerVal.Value.Schema.Value.Example.(string))
-					}
-				}else{
-					rw.Header().Add("Access-Control-Allow-Origin", "")
-					rw.Header().Add("Access-Control-Allow-Headers", "")
-				}
 				//if a content type was pulled from the headers, set it here, otherwise use the one from the key
 					if showContentType {
 					rw.Header().Add("Content-Type", mockContentType)
@@ -253,26 +257,11 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 					return true
 				}
 				//if there is no content type that was pulled from the headers
-			}else if !showContentType{
-				if responseRef.Value.Headers != nil {
-					for key, headerVal := range responseRef.Value.Headers{
-						rw.Header().Add(key, headerVal.Value.Schema.Value.Example.(string))
-					}
-				}else{
-					rw.Header().Add("Access-Control-Allow-Origin", "*")
-					rw.Header().Add("Access-Control-Allow-Headers", "Authorization, Content-Type")
-				}
-
-				if showContentType {
-					rw.Header().Add("Content-Type", mockContentType)
-				} else {
-					rw.Header().Add("Content-Type", contentType)
-				}
-
-				rw.Write([]byte("There are multiple content types defined. Please specify one using the X-Mock-Content-Type header"))
-				return true
 			}
 		}
+	}else if len(keys) > 1 && !showContentType{
+		rw.Write([]byte("There are multiple content types defined. Please specify one using the X-Mock-Content-Type header"))
+		return true
 	}
 	return false
 }

@@ -105,6 +105,15 @@ paths:
                   $ref: '#/components/schemas/Database'
         default:
           description: About Page
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: "*"
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+                example: "Authorization, Content-Type"
           content:
             application/json:
               example:
