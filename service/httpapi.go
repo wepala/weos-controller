@@ -158,9 +158,6 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 		for key, headerVal := range responseRef.Value.Headers{
 			rw.Header().Add(key, headerVal.Value.Schema.Value.Example.(string))
 		}
-	}else{
-		rw.Header().Add("Access-Control-Allow-Origin", "")
-		rw.Header().Add("Access-Control-Allow-Headers", "")
 	}
 
 	//if there is at least 1 key, we start the process
