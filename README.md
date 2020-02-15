@@ -16,12 +16,73 @@ You can run the serve command to give access via http. There are a few ways to s
 1. Configure parameters in a config file `weos-controller serve http localhost:8080 -c weoscontroller.yml`
 1. Place a config in the home folder of the service `weos-controller serve http localhost:8080`
 
-#### Mock Server
-A mock server can also be run where the responses will be the examples set in the api yaml (swagger allows for setting up example api responses).
-The command for the mock server is `serve http-mock`. The options that are available are the same as the `serve http` command e.g. `weos-controller serve http-mock localhost:8080 -a site-api.yml -c site-config.yml`
+#### Mock Responses
+Getting mock responses couldn't be easier. 
+
+##### Mock Setup
+In your api yaml there are a couple ways you can setup mock responses; 
+
+1. Don't configure the path with a `x-weos-config` (it will automatically return example responses you have defined on the path or on the component schema of the response)
+1. Setup a sub property `mock` to true on the `x-weos-config`
+
+Example Mock Config
+```yaml
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Basic Site
+paths:
+  /:
+    get:
+      summary: Landing page of the site
+      responses:
+        '200':
+          description: Landing page
+          content:
+            text/html:
+              example: test
+              schema:
+                type: string
+  /about:
+    get:
+      summary: About Page
+      x-weos-config:
+        mock: true
+        plugins:
+          - &weosPlugin
+            filename: testdata/plugins/test.linux.so
+            config:
+              mysql:
+                host: localhost
+                user: root
+                password: root
+        middleware:
+          - plugin: *weosPlugin
+            handler: HelloWorld
+      responses:
+        '200':
+          description: About Page
+          content:
+            text/html:
+              example: test
+              schema:
+                type: string
+```
+
+You can define mocks in a few ways
+1. `example` under content in the response
+1. `examples` these are named examples 
+1. `example` on the component 
+
+Read more about examples in swagger - https://swagger.io/docs/specification/adding-examples/
 
 
-
+##### Mock Request
+There are a few options you can use when making a mock request 
+1. `X-Mock-Status-Code` - Use this to specify the response code you'd like to receive (this is if the path has multiple responses defined)
+1. `X-Mock-Example` - Use this to specify which example should be used (this is when the `examples` option is used on the response)
+1. `X-Mock-Example-Length` - Use this to specify the amount of items to return (this is useful when the response is an array)
+1. `X-Mock-Content-Type` - Use this to specify the content type desired. (This is required if there are multiple content types defined)
 
 ### Contribution guidelines ###
 

@@ -1,0 +1,221 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Basic Site
+paths:
+  /:
+    get:
+      summary: Landing page of the site
+      responses:
+        '200':
+          description: Landing page
+          content:
+            application/json:
+              example:
+                id: someid
+                wern: somewern
+              schema:
+                $ref: '#/components/schemas/Database'
+            text/html:
+              example: test
+              schema:
+                type: string
+        '201':
+          description: Landing page
+          content:
+            application/json:
+              example:
+                id: someid
+                wern: somewern
+              schema:
+                $ref: '#/components/schemas/Database'
+        '202':
+          description: Landing page
+          content:
+            text/html:
+              example: |
+                <html>
+                  <body>
+                    Goodbye
+                  </body>
+                </html>
+              schema:
+                type: string
+  /about:
+    get:
+      summary: About Page
+      x-weos-config:
+        mock: true
+        plugins:
+          - &weosPlugin
+            filename: testdata/plugins/test.linux.so
+            config:
+              mysql:
+                host: localhost
+                user: root
+                password: root
+        middleware:
+          - plugin: *weosPlugin
+            handler: HelloWorld
+      responses:
+        '200':
+          description: About Page
+          content:
+            text/html:
+              examples:
+                Example1:
+                  value:
+                    <html>
+                      <head>
+                          <title>Landing Page</title>
+                      </head>
+                      <body>
+                        This is a landing page
+                      </body>
+                    </html>
+                Example2:
+                  value: Hello WorldHello World
+              schema:
+                type: string
+  /databases:
+    get:
+      summary: Databases
+      responses:
+        '200':
+          description: About Page
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: "*"
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+                example: "Authorization, Content-Type"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Database'
+        '201':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Database'
+        default:
+          description: About Page
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: "*"
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+                example: "Authorization, Content-Type"
+          content:
+            application/json:
+              example:
+                id: default
+                wern: default
+              schema:
+                $ref: '#/components/schemas/Database'
+    options:
+      summary: This is called automically by the browser to do a CORS check
+      responses:
+        '200':
+          headers:
+            Access-Control-Allow-Origin:
+              schema:
+                type: string
+                example: "*"
+            Access-Control-Allow-Headers:
+              schema:
+                type: string
+                example: "Authorization, Content-Type"
+
+  /nodefault:
+    get:
+      summary: Databases
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Database'
+        '200':
+          description: About Page
+          content:
+            application/json:
+              example:
+                id: default
+                wern: default
+              schema:
+                $ref: '#/components/schemas/Database'
+        '201':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Database'
+        '202':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Database'
+        '203':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Database'
+
+components:
+  schemas:
+    Database:
+      title: Root Type for Database
+      description: WeOS Database
+      type: object
+      properties:
+        id:
+          type: string
+        wern:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        active:
+          type: boolean
+        creatorId:
+          type: string
+        createdDate:
+          format: date-time
+          type: string
+        modifiedDate:
+          format: date-time
+          type: string
+      required:
+        - id
+        - title
+      example:
+        id: 35a54035-753d-4123-bea2-ff3ee25b0eea
+        wern: 'weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea'
+        title: general
+        description: The default database for the account
+        active: true
+        creatorId: d4b7df67-7391-4869-9ba1-0f2952665baf
+        createdDate: '2020-01-22 19:10:25-07'
+        modifiedDate: '2020-01-22 19:10:25-07'
+        links:
+          - rel: self
+            href: /databases/35a54035-753d-4123-bea2-ff3ee25b0eea
+          - rel: tables
+            href: /tables/?databaseId=35a54035-753d-4123-bea2-ff3ee25b0eea

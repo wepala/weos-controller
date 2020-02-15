@@ -1,6 +1,4 @@
 HTTP/1.1 200 OK
 Connection: close
-Access-Control-Allow-Origin: *
-Access-Control-Allow-Methods: GET, OPTIONS
 
 Hello WorldHello World

@@ -2,20 +2,23 @@ package service_test
 
 import (
 	"bitbucket.org/wepala/weos-controller/service"
+	"encoding/json"
 	"flag"
+	"fmt"
+	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
 	"path/filepath"
-	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 )
 
 //go:generate moq -out testing_mocks_test.go -pkg service_test . ServiceInterface
-
+/*
 var mockServerTests = []*HTTPTest{
 	{
 		name:        "about_page_OPTION",
@@ -37,13 +40,33 @@ var mockServerTests = []*HTTPTest{
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/apollo-api.yaml",
 	},
-}
+}*/
 
 var httpServerTests = []*HTTPTest{
+	//{
+	//	name:        "about_page_200",
+	//	testDataDir: "testdata/html/http",
+	//	apiFixture:  "testdata/api/basic-site-api." + runtime.GOOS + ".yml",
+	//},
 	{
-		name:        "about_page_200",
+		name:        "x_mock_status_code",
 		testDataDir: "testdata/html/http",
-		apiFixture:  "testdata/api/basic-site-api." + runtime.GOOS + ".yml",
+		apiFixture:  "testdata/api/x-mock-status-code.yaml",
+	},
+	{
+		name:        "x_mock_multiple_examples",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/x-mock-status-code.yaml",
+	},
+	{
+		name:        "x_mock_component_example",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/x-mock-status-code.yaml",
+	},
+	{
+		name:        "x_mock_array_component_example",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/x-mock-status-code.yaml",
 	},
 }
 
@@ -108,4 +131,573 @@ func runHttpServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMockHandler_ServeHTTP(t *testing.T) {
+	loader := openapi3.NewSwaggerLoader()
+	config, err := loader.LoadSwaggerFromFile("testdata/api/x-mock-status-code.yaml")
+
+	if err != nil {
+		t.Fatalf("error loading %s: %s", "testdata/api/x-mock-status-code.yaml", err.Error())
+	}
+
+	t.Run("test basic example", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
+			t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "application/json" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "application/json", rw.Result().Header.Get("Content-Type"))
+		}
+
+		database := &struct {
+			Id   string `json:"id"`
+			Wern string `json:"wern"`
+		}{}
+
+		err := json.Unmarshal(body, database)
+		if err != nil {
+			t.Errorf("expected json response, %q", err.Error())
+		}
+
+		if database.Id != "someid" {
+			t.Errorf("expected the id on the response to be %s, got %s", "someid", database.Id)
+		}
+
+		if database.Wern != "somewern" {
+			t.Errorf("expected the id on the response to be %s, got %s", "somewern", database.Wern)
+		}
+	})
+
+	t.Run("test return specific content type", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_content_type.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_content_type.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if strconv.Itoa(rw.Result().StatusCode) != "200" {
+			t.Errorf("expected the response code to be %s, got %d", "200", rw.Result().StatusCode) //changed as there was no status code defined in input file
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "text/html" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
+		}
+
+		//confirm the body
+		expectedBody := "test"
+		if strings.TrimSpace(string(body)) != strings.TrimSpace(expectedBody) {
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(expectedBody), strings.TrimSpace(string(body)))
+		}
+	})
+
+	t.Run("test multiple examples", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_multiple_examples.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_multiple_examples.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/about"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+		expectedResponse := loadHttpResponseFixture(filepath.Join("testdata/html/http", "x_mock_multiple_examples.golden.http"), request, t)
+
+		if rw.Result().Header.Get("Content-Type") != "text/html" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
+		}
+
+		//confirm the body
+		expectedBody, _ := ioutil.ReadAll(expectedResponse.Body)
+		if strings.TrimSpace(string(body)) != strings.TrimSpace(string(expectedBody)) {
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+		}
+	})
+
+	t.Run("test example on component", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_component_example.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_component_example.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/databases"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
+			t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "application/json" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "application/json", rw.Result().Header.Get("Content-Type"))
+		}
+
+		database := &struct {
+			Id   string `json:"id"`
+			Wern string `json:"wern"`
+		}{}
+
+		err := json.Unmarshal(body, database)
+		if err != nil {
+			t.Errorf("expected json response, %q", err.Error())
+		}
+
+		if database.Id != "35a54035-753d-4123-bea2-ff3ee25b0eea" {
+			t.Errorf("expected the id on the response to be %s, got %s", "35a54035-753d-4123-bea2-ff3ee25b0eea", database.Id)
+		}
+
+		if database.Wern != "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea" {
+			t.Errorf("expected the id on the response to be %s, got %s", "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea", database.Wern)
+		}
+	})
+
+	t.Run("test example on component when response is an array", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_array_component_example.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_array_component_example.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/databases"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if strconv.Itoa(rw.Result().StatusCode) != request.Header.Get("X-Mock-Status-Code") {
+			t.Errorf("expected the response code to be %s, got %d", request.Header.Get("X-Mock-Status-Code"), rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "application/json" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "application/json", rw.Result().Header.Get("Content-Type"))
+		}
+
+		var database []*struct {
+			Id   string `json:"id"`
+			Wern string `json:"wern"`
+		}
+
+		err := json.Unmarshal(body, &database)
+		if err != nil {
+			t.Errorf("expected json response, %q", err.Error())
+		}
+
+		if strconv.Itoa(len(database)) != request.Header.Get("X-Mock-Example-Length") {
+			t.Errorf("expected the length of the result to be %s, got %d", request.Header.Get("X-Mock-Example-Length"), len(database))
+		}
+
+		if database[0].Id != "35a54035-753d-4123-bea2-ff3ee25b0eea" {
+			t.Errorf("expected the id on the response to be %s, got %s", "35a54035-753d-4123-bea2-ff3ee25b0eea", database[0].Id)
+		}
+
+		if database[0].Wern != "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea" {
+			t.Errorf("expected the id on the response to be %s, got %s", "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea", database[0].Wern)
+		}
+	})
+
+	t.Run("test that CORs headers are NOT automatically set", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		if rw.Result().Header.Get("Access-Control-Allow-Origin") != "" {
+			t.Error("no response headers was expected")
+		}
+	})
+
+	t.Run("test defined headers are returned in response", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_header_example.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_header_example.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/databases"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		if rw.Result().Header.Get("Access-Control-Allow-Origin") != "*" {
+			t.Errorf("expected header Access-Control-Allow-Origin to be %s, got %s", "*", rw.Result().Header.Get("Access-Control-Allow-Origin"))
+		}
+
+		if rw.Result().Header.Get("Access-Control-Allow-Headers") != "Authorization, Content-Type" {
+			t.Errorf("expected header Access-Control-Allow-Headers to be %s, got %s", "Authorization, Content-Type", rw.Result().Header.Get("Access-Control-Allow-Headers"))
+		}
+	})
+
+	t.Run("test no status code hits default", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/databases"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if rw.Result().StatusCode != 200 {
+			t.Errorf("expected the response code to be %d, got %d", 200, rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "application/json" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "application/json", rw.Result().Header.Get("Content-Type"))
+		}
+
+		database := &struct {
+			Id   string `json:"id"`
+			Wern string `json:"wern"`
+		}{}
+
+		err := json.Unmarshal(body, database)
+		if err != nil {
+			t.Errorf("expected json response, %q", err.Error())
+		}
+
+		if database.Id != "default" {
+			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Id)
+		}
+
+		if database.Wern != "default" {
+			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Wern)
+		}
+	})
+
+	t.Run("test no status code hits 200", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code_no_default.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code_no_default.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/nodefault"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if rw.Result().StatusCode != 200 {
+			t.Errorf("expected the response code to be %d, got %d", 200, rw.Result().StatusCode)
+		}
+
+		database := &struct {
+			Id   string `json:"id"`
+			Wern string `json:"wern"`
+		}{}
+
+		err := json.Unmarshal(body, database)
+		if err != nil {
+			t.Errorf("expected json response, %q", err.Error())
+		}
+
+		if database.Id != "default" {
+			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Id)
+		}
+
+		if database.Wern != "default" {
+			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Wern)
+		}
+	})
+
+}
+
+func TestMockHandler_ServeHTTPErrors(t *testing.T) {
+	loader := openapi3.NewSwaggerLoader()
+	config, err := loader.LoadSwaggerFromFile("testdata/api/x-mock-status-code.yaml")
+
+	if err != nil {
+		t.Fatalf("error loading %s: %s", "testdata/api/x-mock-status-code.yaml", err.Error())
+	}
+
+	t.Run("test undefined status code ", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_missing_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_missing_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if strconv.Itoa(rw.Result().StatusCode) == request.Header.Get("X-Mock-Status-Code") {
+			t.Errorf("expected the response code to be %s, got %d", "200", rw.Result().StatusCode)
+		}
+
+		if rw.Result().Header.Get("Content-Type") != "text/plain" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "text/plain", rw.Result().Header.Get("Content-Type"))
+		}
+
+		//confirm the body
+		expectedBody := fmt.Sprintf("There is no mocked response for status code %s", request.Header.Get("X-Mock-Status-Code"))
+		if strings.TrimSpace(string(body)) != strings.TrimSpace(expectedBody) {
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+		}
+
+	})
+
+	t.Run("test undefined example", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_multiple_examples_missing_example.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_multiple_examples_missing_example.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/about"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		if rw.Result().Header.Get("Content-Type") != "text/html" {
+			t.Errorf("expected the Content-Type to be %s, got %s", "text/html", rw.Result().Header.Get("Content-Type"))
+		}
+
+		//confirm the body
+		expectedBody := fmt.Sprintf("There is no mocked response with example named %s", request.Header.Get("X-Mock-Example"))
+		if strings.TrimSpace(string(body)) != strings.TrimSpace(expectedBody) {
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+		}
+
+	})
+
+	t.Run("test multiple examples none specified", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_no_example.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_example.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/about"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		//confirm the body
+		expectedBody := "There are multiple examples defined. Please specify one using the X-Mock-Example header"
+		if strings.TrimSpace(string(body)) != strings.TrimSpace(expectedBody) {
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+		}
+
+	})
+
+	t.Run("test multiple content types defined none specified", func(t *testing.T) {
+		log.Debugf("Load input fixture: %s", "x_mock_no_content_type.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_content_type.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		//confirm the body
+		expectedBody := "There are multiple content types defined. Please specify one using the X-Mock-Content-Type header"
+		if strings.TrimSpace(string(body)) != strings.TrimSpace(expectedBody) {
+			t.Errorf("expected body '%s', got: '%s'", strings.TrimSpace(string(expectedBody)), strings.TrimSpace(string(body)))
+		}
+
+	})
+
+}
+
+func TestOtherSwaggerFiles(t *testing.T)  {
+	t.Run("test callback example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/callback-example.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/callback-example.yaml", err.Error())
+	}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/streams"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+
+	t.Run("test api example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/api-with-examples.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/api-with-examples.yaml", err.Error())
+		}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+
+	t.Run("test petstore expanded example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/petstore-expanded.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/petstore-expanded.yaml", err.Error())
+		}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/pets"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+
+	t.Run("test petstore example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/petstore.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/petstore.yaml", err.Error())
+		}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/pets"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+
+	t.Run("test uspto example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/uspto.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/uspto.yaml", err.Error())
+		}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
+
+	t.Run("test link example", func(t *testing.T) {
+		loader := openapi3.NewSwaggerLoader()
+		config, err := loader.LoadSwaggerFromFile("testdata/api/link-example.yaml")
+
+		if err != nil {
+			t.Fatalf("error loading %s: %s", "testdata/api/link-example.yaml", err.Error())
+		}
+
+		log.Debugf("Load input fixture: %s", "x_mock_no_status_code.input.http")
+		request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "x_mock_no_status_code.input.http"), t)
+		rw := httptest.NewRecorder()
+
+		mockHandler := service.MockHandler{
+			PathInfo: config.Paths.Find("/2.0/users/{username}"),
+		}
+
+		mockHandler.ServeHTTP(rw, request)
+
+		body, _ := ioutil.ReadAll(rw.Result().Body)
+
+		log.Info(string(body))
+
+		if string(body) == ""{
+			t.Error("Expected something to be returned")
+		}
+	})
 }

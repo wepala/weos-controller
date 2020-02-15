@@ -34,7 +34,7 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //             GetGlobalMiddlewareConfigFunc: func() ([]*service.MiddlewareConfig, error) {
 // 	               panic("mock out the GetGlobalMiddlewareConfig method")
 //             },
-//             GetHandlersFunc: func(path string, config *service.PathConfig, pathInfo *openapi3.PathItem) ([]http.HandlerFunc, error) {
+//             GetHandlersFunc: func(config *service.PathConfig, mockHandler http.Handler) ([]http.HandlerFunc, error) {
 // 	               panic("mock out the GetHandlers method")
 //             },
 //             GetPathConfigFunc: func(path string, operation string) (*service.PathConfig, error) {
@@ -54,7 +54,7 @@ type ServiceInterfaceMock struct {
 	GetGlobalMiddlewareConfigFunc func() ([]*service.MiddlewareConfig, error)
 
 	// GetHandlersFunc mocks the GetHandlers method.
-	GetHandlersFunc func(path string, config *service.PathConfig, pathInfo *openapi3.PathItem) ([]http.HandlerFunc, error)
+	GetHandlersFunc func(config *service.PathConfig, mockHandler http.Handler) ([]http.HandlerFunc, error)
 
 	// GetPathConfigFunc mocks the GetPathConfig method.
 	GetPathConfigFunc func(path string, operation string) (*service.PathConfig, error)
@@ -69,12 +69,10 @@ type ServiceInterfaceMock struct {
 		}
 		// GetHandlers holds details about calls to the GetHandlers method.
 		GetHandlers []struct {
-			// Path is the path argument value.
-			Path string
 			// Config is the config argument value.
 			Config *service.PathConfig
-			// PathInfo is the pathInfo argument value.
-			PathInfo *openapi3.PathItem
+			// MockHandler is the mockHandler argument value.
+			MockHandler http.Handler
 		}
 		// GetPathConfig holds details about calls to the GetPathConfig method.
 		GetPathConfig []struct {
@@ -139,37 +137,33 @@ func (mock *ServiceInterfaceMock) GetGlobalMiddlewareConfigCalls() []struct {
 }
 
 // GetHandlers calls GetHandlersFunc.
-func (mock *ServiceInterfaceMock) GetHandlers(path string, config *service.PathConfig, pathInfo *openapi3.PathItem) ([]http.HandlerFunc, error) {
+func (mock *ServiceInterfaceMock) GetHandlers(config *service.PathConfig, mockHandler http.Handler) ([]http.HandlerFunc, error) {
 	if mock.GetHandlersFunc == nil {
 		panic("ServiceInterfaceMock.GetHandlersFunc: method is nil but ServiceInterface.GetHandlers was just called")
 	}
 	callInfo := struct {
-		Path     string
-		Config   *service.PathConfig
-		PathInfo *openapi3.PathItem
+		Config      *service.PathConfig
+		MockHandler http.Handler
 	}{
-		Path:     path,
-		Config:   config,
-		PathInfo: pathInfo,
+		Config:      config,
+		MockHandler: mockHandler,
 	}
 	lockServiceInterfaceMockGetHandlers.Lock()
 	mock.calls.GetHandlers = append(mock.calls.GetHandlers, callInfo)
 	lockServiceInterfaceMockGetHandlers.Unlock()
-	return mock.GetHandlersFunc(path, config, pathInfo)
+	return mock.GetHandlersFunc(config, mockHandler)
 }
 
 // GetHandlersCalls gets all the calls that were made to GetHandlers.
 // Check the length with:
 //     len(mockedServiceInterface.GetHandlersCalls())
 func (mock *ServiceInterfaceMock) GetHandlersCalls() []struct {
-	Path     string
-	Config   *service.PathConfig
-	PathInfo *openapi3.PathItem
+	Config      *service.PathConfig
+	MockHandler http.Handler
 } {
 	var calls []struct {
-		Path     string
-		Config   *service.PathConfig
-		PathInfo *openapi3.PathItem
+		Config      *service.PathConfig
+		MockHandler http.Handler
 	}
 	lockServiceInterfaceMockGetHandlers.RLock()
 	calls = mock.calls.GetHandlers
