@@ -2,15 +2,17 @@ package service
 
 import (
 	"encoding/json"
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/gorilla/mux"
-	log "github.com/sirupsen/logrus"
-	"github.com/urfave/negroni"
+	"fmt"
 	"net/http"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/gorilla/mux"
+	log "github.com/sirupsen/logrus"
+	"github.com/urfave/negroni"
 )
 
 type MockHandler struct {
@@ -63,7 +65,7 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 				if statusCodeString == mockStatusCode {
 					ok = h.getMockResponses(responseReference, rw, r)
 				}
-				if ok{
+				if ok {
 					break
 				}
 			}
@@ -107,7 +109,7 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw http.ResponseWriter, r *http.Request) bool{
+func (h *MockHandler) getMockResponses(responseRef *openapi3.ResponseRef, rw http.ResponseWriter, r *http.Request) bool {
 
 	//values pulled from headers are stored here
 	var mockStatusVal int
@@ -156,10 +158,9 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 	//store all the kets from the content
 	keys := reflect.ValueOf(*responseContent).MapKeys()
 
-
 	//attach headers
 	if responseRef.Value.Headers != nil {
-		for key, headerVal := range responseRef.Value.Headers{
+		for key, headerVal := range responseRef.Value.Headers {
 			if headerVal.Value.Schema.Value.Example != nil {
 				rw.Header().Add(key, headerVal.Value.Schema.Value.Example.(string))
 			}
@@ -176,7 +177,7 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 				var c *openapi3.MediaType
 
 				//if a content type was pulled from the headers, set it here, otherwise use the one from the key
-					if showContentType {
+				if showContentType {
 					rw.Header().Add("Content-Type", mockContentType)
 					c = responseContent.Get(mockContentType)
 				} else {
@@ -249,7 +250,7 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 						}
 						rw.Write(body)
 						return true
-					} else if c.Schema.Value.Items != nil && mockExampleLengthVal != 0{
+					} else if c.Schema.Value.Items != nil && mockExampleLengthVal != 0 {
 						arrayLength := mockExampleLengthVal
 
 						exampleValue := c.Schema.Value.Items.Value.Example
@@ -271,16 +272,19 @@ func(h *MockHandler) getMockResponses (responseRef *openapi3.ResponseRef, rw htt
 				//if there is no content type that was pulled from the headers
 			}
 		}
-	}else if len(keys) > 1 && !showContentType{
+	} else if len(keys) > 1 && !showContentType {
 		rw.Write([]byte("There are multiple content types defined. Please specify one using the X-Mock-Content-Type header"))
 		return true
 	}
 	return false
 }
 
-func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
+func NewHTTPServer(service ServiceInterface, serveStatic bool, staticFolder string) http.Handler {
 	router := mux.NewRouter()
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticFolder))))
+	if serveStatic {
+		router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticFolder))))
+	}
+
 	config := service.GetConfig()
 
 	if config != nil {
@@ -306,6 +310,22 @@ func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
 				for _, handler := range handlers {
 					n.UseHandler(handler)
 				}
+
+				// Replace wildcard with regex
+				if strings.Contains(path, "*") {
+					// Let's split the string
+					subPaths := strings.Split(path, "*")
+					// The entire path must be a regex string for this to work
+					pathPrefix := fmt.Sprintf("/{_dummy:%s", strings.Split(subPaths[0], "/")[1])
+					path = pathPrefix + `.*`
+					// This is meant to match things after the wildcard
+					if len(subPaths) > 1 {
+						path += strings.Join(subPaths[1:], "")
+					}
+					path += "}" // close the regexp
+				}
+				log.Debugf("Adding path %s", path)
+
 				router.Handle(path, n).Methods(method)
 				log.Debugf("added %d handler(s) to path %s %s", len(handlers), path, method)
 
