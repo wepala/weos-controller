@@ -85,6 +85,11 @@ var httpServerTests = []*HTTPTest{
 		testDataDir: "testdata/html/http",
 		apiFixture:  "testdata/api/http-test-api-wildcard.yaml",
 	},
+	{
+		name:        "wildcard_static",
+		testDataDir: "testdata/html/http",
+		apiFixture:  "testdata/api/http-test-api-wildcard-static.yaml",
+	},
 }
 
 var staticPageTest = []*HTTPTest{
@@ -98,17 +103,17 @@ var staticPageTest = []*HTTPTest{
 var update = flag.Bool("update", false, "update .golden files")
 
 func Test_Endpoints(t *testing.T) {
-	runHttpServerTests(httpServerTests, "static", t)
+	runHttpServerTests(httpServerTests, false, "static", t)
 }
 
-func runHttpServerTests(tests []*HTTPTest, staticFolder string, t *testing.T) {
+func runHttpServerTests(tests []*HTTPTest, serveStatic bool, staticFolder string, t *testing.T) {
 	//t.SkipNow()
 	for _, test := range tests {
 		t.Run(test.name, func(subTest *testing.T) {
 			var handler http.Handler
 			//setup html server
 			controllerService, _ := service.NewControllerService(test.apiFixture, service.NewPluginLoader())
-			handler = service.NewHTTPServer(controllerService, staticFolder)
+			handler = service.NewHTTPServer(controllerService, serveStatic, staticFolder)
 
 			rw := httptest.NewRecorder()
 

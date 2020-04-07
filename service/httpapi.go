@@ -279,9 +279,12 @@ func (h *MockHandler) getMockResponses(responseRef *openapi3.ResponseRef, rw htt
 	return false
 }
 
-func NewHTTPServer(service ServiceInterface, staticFolder string) http.Handler {
+func NewHTTPServer(service ServiceInterface, serveStatic bool, staticFolder string) http.Handler {
 	router := mux.NewRouter()
-	router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticFolder))))
+	if serveStatic {
+		router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticFolder))))
+	}
+
 	config := service.GetConfig()
 
 	if config != nil {
