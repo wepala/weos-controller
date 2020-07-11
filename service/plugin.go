@@ -15,6 +15,7 @@ type PluginInterface interface {
 	GetHandlerByName(name string) http.HandlerFunc
 	AddConfig(config json.RawMessage) error
 	AddPathConfig(handler string, config json.RawMessage) error
+	AddLogger(logger log.Ext1FieldLogger)
 }
 
 type RepositoryInterface interface {

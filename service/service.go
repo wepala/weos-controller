@@ -31,6 +31,7 @@ type MiddlewareConfig struct {
 type controllerService struct {
 	config       *openapi3.Swagger
 	pluginLoader PluginLoaderInterface
+	logger       log.Ext1FieldLogger
 }
 
 func (s *controllerService) GetGlobalMiddlewareConfig() ([]*MiddlewareConfig, error) {
@@ -75,7 +76,7 @@ func (s *controllerService) GetHandlers(config *PathConfig, mockHandler http.Han
 	var middlewareConfig []*MiddlewareConfig
 
 	if err != nil {
-		log.Debug("there was an issue loading global handlers")
+		s.logger.Debug("there was an issue loading global handlers")
 		return nil, err
 	}
 
@@ -91,22 +92,23 @@ func (s *controllerService) GetHandlers(config *PathConfig, mockHandler http.Han
 	} else { // otherwise let's load the plugins
 		sort.Sort(NewMiddlewareConfigSorter(middlewareConfig))
 		for key, mc := range middlewareConfig {
-			log.Debugf("loading plugin %s", mc.Plugin.FileName)
+			s.logger.Debugf("loading plugin %s", mc.Plugin.FileName)
 			plugin, err := s.pluginLoader.GetPlugin(mc.Plugin.FileName)
 			if err != nil {
-				log.Errorf("error loading plugin %s", err)
+				s.logger.Errorf("error loading plugin %s", err)
 				return nil, err
 			}
 
 			if mc.Plugin.Config != nil {
 				err = plugin.AddConfig(*mc.Plugin.Config) //pass the raw json message that is loaded to the plugin
+				plugin.AddLogger(s.logger)
 				if err != nil {
 					log.Error("error loading plugin config", err)
 					return nil, err
 				}
 			}
 
-			log.Debugf("retrieving handler %s", mc.Handler)
+			s.logger.Debugf("retrieving handler %s", mc.Handler)
 			handlers[key] = plugin.GetHandlerByName(mc.Handler)
 		}
 	}
@@ -134,6 +136,7 @@ func NewControllerService(apiConfig string, pluginLoader PluginLoaderInterface) 
 	svc := &controllerService{
 		config:       swagger,
 		pluginLoader: pluginLoader,
+		logger:       log.WithField("application", "weos-controller"),
 	}
 
 	return svc, nil

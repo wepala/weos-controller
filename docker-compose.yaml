@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+
+
+  data:
+    image: golang:1.13.8
+    container_name: weos_service
+    volumes:
+      - .:/app
+    ports:
+      - "8080:80"
+    environment:
+      NMI_SECURITY_KEY: ${NMI_SECURITY_KEY}
+      PAAY_API_KEY: ${PAAY_API_KEY}
+      LOG_LEVEL: ${LOG_LEVEL}
+
+
+
+  build:
+    image: golang:1.13.8
+    container_name: build_weoscontroller
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: ["go", "build", "-o", "weos-controller"]
+    environment:
+      CGO_ENABLED: 1
