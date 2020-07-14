@@ -23,6 +23,6 @@ services:
     volumes:
       - .:/app
     working_dir: /app
-    command: ["go", "build", "-o", "weos-controller"]
+    command: ["go", "build","-x","-trimpath", "-o", "weos-controller"]
     environment:
       CGO_ENABLED: 1

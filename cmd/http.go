@@ -1,15 +1,15 @@
 package cmd
 
 import (
-	"net/http"
-	"os"
-	"os/signal"
-	"time"
-
 	"bitbucket.org/wepala/weos-controller/service"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
+	_ "golang.org/x/sys/unix"
+	"net/http"
+	"os"
+	"os/signal"
+	"time"
 )
 
 func NewHTTPCmd() (*cobra.Command, *http.Server) {
