@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-sdk-go v1.33.5 // indirect
 	github.com/getkin/kin-openapi v0.15.0
 	github.com/gorilla/mux v1.7.4
+	github.com/matryer/moq v0.0.0-20200607124540-4638a53893e6 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/cobra v1.0.0
