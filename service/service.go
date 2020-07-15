@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 )
@@ -128,7 +130,10 @@ type ServiceInterface interface {
 func NewControllerService(apiConfig string, pluginLoader PluginLoaderInterface) (ServiceInterface, error) {
 
 	loader := openapi3.NewSwaggerLoader()
-	swagger, err := loader.LoadSwaggerFromFile(apiConfig)
+	file, err := ioutil.ReadFile(apiConfig)
+	//replace environment variables in file
+	file = []byte(os.ExpandEnv(string(file)))
+	swagger, err := loader.LoadSwaggerFromData(file)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("error loading %s: %s", apiConfig, err.Error()))
 	}

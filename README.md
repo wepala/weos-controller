@@ -50,7 +50,7 @@ paths:
         mock: true
         plugins:
           - &weosPlugin
-            filename: testdata/plugins/test.linux.so
+            filename: testdata/plugins/test.so
             config:
               mysql:
                 host: localhost

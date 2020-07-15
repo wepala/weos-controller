@@ -3,9 +3,10 @@ package service_test
 import (
 	"bitbucket.org/wepala/weos-controller/service"
 	"encoding/json"
+	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
-	"runtime"
+	"os"
 	"strings"
 	"testing"
 )
@@ -20,7 +21,7 @@ type Config struct {
 
 func TestNewControllerService(t *testing.T) {
 	t.Run("test basic yaml loaded", func(t *testing.T) {
-		apiYaml := "testdata/api/basic-site-api." + runtime.GOOS + ".yml"
+		apiYaml := "testdata/api/basic-site-api.yml"
 		testService, err := service.NewControllerService(apiYaml, nil)
 		if err != nil {
 			t.Fatalf("there was an error setting up testService: %v", err)
@@ -54,7 +55,7 @@ func TestNewControllerService(t *testing.T) {
 		}
 	})
 	t.Run("test loading api config only", func(t *testing.T) {
-		apiYaml := "testdata/api/basic-site-api." + runtime.GOOS + ".yml"
+		apiYaml := "testdata/api/basic-site-api.yml"
 		service, err := service.NewControllerService(apiYaml, nil)
 		if err != nil {
 			t.Fatalf("there was an error setting up service: %v", err)
@@ -81,7 +82,7 @@ func TestNewControllerService(t *testing.T) {
 }
 
 func TestControllerService_GetHandlers(t *testing.T) {
-	apiYaml := "testdata/api/basic-site-api." + runtime.GOOS + ".yml"
+	apiYaml := "testdata/api/basic-site-api.yml"
 	var handlerNames []string
 	config := Config{}
 	//setup mock
@@ -105,6 +106,9 @@ func TestControllerService_GetHandlers(t *testing.T) {
 		},
 		AddPathConfigFunc: func(handler string, config json.RawMessage) error {
 			return nil
+		},
+		AddLoggerFunc: func(logger log.Ext1FieldLogger) {
+
 		},
 	}
 
@@ -150,7 +154,7 @@ func TestControllerService_GetHandlers(t *testing.T) {
 }
 
 func TestControllerService_HandlerPriority(t *testing.T) {
-	apiYaml := "testdata/api/basic-site-api." + runtime.GOOS + ".yml"
+	apiYaml := "testdata/api/basic-site-api.yml"
 	var handlerNames []string
 	config := Config{}
 	//setup mock
@@ -175,6 +179,9 @@ func TestControllerService_HandlerPriority(t *testing.T) {
 		AddPathConfigFunc: func(handler string, config json.RawMessage) error {
 			return nil
 		},
+		AddLoggerFunc: func(logger log.Ext1FieldLogger) {
+
+		},
 	}
 
 	weosPluginMock2 := &PluginInterfaceMock{
@@ -197,6 +204,9 @@ func TestControllerService_HandlerPriority(t *testing.T) {
 		},
 		AddPathConfigFunc: func(handler string, config json.RawMessage) error {
 			return nil
+		},
+		AddLoggerFunc: func(logger log.Ext1FieldLogger) {
+
 		},
 	}
 
@@ -240,7 +250,7 @@ func TestControllerService_HandlerPriority(t *testing.T) {
 }
 
 func TestControllerService_GlobalHandlers(t *testing.T) {
-	apiYaml := "testdata/api/basic-site-api." + runtime.GOOS + ".yml"
+	apiYaml := "testdata/api/basic-site-api.yml"
 	var handlerNames []string
 	config := Config{}
 	//setup mock
@@ -406,5 +416,63 @@ func Test_WEOS_168(t *testing.T) {
 			t.Errorf("didn't expect the plugin to be loaded")
 		}
 	})
+}
+
+//Test_WEOS_482 make it so that environment variables can be passed for routes in weos controller
+func Test_WEOS_482(t *testing.T) {
+	apiYaml := "testdata/api/basic-site-api.yml"
+	var handlerNames []string
+	config := Config{}
+	os.Setenv("ACCOUNT", "wepala")
+	//setup mock
+	weosPluginMock1 := &PluginInterfaceMock{
+		GetHandlerByNameFunc: func(name string) http.HandlerFunc {
+			return func(writer http.ResponseWriter, request *http.Request) {
+				handlerNames = append(handlerNames, name)
+			}
+		},
+		AddConfigFunc: func(tconfig json.RawMessage) error {
+			//check the config on the middleware
+			tbytes, err := tconfig.MarshalJSON()
+			if err != nil {
+				t.Fatalf("encountered error marshaling json for config")
+			}
+			if err = json.Unmarshal(tbytes, &config); err != nil {
+				t.Fatalf("encountered error unmarshaling json for config")
+			}
+
+			return nil
+		},
+		AddPathConfigFunc: func(handler string, config json.RawMessage) error {
+			return nil
+		},
+		AddLoggerFunc: func(logger log.Ext1FieldLogger) {
+
+		},
+	}
+
+	pluginLoaderMock := &PluginLoaderInterfaceMock{
+		GetPluginFunc: func(fileName string) (pluginInterface service.PluginInterface, e error) {
+			return weosPluginMock1, nil
+		},
+	}
+
+	s, err := service.NewControllerService(apiYaml, pluginLoaderMock)
+	if err != nil {
+		t.Fatalf("got an error while create new controller service %s", err)
+	}
+
+	//get path config
+	pathConfig, err := s.GetPathConfig("/wepala/users", "get")
+	if err != nil {
+		t.Fatalf("issue getting path config: '%v", err)
+	}
+
+	//use path config to get handlers
+	handlers, _ := s.GetHandlers(pathConfig, &service.MockHandler{PathInfo: s.GetConfig().Paths["/wepala/users"]})
+
+	if len(handlers) != 2 {
+		t.Errorf("expected %d handlers to be loaded, got %d", 2, len(handlers))
+	}
 
 }

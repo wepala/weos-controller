@@ -3,18 +3,19 @@ package service_test
 import (
 	"bitbucket.org/wepala/weos-controller/service"
 	"plugin"
-	"runtime"
 	"testing"
 )
 
 func TestGetPlugin(t *testing.T) {
-	plugin, err := service.NewPluginLoader().GetPlugin("testdata/plugins/test." + runtime.GOOS + ".so")
+	t.SkipNow()
+	plugin, err := service.NewPluginLoader().GetPlugin("testdata/plugins/test.so")
 	if plugin == nil {
 		t.Errorf("expected plugin to be loaded, got error '%s'", err)
 	}
 }
 
 func TestPluginLoadedOnce(t *testing.T) {
+	t.SkipNow()
 	timesPluginLoaded := 0
 
 	//monkey patch the function "OpenPlugin" to increment the counter so we can confirm that it runs only once
@@ -24,18 +25,18 @@ func TestPluginLoadedOnce(t *testing.T) {
 	}
 	pluginLoader := service.NewPluginLoader()
 
-	plugin, err := pluginLoader.GetPlugin("testdata/plugins/test." + runtime.GOOS + ".so")
+	plugin, err := pluginLoader.GetPlugin("testdata/plugins/test.so")
 	if plugin == nil {
 		t.Fatalf("expected plugin to be loaded the first time, got error '%s'", err)
 	}
-	plugin, _ = pluginLoader.GetPlugin("testdata/plugins/test." + runtime.GOOS + ".so")
+	plugin, _ = pluginLoader.GetPlugin("testdata/plugins/test.so")
 	if timesPluginLoaded != 1 {
 		t.Errorf("expected plugin to be loaded once")
 	}
 }
 
 func TestInvalidPluginNotLoaded(t *testing.T) {
-	_, err := service.NewPluginLoader().GetPlugin("testdata/plugins/invalid_test." + runtime.GOOS + ".so")
+	_, err := service.NewPluginLoader().GetPlugin("testdata/plugins/invalid_test.so")
 	if err == nil {
 		t.Errorf("expected error loading plugin")
 	}
@@ -43,7 +44,7 @@ func TestInvalidPluginNotLoaded(t *testing.T) {
 
 func TestPluginLoader_GetRepository(t *testing.T) {
 	t.SkipNow()
-	plugin, err := service.NewPluginLoader().GetRepository("testdata/plugins/test." + runtime.GOOS + ".so")
+	plugin, err := service.NewPluginLoader().GetRepository("testdata/plugins/test.so")
 	if plugin == nil {
 		t.Errorf("expected plugin to be loaded, got error '%s'", err)
 	}
