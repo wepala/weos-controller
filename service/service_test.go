@@ -3,6 +3,8 @@ package service_test
 import (
 	"bitbucket.org/wepala/weos-controller/service"
 	"encoding/json"
+	"github.com/boj/redistore"
+	"github.com/gorilla/sessions"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"net/http/httptest"
@@ -475,4 +477,172 @@ func Test_WEOS_482(t *testing.T) {
 		t.Errorf("expected %d handlers to be loaded, got %d", 2, len(handlers))
 	}
 
+}
+
+func Test_AddSession(t *testing.T) {
+	apiYaml := "testdata/api/session-api.yml"
+	var handlerNames []string
+	config := Config{}
+	os.Setenv("SESSION_KEY", "wepala")
+	//setup mock
+	weosPluginMock1 := &PluginInterfaceMock{
+		GetHandlerByNameFunc: func(name string) http.HandlerFunc {
+			return func(writer http.ResponseWriter, request *http.Request) {
+				handlerNames = append(handlerNames, name)
+			}
+		},
+		AddConfigFunc: func(tconfig json.RawMessage) error {
+			//check the config on the middleware
+			tbytes, err := tconfig.MarshalJSON()
+			if err != nil {
+				t.Fatalf("encountered error marshaling json for config")
+			}
+			if err = json.Unmarshal(tbytes, &config); err != nil {
+				t.Fatalf("encountered error unmarshaling json for config")
+			}
+
+			return nil
+		},
+		AddPathConfigFunc: func(handler string, config json.RawMessage) error {
+			return nil
+		},
+		AddLoggerFunc: func(logger log.Ext1FieldLogger) {
+
+		},
+		AddSessionFunc: func(session sessions.Store) {
+			//expect default key to be cookie store
+			sessionStore, ok := session.(*sessions.CookieStore)
+			if !ok {
+				t.Errorf("expected the default session store to be a cookie store")
+			}
+
+			//expect default max age to be as long as the browser session
+			if sessionStore.Options.MaxAge != 0 {
+				t.Errorf("expected the default max age to be %d, got %d", 0, sessionStore.Options.MaxAge)
+			}
+		},
+	}
+
+	pluginLoaderMock := &PluginLoaderInterfaceMock{
+		GetPluginFunc: func(fileName string) (pluginInterface service.PluginInterface, e error) {
+			return weosPluginMock1, nil
+		},
+	}
+
+	s, err := service.NewControllerService(apiYaml, pluginLoaderMock)
+	if err != nil {
+		t.Fatalf("got an error while create new controller service %s", err)
+	}
+
+	//get path config
+	pathConfig, err := s.GetPathConfig("/wepala/users", "get")
+	if err != nil {
+		t.Fatalf("issue getting path config: '%v", err)
+	}
+
+	//use path config to get handlers
+	handlers, _ := s.GetHandlers(pathConfig, &service.MockHandler{PathInfo: s.GetConfig().Paths["/wepala/users"]})
+
+	if len(handlers) != 2 {
+		t.Errorf("expected %d handlers to be loaded, got %d", 2, len(handlers))
+	}
+
+	//confirm session is setup
+	if len(weosPluginMock1.AddSessionCalls()) == 0 {
+		t.Errorf("expected session to be created and passed to plugin")
+	}
+}
+
+//Test_RedisSession this test only work when run with docker-compose run redis test (we need redis running for this to work)
+func Test_RedisSession(t *testing.T) {
+	apiYaml := "testdata/api/session-redis-api.yml"
+	var handlerNames []string
+	config := Config{}
+	os.Setenv("SESSION_KEY", "wepala")
+	//setup mock
+	weosPluginMock1 := &PluginInterfaceMock{
+		GetHandlerByNameFunc: func(name string) http.HandlerFunc {
+			return func(writer http.ResponseWriter, request *http.Request) {
+				handlerNames = append(handlerNames, name)
+			}
+		},
+		AddConfigFunc: func(tconfig json.RawMessage) error {
+			//check the config on the middleware
+			tbytes, err := tconfig.MarshalJSON()
+			if err != nil {
+				t.Fatalf("encountered error marshaling json for config")
+			}
+			if err = json.Unmarshal(tbytes, &config); err != nil {
+				t.Fatalf("encountered error unmarshaling json for config")
+			}
+
+			return nil
+		},
+		AddPathConfigFunc: func(handler string, config json.RawMessage) error {
+			return nil
+		},
+		AddLoggerFunc: func(logger log.Ext1FieldLogger) {
+
+		},
+		AddSessionFunc: func(session sessions.Store) {
+			//expect default key to be cookie store
+			sessionStore, ok := session.(*redistore.RediStore)
+			if !ok {
+				t.Fatalf("expected the session store to be a redis store")
+			}
+
+			if sessionStore.Options.MaxAge != 86400 {
+				t.Errorf("expected the max age to be %d, got %d", 86400, sessionStore.Options.MaxAge)
+			}
+
+			if sessionStore.Options.Path != "/some-path" {
+				t.Errorf("expected the max age to be %s, got %s", "/some-path", sessionStore.Options.Path)
+			}
+
+			if sessionStore.Options.Domain != "http://weos.cloud" {
+				t.Errorf("expected the max age to be %s, got %s", "http://weos.cloud", sessionStore.Options.Domain)
+			}
+
+			if !sessionStore.Options.Secure {
+				t.Errorf("expected the secure option to be true")
+			}
+
+			if !sessionStore.Options.HttpOnly {
+				t.Errorf("expected the http-only option to be true")
+			}
+
+			if sessionStore.Options.SameSite != http.SameSiteNoneMode {
+				t.Errorf("expected the same site option to be set to SameSiteNoneMode")
+			}
+		},
+	}
+
+	pluginLoaderMock := &PluginLoaderInterfaceMock{
+		GetPluginFunc: func(fileName string) (pluginInterface service.PluginInterface, e error) {
+			return weosPluginMock1, nil
+		},
+	}
+
+	s, err := service.NewControllerService(apiYaml, pluginLoaderMock)
+	if err != nil {
+		t.Fatalf("got an error while create new controller service %s", err)
+	}
+
+	//get path config
+	pathConfig, err := s.GetPathConfig("/wepala/users", "get")
+	if err != nil {
+		t.Fatalf("issue getting path config: '%v", err)
+	}
+
+	//use path config to get handlers
+	handlers, _ := s.GetHandlers(pathConfig, &service.MockHandler{PathInfo: s.GetConfig().Paths["/wepala/users"]})
+
+	if len(handlers) != 2 {
+		t.Errorf("expected %d handlers to be loaded, got %d", 2, len(handlers))
+	}
+
+	//confirm session is setup
+	if len(weosPluginMock1.AddSessionCalls()) == 0 {
+		t.Errorf("expected session to be created and passed to plugin")
+	}
 }

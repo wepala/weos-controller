@@ -1,0 +1,132 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: Basic Site
+x-weos-plugins:
+  - &weosPlugin
+    filename: testdata/plugins/test.so
+    config:
+      mysql:
+        host: localhost
+        user: root
+        password: root
+  - &weosPlugin2
+    filename: testdata/plugins/test2.so
+x-weos-config:
+  session:
+    key: ${SESSION_KEY}
+  middleware:
+    - plugin: *weosPlugin
+      handler: HelloWorld
+paths:
+  /:
+    get:
+      summary: Landing page of the site
+      responses:
+        '200':
+          description: Landing page
+          content:
+            text/html:
+              example: |
+                <html>
+                  <head>
+                      <title>Landing Page</title>
+                  </head>
+                  <body>
+                    This is a landing page
+                  </body>
+                </html>
+              schema:
+                type: string
+  /about:
+    get:
+      summary: About Page
+      x-weos-config:
+        plugins:
+          - &weosPlugin
+            filename: testdata/plugins/test.so
+            config:
+              mysql:
+                host: localhost
+                user: root
+                password: root
+        middleware:
+          - plugin: *weosPlugin
+            handler: HelloWorld
+      responses:
+        '200':
+          description: About Page
+          content:
+            text/html:
+              example: |
+                <html>
+                  <head>
+                      <title>Landing Page</title>
+                  </head>
+                  <body>
+                    This is a landing page
+                  </body>
+                </html>
+              schema:
+                type: string
+  /multiple-handlers:
+    get:
+      summary: About Page
+      x-weos-config:
+        middleware:
+          - plugin: *weosPlugin2
+            handler: HelloWorld
+            priority: 100
+            config:
+              postgres:
+                host: db
+          - plugin: *weosPlugin
+            handler: FooBar
+            priority: 1
+      responses:
+        '200':
+          description: About Page
+          content:
+            text/html:
+              example: |
+                <html>
+                  <head>
+                      <title>Landing Page</title>
+                  </head>
+                  <body>
+                    This is a landing page
+                  </body>
+                </html>
+              schema:
+                type: string
+  /wepala/users:
+    get:
+      summary: Dynamic route pate
+      x-weos-config:
+        plugins:
+          - &weosPlugin
+            filename: testdata/plugins/test.so
+            config:
+              mysql:
+                host: localhost
+                user: root
+                password: root
+        middleware:
+          - plugin: *weosPlugin
+            handler: HelloWorld
+      responses:
+        '200':
+          description: About Page
+          content:
+            text/html:
+              example: |
+                <html>
+                  <head>
+                      <title>Landing Page</title>
+                  </head>
+                  <body>
+                    This is a landing page
+                  </body>
+                </html>
+              schema:
+                type: string

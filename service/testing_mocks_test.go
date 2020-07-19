@@ -7,6 +7,7 @@ import (
 	"bitbucket.org/wepala/weos-controller/service"
 	"encoding/json"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"sync"
@@ -211,6 +212,7 @@ var (
 	lockPluginInterfaceMockAddConfig        sync.RWMutex
 	lockPluginInterfaceMockAddLogger        sync.RWMutex
 	lockPluginInterfaceMockAddPathConfig    sync.RWMutex
+	lockPluginInterfaceMockAddSession       sync.RWMutex
 	lockPluginInterfaceMockGetHandlerByName sync.RWMutex
 )
 
@@ -233,6 +235,9 @@ var _ service.PluginInterface = &PluginInterfaceMock{}
 //             AddPathConfigFunc: func(handler string, config json.RawMessage) error {
 // 	               panic("mock out the AddPathConfig method")
 //             },
+//             AddSessionFunc: func(session sessions.Store)  {
+// 	               panic("mock out the AddSession method")
+//             },
 //             GetHandlerByNameFunc: func(name string) http.HandlerFunc {
 // 	               panic("mock out the GetHandlerByName method")
 //             },
@@ -251,6 +256,9 @@ type PluginInterfaceMock struct {
 
 	// AddPathConfigFunc mocks the AddPathConfig method.
 	AddPathConfigFunc func(handler string, config json.RawMessage) error
+
+	// AddSessionFunc mocks the AddSession method.
+	AddSessionFunc func(session sessions.Store)
 
 	// GetHandlerByNameFunc mocks the GetHandlerByName method.
 	GetHandlerByNameFunc func(name string) http.HandlerFunc
@@ -273,6 +281,11 @@ type PluginInterfaceMock struct {
 			Handler string
 			// Config is the config argument value.
 			Config json.RawMessage
+		}
+		// AddSession holds details about calls to the AddSession method.
+		AddSession []struct {
+			// Session is the session argument value.
+			Session sessions.Store
 		}
 		// GetHandlerByName holds details about calls to the GetHandlerByName method.
 		GetHandlerByName []struct {
@@ -376,6 +389,37 @@ func (mock *PluginInterfaceMock) AddPathConfigCalls() []struct {
 	lockPluginInterfaceMockAddPathConfig.RLock()
 	calls = mock.calls.AddPathConfig
 	lockPluginInterfaceMockAddPathConfig.RUnlock()
+	return calls
+}
+
+// AddSession calls AddSessionFunc.
+func (mock *PluginInterfaceMock) AddSession(session sessions.Store) {
+	if mock.AddSessionFunc == nil {
+		panic("PluginInterfaceMock.AddSessionFunc: method is nil but PluginInterface.AddSession was just called")
+	}
+	callInfo := struct {
+		Session sessions.Store
+	}{
+		Session: session,
+	}
+	lockPluginInterfaceMockAddSession.Lock()
+	mock.calls.AddSession = append(mock.calls.AddSession, callInfo)
+	lockPluginInterfaceMockAddSession.Unlock()
+	mock.AddSessionFunc(session)
+}
+
+// AddSessionCalls gets all the calls that were made to AddSession.
+// Check the length with:
+//     len(mockedPluginInterface.AddSessionCalls())
+func (mock *PluginInterfaceMock) AddSessionCalls() []struct {
+	Session sessions.Store
+} {
+	var calls []struct {
+		Session sessions.Store
+	}
+	lockPluginInterfaceMockAddSession.RLock()
+	calls = mock.calls.AddSession
+	lockPluginInterfaceMockAddSession.RUnlock()
 	return calls
 }
 

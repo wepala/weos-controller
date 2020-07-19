@@ -1,7 +1,8 @@
 version: "3.7"
 
 services:
-
+  redis:
+    image: redis
 
   data:
     image: golang:1.13.8

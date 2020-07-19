@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/gorilla/sessions"
 	log "github.com/sirupsen/logrus"
 	"net/http"
 	"plugin"
@@ -16,6 +17,7 @@ type PluginInterface interface {
 	AddConfig(config json.RawMessage) error
 	AddPathConfig(handler string, config json.RawMessage) error
 	AddLogger(logger log.Ext1FieldLogger)
+	AddSession(session sessions.Store)
 }
 
 type RepositoryInterface interface {
