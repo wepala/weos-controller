@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/boj/redistore"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/gorilla/sessions"
 	log "github.com/sirupsen/logrus"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 )
@@ -15,7 +19,27 @@ import (
 type PathConfig struct {
 	Mock       bool                `yaml:"mock"`
 	Middleware []*MiddlewareConfig `yaml:"middleware"`
+	Session    *SessionConfig      `yaml:"session"`
 	Data       interface{}
+}
+
+type SessionStoreConfig struct {
+	Type     string `yaml:"type"`
+	Size     int    `yaml:"size"`
+	Network  string `yaml:"network"`
+	Address  string `yaml:"address"`
+	Password string `yaml:"password"`
+}
+
+type SessionConfig struct {
+	Key         string              `yaml:"key"`
+	StoreConfig *SessionStoreConfig `json:"store"`
+	MaxAge      int                 `json:"max-age"`
+	Path        string              `json:"path"`
+	Domain      string              `json:"domain"`
+	Secure      bool                `json:"secure"`
+	HttpOnly    bool                `json:"http-only"`
+	SameSite    string              `json:"same-site"`
 }
 
 type MiddlewareConfig struct {
@@ -31,20 +55,37 @@ type MiddlewareConfig struct {
 type controllerService struct {
 	config       *openapi3.Swagger
 	pluginLoader PluginLoaderInterface
+	logger       log.Ext1FieldLogger
+	globalConfig *PathConfig
+	session      sessions.Store
+}
+
+func (s *controllerService) GetGlobalConfig() (*PathConfig, error) {
+	if s.globalConfig == nil {
+		if s.config.ExtensionProps.Extensions["x-weos-config"] != nil {
+			globalConfigBytes, err := s.config.ExtensionProps.Extensions["x-weos-config"].(json.RawMessage).MarshalJSON()
+			if err != nil {
+				return nil, err
+			}
+			var globalConfig *PathConfig
+			err = json.Unmarshal(globalConfigBytes, &globalConfig)
+			if err != nil {
+				return nil, err
+			}
+
+			return globalConfig, nil
+		}
+	}
+
+	return nil, nil
 }
 
 func (s *controllerService) GetGlobalMiddlewareConfig() ([]*MiddlewareConfig, error) {
-	if s.config.ExtensionProps.Extensions["x-weos-config"] != nil {
-		globalConfigBytes, err := s.config.ExtensionProps.Extensions["x-weos-config"].(json.RawMessage).MarshalJSON()
-		if err != nil {
-			return nil, err
-		}
-		var globalConfig PathConfig
-		err = json.Unmarshal(globalConfigBytes, &globalConfig)
-		if err != nil {
-			return nil, err
-		}
-
+	globalConfig, err := s.GetGlobalConfig()
+	if err != nil {
+		return nil, err
+	}
+	if globalConfig != nil {
 		return globalConfig.Middleware, nil
 	}
 	return nil, nil
@@ -75,7 +116,7 @@ func (s *controllerService) GetHandlers(config *PathConfig, mockHandler http.Han
 	var middlewareConfig []*MiddlewareConfig
 
 	if err != nil {
-		log.Debug("there was an issue loading global handlers")
+		s.logger.Debug("there was an issue loading global handlers")
 		return nil, err
 	}
 
@@ -91,22 +132,26 @@ func (s *controllerService) GetHandlers(config *PathConfig, mockHandler http.Han
 	} else { // otherwise let's load the plugins
 		sort.Sort(NewMiddlewareConfigSorter(middlewareConfig))
 		for key, mc := range middlewareConfig {
-			log.Debugf("loading plugin %s", mc.Plugin.FileName)
+			s.logger.Debugf("loading plugin %s", mc.Plugin.FileName)
 			plugin, err := s.pluginLoader.GetPlugin(mc.Plugin.FileName)
 			if err != nil {
-				log.Errorf("error loading plugin %s", err)
+				s.logger.Errorf("error loading plugin %s", err)
 				return nil, err
 			}
 
 			if mc.Plugin.Config != nil {
 				err = plugin.AddConfig(*mc.Plugin.Config) //pass the raw json message that is loaded to the plugin
+				plugin.AddLogger(s.logger)
+				if s.session != nil {
+					plugin.AddSession(s.session)
+				}
 				if err != nil {
 					log.Error("error loading plugin config", err)
 					return nil, err
 				}
 			}
 
-			log.Debugf("retrieving handler %s", mc.Handler)
+			s.logger.Debugf("retrieving handler %s", mc.Handler)
 			handlers[key] = plugin.GetHandlerByName(mc.Handler)
 		}
 	}
@@ -126,7 +171,10 @@ type ServiceInterface interface {
 func NewControllerService(apiConfig string, pluginLoader PluginLoaderInterface) (ServiceInterface, error) {
 
 	loader := openapi3.NewSwaggerLoader()
-	swagger, err := loader.LoadSwaggerFromFile(apiConfig)
+	file, err := ioutil.ReadFile(apiConfig)
+	//replace environment variables in file
+	file = []byte(os.ExpandEnv(string(file)))
+	swagger, err := loader.LoadSwaggerFromData(file)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("error loading %s: %s", apiConfig, err.Error()))
 	}
@@ -134,7 +182,82 @@ func NewControllerService(apiConfig string, pluginLoader PluginLoaderInterface) 
 	svc := &controllerService{
 		config:       swagger,
 		pluginLoader: pluginLoader,
+		logger:       log.WithField("application", "weos-controller"),
+	}
+
+	//check if session is configured and then setup session
+	if globalConfig, err := svc.GetGlobalConfig(); err == nil && globalConfig != nil {
+		if globalConfig.Session != nil {
+			if globalConfig.Session.StoreConfig != nil {
+				switch globalConfig.Session.StoreConfig.Type {
+				case "redis":
+					svc.session, err = redistore.NewRediStore(globalConfig.Session.StoreConfig.Size, globalConfig.Session.StoreConfig.Network, globalConfig.Session.StoreConfig.Address, globalConfig.Session.StoreConfig.Password, []byte(globalConfig.Session.Key))
+					if err != nil {
+						svc.logger.Errorf("encountered error starting redis session %s", err)
+						svc.logger.Info("Falling back to default cookie store")
+						svc.session = setupDefaultSession(globalConfig.Session)
+					} else {
+						svc.session.(*redistore.RediStore).Options = &sessions.Options{
+							Path:     globalConfig.Session.Path,
+							Domain:   globalConfig.Session.Domain,
+							MaxAge:   globalConfig.Session.MaxAge,
+							Secure:   globalConfig.Session.Secure,
+							HttpOnly: globalConfig.Session.HttpOnly,
+						}
+						switch globalConfig.Session.SameSite {
+						case "SameSiteNoneMode":
+							svc.session.(*redistore.RediStore).Options.SameSite = http.SameSiteNoneMode
+							break
+						case "SameSiteLaxMode":
+							svc.session.(*redistore.RediStore).Options.SameSite = http.SameSiteLaxMode
+							break
+						case "SameSiteStrictMode":
+							svc.session.(*redistore.RediStore).Options.SameSite = http.SameSiteStrictMode
+							break
+						default:
+							svc.session.(*redistore.RediStore).Options.SameSite = http.SameSiteDefaultMode
+							break
+						}
+					}
+
+					break
+				default:
+					svc.session = sessions.NewCookieStore([]byte(globalConfig.Session.Key))
+				}
+
+			} else {
+				svc.session = setupDefaultSession(globalConfig.Session)
+			}
+		}
 	}
 
 	return svc, nil
+}
+
+func setupDefaultSession(config *SessionConfig) *sessions.CookieStore {
+	session := sessions.NewCookieStore([]byte(config.Key))
+	session.MaxAge(config.MaxAge)
+
+	session.Options = &sessions.Options{
+		Path:     config.Path,
+		Domain:   config.Domain,
+		MaxAge:   config.MaxAge,
+		Secure:   config.Secure,
+		HttpOnly: config.HttpOnly,
+	}
+	switch config.SameSite {
+	case "SameSiteNoneMode":
+		session.Options.SameSite = http.SameSiteNoneMode
+		break
+	case "SameSiteLaxMode":
+		session.Options.SameSite = http.SameSiteLaxMode
+		break
+	case "SameSiteStrictMode":
+		session.Options.SameSite = http.SameSiteStrictMode
+		break
+	default:
+		session.Options.SameSite = http.SameSiteDefaultMode
+		break
+	}
+	return session
 }

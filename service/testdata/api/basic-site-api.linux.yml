@@ -4,14 +4,14 @@ info:
   title: Basic Site
 x-weos-plugins:
   - &weosPlugin
-    filename: testdata/plugins/test.linux.so
+    filename: testdata/plugins/test.so
     config:
       mysql:
         host: localhost
         user: root
         password: root
   - &weosPlugin2
-    filename: testdata/plugins/test2.linux.so
+    filename: testdata/plugins/test2.so
 x-weos-config:
   middleware:
     - plugin: *weosPlugin

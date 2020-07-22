@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"golang.org/x/net/context"
+	_ "golang.org/x/sys/unix"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,7 +13,6 @@ import (
 )
 
 func NewHTTPCmd() (*cobra.Command, *http.Server) {
-
 	srv := &http.Server{
 		WriteTimeout: time.Second * 30,
 		ReadTimeout:  time.Second * 30,
@@ -33,7 +33,7 @@ func NewHTTPCmd() (*cobra.Command, *http.Server) {
 				log.Fatalf("error occurred setting up controller service: %s", err)
 			}
 			//setup html handler
-			htmlHandler := service.NewHTTPServer(controllerService, staticPath)
+			htmlHandler := service.NewHTTPServer(controllerService, serveStatic, staticPath)
 			srv := &http.Server{
 				Addr:         args[0],
 				WriteTimeout: time.Second * 30,

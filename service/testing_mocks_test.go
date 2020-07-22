@@ -7,6 +7,8 @@ import (
 	"bitbucket.org/wepala/weos-controller/service"
 	"encoding/json"
 	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/gorilla/sessions"
+	"github.com/sirupsen/logrus"
 	"net/http"
 	"sync"
 )
@@ -18,15 +20,15 @@ var (
 	lockServiceInterfaceMockGetPathConfig             sync.RWMutex
 )
 
-// Ensure, that ServiceInterfaceMock does implement ServiceInterface.
+// Ensure, that ServiceInterfaceMock does implement service.ServiceInterface.
 // If this is not the case, regenerate this file with moq.
 var _ service.ServiceInterface = &ServiceInterfaceMock{}
 
-// ServiceInterfaceMock is a mock implementation of ServiceInterface.
+// ServiceInterfaceMock is a mock implementation of service.ServiceInterface.
 //
 //     func TestSomethingThatUsesServiceInterface(t *testing.T) {
 //
-//         // make and configure a mocked ServiceInterface
+//         // make and configure a mocked service.ServiceInterface
 //         mockedServiceInterface := &ServiceInterfaceMock{
 //             GetConfigFunc: func() *openapi3.Swagger {
 // 	               panic("mock out the GetConfig method")
@@ -42,7 +44,7 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //             },
 //         }
 //
-//         // use mockedServiceInterface in code that requires ServiceInterface
+//         // use mockedServiceInterface in code that requires service.ServiceInterface
 //         // and then make assertions.
 //
 //     }
@@ -208,32 +210,40 @@ func (mock *ServiceInterfaceMock) GetPathConfigCalls() []struct {
 
 var (
 	lockPluginInterfaceMockAddConfig        sync.RWMutex
+	lockPluginInterfaceMockAddLogger        sync.RWMutex
 	lockPluginInterfaceMockAddPathConfig    sync.RWMutex
+	lockPluginInterfaceMockAddSession       sync.RWMutex
 	lockPluginInterfaceMockGetHandlerByName sync.RWMutex
 )
 
-// Ensure, that PluginInterfaceMock does implement PluginInterface.
+// Ensure, that PluginInterfaceMock does implement service.PluginInterface.
 // If this is not the case, regenerate this file with moq.
 var _ service.PluginInterface = &PluginInterfaceMock{}
 
-// PluginInterfaceMock is a mock implementation of PluginInterface.
+// PluginInterfaceMock is a mock implementation of service.PluginInterface.
 //
 //     func TestSomethingThatUsesPluginInterface(t *testing.T) {
 //
-//         // make and configure a mocked PluginInterface
+//         // make and configure a mocked service.PluginInterface
 //         mockedPluginInterface := &PluginInterfaceMock{
 //             AddConfigFunc: func(config json.RawMessage) error {
 // 	               panic("mock out the AddConfig method")
 //             },
+//             AddLoggerFunc: func(logger logrus.Ext1FieldLogger)  {
+// 	               panic("mock out the AddLogger method")
+//             },
 //             AddPathConfigFunc: func(handler string, config json.RawMessage) error {
 // 	               panic("mock out the AddPathConfig method")
+//             },
+//             AddSessionFunc: func(session sessions.Store)  {
+// 	               panic("mock out the AddSession method")
 //             },
 //             GetHandlerByNameFunc: func(name string) http.HandlerFunc {
 // 	               panic("mock out the GetHandlerByName method")
 //             },
 //         }
 //
-//         // use mockedPluginInterface in code that requires PluginInterface
+//         // use mockedPluginInterface in code that requires service.PluginInterface
 //         // and then make assertions.
 //
 //     }
@@ -241,8 +251,14 @@ type PluginInterfaceMock struct {
 	// AddConfigFunc mocks the AddConfig method.
 	AddConfigFunc func(config json.RawMessage) error
 
+	// AddLoggerFunc mocks the AddLogger method.
+	AddLoggerFunc func(logger logrus.Ext1FieldLogger)
+
 	// AddPathConfigFunc mocks the AddPathConfig method.
 	AddPathConfigFunc func(handler string, config json.RawMessage) error
+
+	// AddSessionFunc mocks the AddSession method.
+	AddSessionFunc func(session sessions.Store)
 
 	// GetHandlerByNameFunc mocks the GetHandlerByName method.
 	GetHandlerByNameFunc func(name string) http.HandlerFunc
@@ -254,12 +270,22 @@ type PluginInterfaceMock struct {
 			// Config is the config argument value.
 			Config json.RawMessage
 		}
+		// AddLogger holds details about calls to the AddLogger method.
+		AddLogger []struct {
+			// Logger is the logger argument value.
+			Logger logrus.Ext1FieldLogger
+		}
 		// AddPathConfig holds details about calls to the AddPathConfig method.
 		AddPathConfig []struct {
 			// Handler is the handler argument value.
 			Handler string
 			// Config is the config argument value.
 			Config json.RawMessage
+		}
+		// AddSession holds details about calls to the AddSession method.
+		AddSession []struct {
+			// Session is the session argument value.
+			Session sessions.Store
 		}
 		// GetHandlerByName holds details about calls to the GetHandlerByName method.
 		GetHandlerByName []struct {
@@ -300,6 +326,37 @@ func (mock *PluginInterfaceMock) AddConfigCalls() []struct {
 	return calls
 }
 
+// AddLogger calls AddLoggerFunc.
+func (mock *PluginInterfaceMock) AddLogger(logger logrus.Ext1FieldLogger) {
+	if mock.AddLoggerFunc == nil {
+		panic("PluginInterfaceMock.AddLoggerFunc: method is nil but PluginInterface.AddLogger was just called")
+	}
+	callInfo := struct {
+		Logger logrus.Ext1FieldLogger
+	}{
+		Logger: logger,
+	}
+	lockPluginInterfaceMockAddLogger.Lock()
+	mock.calls.AddLogger = append(mock.calls.AddLogger, callInfo)
+	lockPluginInterfaceMockAddLogger.Unlock()
+	mock.AddLoggerFunc(logger)
+}
+
+// AddLoggerCalls gets all the calls that were made to AddLogger.
+// Check the length with:
+//     len(mockedPluginInterface.AddLoggerCalls())
+func (mock *PluginInterfaceMock) AddLoggerCalls() []struct {
+	Logger logrus.Ext1FieldLogger
+} {
+	var calls []struct {
+		Logger logrus.Ext1FieldLogger
+	}
+	lockPluginInterfaceMockAddLogger.RLock()
+	calls = mock.calls.AddLogger
+	lockPluginInterfaceMockAddLogger.RUnlock()
+	return calls
+}
+
 // AddPathConfig calls AddPathConfigFunc.
 func (mock *PluginInterfaceMock) AddPathConfig(handler string, config json.RawMessage) error {
 	if mock.AddPathConfigFunc == nil {
@@ -332,6 +389,37 @@ func (mock *PluginInterfaceMock) AddPathConfigCalls() []struct {
 	lockPluginInterfaceMockAddPathConfig.RLock()
 	calls = mock.calls.AddPathConfig
 	lockPluginInterfaceMockAddPathConfig.RUnlock()
+	return calls
+}
+
+// AddSession calls AddSessionFunc.
+func (mock *PluginInterfaceMock) AddSession(session sessions.Store) {
+	if mock.AddSessionFunc == nil {
+		panic("PluginInterfaceMock.AddSessionFunc: method is nil but PluginInterface.AddSession was just called")
+	}
+	callInfo := struct {
+		Session sessions.Store
+	}{
+		Session: session,
+	}
+	lockPluginInterfaceMockAddSession.Lock()
+	mock.calls.AddSession = append(mock.calls.AddSession, callInfo)
+	lockPluginInterfaceMockAddSession.Unlock()
+	mock.AddSessionFunc(session)
+}
+
+// AddSessionCalls gets all the calls that were made to AddSession.
+// Check the length with:
+//     len(mockedPluginInterface.AddSessionCalls())
+func (mock *PluginInterfaceMock) AddSessionCalls() []struct {
+	Session sessions.Store
+} {
+	var calls []struct {
+		Session sessions.Store
+	}
+	lockPluginInterfaceMockAddSession.RLock()
+	calls = mock.calls.AddSession
+	lockPluginInterfaceMockAddSession.RUnlock()
 	return calls
 }
 
@@ -371,15 +459,15 @@ var (
 	lockPluginLoaderInterfaceMockGetRepository sync.RWMutex
 )
 
-// Ensure, that PluginLoaderInterfaceMock does implement PluginLoaderInterface.
+// Ensure, that PluginLoaderInterfaceMock does implement service.PluginLoaderInterface.
 // If this is not the case, regenerate this file with moq.
 var _ service.PluginLoaderInterface = &PluginLoaderInterfaceMock{}
 
-// PluginLoaderInterfaceMock is a mock implementation of PluginLoaderInterface.
+// PluginLoaderInterfaceMock is a mock implementation of service.PluginLoaderInterface.
 //
 //     func TestSomethingThatUsesPluginLoaderInterface(t *testing.T) {
 //
-//         // make and configure a mocked PluginLoaderInterface
+//         // make and configure a mocked service.PluginLoaderInterface
 //         mockedPluginLoaderInterface := &PluginLoaderInterfaceMock{
 //             GetPluginFunc: func(fileName string) (service.PluginInterface, error) {
 // 	               panic("mock out the GetPlugin method")
@@ -389,7 +477,7 @@ var _ service.PluginLoaderInterface = &PluginLoaderInterfaceMock{}
 //             },
 //         }
 //
-//         // use mockedPluginLoaderInterface in code that requires PluginLoaderInterface
+//         // use mockedPluginLoaderInterface in code that requires service.PluginLoaderInterface
 //         // and then make assertions.
 //
 //     }

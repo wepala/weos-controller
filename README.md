@@ -50,7 +50,7 @@ paths:
         mock: true
         plugins:
           - &weosPlugin
-            filename: testdata/plugins/test.linux.so
+            filename: testdata/plugins/test.so
             config:
               mysql:
                 host: localhost
@@ -95,6 +95,9 @@ This project uses [gitflow workflow](https://www.atlassian.com/git/tutorials/com
 * When the item is merged to master it will be deployed
 
 To aid with this use the git flow cli (you will be able to create feature branches e.g. git flow feature start APO-1)
+
+#### Generating moqs 
+Go to service folder and run `moq -out testing_mocks_test.go -pkg service_test . ServiceInterface PluginInterface PluginLoaderInterface`
 
 #### New Features ####
 
