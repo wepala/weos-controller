@@ -15,6 +15,11 @@ x-weos-plugins:
 x-weos-config:
   session:
     key: ${SESSION_KEY}
+    path: "/some-path"
+    domain: "http://weos.cloud"
+    secure: true
+    http-only: true
+    same-site: SameSiteNoneMode
   middleware:
     - plugin: *weosPlugin
       handler: HelloWorld

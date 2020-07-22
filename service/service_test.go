@@ -520,6 +520,26 @@ func Test_AddSession(t *testing.T) {
 			if sessionStore.Options.MaxAge != 0 {
 				t.Errorf("expected the default max age to be %d, got %d", 0, sessionStore.Options.MaxAge)
 			}
+
+			if sessionStore.Options.Path != "/some-path" {
+				t.Errorf("expected the max age to be %s, got %s", "/some-path", sessionStore.Options.Path)
+			}
+
+			if sessionStore.Options.Domain != "http://weos.cloud" {
+				t.Errorf("expected the max age to be %s, got %s", "http://weos.cloud", sessionStore.Options.Domain)
+			}
+
+			if !sessionStore.Options.Secure {
+				t.Errorf("expected the secure option to be true")
+			}
+
+			if !sessionStore.Options.HttpOnly {
+				t.Errorf("expected the http-only option to be true")
+			}
+
+			if sessionStore.Options.SameSite != http.SameSiteNoneMode {
+				t.Errorf("expected the same site option to be set to SameSiteNoneMode")
+			}
 		},
 	}
 

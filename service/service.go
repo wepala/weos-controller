@@ -237,5 +237,27 @@ func NewControllerService(apiConfig string, pluginLoader PluginLoaderInterface) 
 func setupDefaultSession(config *SessionConfig) *sessions.CookieStore {
 	session := sessions.NewCookieStore([]byte(config.Key))
 	session.MaxAge(config.MaxAge)
+
+	session.Options = &sessions.Options{
+		Path:     config.Path,
+		Domain:   config.Domain,
+		MaxAge:   config.MaxAge,
+		Secure:   config.Secure,
+		HttpOnly: config.HttpOnly,
+	}
+	switch config.SameSite {
+	case "SameSiteNoneMode":
+		session.Options.SameSite = http.SameSiteNoneMode
+		break
+	case "SameSiteLaxMode":
+		session.Options.SameSite = http.SameSiteLaxMode
+		break
+	case "SameSiteStrictMode":
+		session.Options.SameSite = http.SameSiteStrictMode
+		break
+	default:
+		session.Options.SameSite = http.SameSiteDefaultMode
+		break
+	}
 	return session
 }
