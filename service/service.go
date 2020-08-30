@@ -179,7 +179,7 @@ func NewControllerService(apiConfig string, pluginLoader PluginLoaderInterface) 
 	tempFile := strings.ReplaceAll(string(file), "$ref", "__ref__")
 	//replace environment variables in file
 	tempFile = os.ExpandEnv(string(tempFile))
-	tempFile = strings.ReplaceAll(string(file), "__ref__", "$ref")
+	tempFile = strings.ReplaceAll(string(tempFile), "__ref__", "$ref")
 	file = []byte(tempFile)
 	swagger, err := loader.LoadSwaggerFromData(file)
 	if err != nil {

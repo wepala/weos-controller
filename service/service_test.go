@@ -483,7 +483,10 @@ func Test_WECON_1(t *testing.T) {
 	apiYaml := "testdata/api/wetutor-api.yaml"
 	var handlerNames []string
 	config := Config{}
-	os.Setenv("ACCOUNT", "wepala")
+	err := os.Setenv("POSTGRES_PORT", "5432")
+	if err != nil {
+		t.Fatalf("could not set environment vriable in test %s", err)
+	}
 	//setup mock
 	weosPluginMock1 := &PluginInterfaceMock{
 		GetHandlerByNameFunc: func(name string) http.HandlerFunc {
