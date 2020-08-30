@@ -523,16 +523,16 @@ func Test_WECON_1(t *testing.T) {
 	}
 
 	//get path config
-	pathConfig, err := s.GetPathConfig("/health", "get")
+	pathConfig, err := s.GetPathConfig("/events", "post")
 	if err != nil {
 		t.Fatalf("issue getting path config: '%v", err)
 	}
 
 	//use path config to get handlers
-	handlers, _ := s.GetHandlers(pathConfig, &service.MockHandler{PathInfo: s.GetConfig().Paths["/health"]})
+	handlers, _ := s.GetHandlers(pathConfig, &service.MockHandler{PathInfo: s.GetConfig().Paths["/events"]})
 
-	if len(handlers) != 1 {
-		t.Errorf("expected %d handlers to be loaded, got %d", 1, len(handlers))
+	if len(handlers) != 2 {
+		t.Errorf("expected %d handlers to be loaded, got %d", 2, len(handlers))
 	}
 
 }

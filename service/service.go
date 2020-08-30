@@ -140,8 +140,8 @@ func (s *controllerService) GetHandlers(config *PathConfig, mockHandler http.Han
 			}
 
 			if mc.Plugin.Config != nil {
-				err = plugin.AddConfig(*mc.Plugin.Config) //pass the raw json message that is loaded to the plugin
 				plugin.AddLogger(s.logger)
+				err = plugin.AddConfig(*mc.Plugin.Config) //pass the raw json message that is loaded to the plugin
 				if s.session != nil {
 					plugin.AddSession(s.session)
 				}

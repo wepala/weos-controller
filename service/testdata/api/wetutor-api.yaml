@@ -65,7 +65,6 @@ paths:
 
     post:
       x-weos-config:
-        mock: true
         middleware:
           - plugin: *EventPlugin
             handler: EventSaveCommand
