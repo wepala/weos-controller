@@ -140,8 +140,8 @@ func (s *controllerService) GetHandlers(config *PathConfig, mockHandler http.Han
 			}
 
 			if mc.Plugin.Config != nil {
-				err = plugin.AddConfig(*mc.Plugin.Config) //pass the raw json message that is loaded to the plugin
 				plugin.AddLogger(s.logger)
+				err = plugin.AddConfig(*mc.Plugin.Config) //pass the raw json message that is loaded to the plugin
 				if s.session != nil {
 					plugin.AddSession(s.session)
 				}
@@ -172,8 +172,15 @@ func NewControllerService(apiConfig string, pluginLoader PluginLoaderInterface) 
 
 	loader := openapi3.NewSwaggerLoader()
 	file, err := ioutil.ReadFile(apiConfig)
+	if err != nil {
+		return nil, err
+	}
+	//change the $ref to another marker so that it doesn't get considered an environment variable WECON-1
+	tempFile := strings.ReplaceAll(string(file), "$ref", "__ref__")
 	//replace environment variables in file
-	file = []byte(os.ExpandEnv(string(file)))
+	tempFile = os.ExpandEnv(string(tempFile))
+	tempFile = strings.ReplaceAll(string(tempFile), "__ref__", "$ref")
+	file = []byte(tempFile)
 	swagger, err := loader.LoadSwaggerFromData(file)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("error loading %s: %s", apiConfig, err.Error()))

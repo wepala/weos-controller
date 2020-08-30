@@ -1,0 +1,563 @@
+openapi: 3.0.2
+info:
+  title: WeTutor Command  Service
+  version: 1.0.0
+  description: Api for WeTutor Event Service
+
+servers:
+  - url: http://localhost:8083
+    description: Local server (uses test data)
+
+x-weos-config:
+  plugins:
+    - &EventPlugin
+      filename: /app/weos-event-plugin.so
+      config:
+        POSTGRES_HOST: ${POSTGRES_HOST}
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_PORT: ${POSTGRES_PORT}
+    - &WeTutorPlugin
+      filename: /app/wetutor-command-plugin.so
+      config:
+        db:
+          host: ${POSTGRES_HOST}
+          db: ${POSTGRES_DB}
+          user: ${POSTGRES_USER}
+          password: ${POSTGRES_PASSWORD}
+          port: ${POSTGRES_PORT}
+        search:
+          endpoint: ${ELASTICSEARCH_ENDPOINT}
+          index: ${ACCOUNT_ID}
+
+paths:
+
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Check status of api
+      x-weos-config:
+        middleware:
+          - plugin: *EventPlugin
+            handler: HealthCheck
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              example:
+                status: "OK"
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /events:
+    summary: Path used to manage events
+    parameters:
+      - in: header
+        name: Authorization
+        schema:
+          type: string
+        required: true
+        description: The bearer token
+    description: >-
+      This path is used to add and retrieve events in the datastore
+
+    post:
+      x-weos-config:
+        middleware:
+          - plugin: *EventPlugin
+            handler: EventSaveCommand
+          - plugin: *WeTutorPlugin
+            handler: AddCourse
+      requestBody:
+        description: A new `Event` to be created.
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/AddCourseEvent"
+                - $ref: "#/components/schemas/SignupEvent"
+          application/x-www-form:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/AddCourseFormEvent'
+                - $ref: '#/components/schemas/SignupFormEvent'
+            encoding:
+              "payload[days]":
+                contentType: application/json
+              subjects:
+                contentType: application/json
+        required: true
+      responses:
+        "201":
+          description: Successful response
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+                example: "DENY"
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Success"
+        "400":
+          description: Bad Request
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+                example: "DENY"
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Duplicate response
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+                example: "DENY"
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+          content:
+            application/json:
+              example: { "message": "event already exists" }
+              schema:
+                $ref: "#/components/schemas/Error"
+        "412":
+          description: Out of sync, event update required
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+                example: "DENY"
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+          content:
+            application/json:
+              example: { "message": "item is out of sync, update required" }
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal Server Error
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+                example: "DENY"
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+          content:
+            application/json:
+              example: { "message": "internal error encountered" }
+
+              schema:
+                $ref: "#/components/schemas/Error"
+      operationId: saveEvents
+      summary: Add Event
+      description: >-
+        Add an event to the system
+    get:
+      summary: Get Events
+      parameters:
+        - in: header
+          name: Etag
+          schema:
+            type: string
+          required: true
+          description: string in the format of (ApplicationId.LastCount)
+      x-weos-config:
+        middleware:
+          - plugin: *EventPlugin
+            handler: EventGetCommand
+      responses:
+        "200":
+          description: Successful response.
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+                example: "DENY"
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EventsResponse"
+        '204':
+          description: no update need , application is already up to date
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+                example: "DENY"
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+        "400":
+          description: Bad Request
+          headers:
+            X-Frame-Options:
+              schema:
+                type: string
+                example: "DENY"
+            X-Content-Type-Options:
+              schema:
+                type: string
+                example: nosniff
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+      operationId: getEvents
+      description: >-
+        Pull the latest events for a user
+
+components:
+  schemas:
+    Event:
+      properties:
+        "type":
+          type: string
+        payload:
+          type: string
+          format: binary
+        meta:
+          type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            seqeuenceNo:
+              type: integer
+              format: int64
+            application:
+              type: string
+            created:
+              type: string
+              format: date-time
+      example:
+        type: "ADD_COURSE"
+        payload: {"name":"John Doe"}
+        meta:
+          id: 56268018-3057-4a75-80f2-281df7221c9a
+          seqeuenceNo: 0
+          application: dcdc8542-8aeb-4bac-b529-d3542ed3a769
+          created: "2020-04-14T20:00:59+00:00"
+    SignupEvent:
+      properties:
+        "type":
+          type: string
+        payload:
+          type: object
+          properties:
+            signupId:
+              type: string
+              format: uuid
+            courseId:
+              type: string
+              format: uuid
+            userId:
+              type: string
+              format: uuid
+            participants:
+              type: integer
+            paid:
+              type: boolean
+            order:
+              type: string
+              format: uuid
+      required:
+        - signupId
+        - courseId
+        - userId
+      example:
+        type: "SIGNUP"
+        payload:
+          signupId: d6002d93-e404-433c-851b-f708d543f9d8
+          courseId: cc158451-0e99-44f5-aaf5-0de2193932d5
+          userId: 0ec2285d-b726-467b-ab84-27604ea52e9e
+          participants: 2
+          paid: true
+          order: dbf5a7a4-1ea2-4e22-954f-04094aaa1471
+        meta:
+          id: 56268018-3057-4a75-80f2-281df7221c9a
+          seqeuenceNo: 0
+          application: dcdc8542-8aeb-4bac-b529-d3542ed3a769
+          created: "2020-04-14T20:00:59+00:00"
+    SignupFormEvent:
+      properties:
+        "type":
+          type: string
+        "payload[signupId]":
+          type: string
+          format: uuid
+        "payload[courseId]":
+          type: string
+          format: uuid
+        "payload[userId]":
+          type: string
+          format: string
+        "payload[participants]":
+          type: integer
+        "payload[paid]":
+          type: boolean
+        "payload[order]":
+          type: string
+          format: uuid
+        "meta[id]":
+          type: string
+          format: uuid
+        "meta[application]":
+          type: string
+          format: uuid
+      example:
+        type: "ADD_USER"
+        payload: {"name":"John Doe"}
+        meta:
+          id: 56268018-3057-4a75-80f2-281df7221c9a
+          seqeuenceNo: 0
+          application: dcdc8542-8aeb-4bac-b529-d3542ed3a769
+          created: "2020-04-14T20:00:59+00:00"
+    AddCourseEvent:
+      properties:
+        "type":
+          type: string
+        payload:
+          type: object
+          properties:
+            courseId:
+              type: string
+              format: uuid
+            title:
+              type: string
+            description:
+              type: string
+            stageId:
+              type: integer
+            stageLevelId:
+              type: integer
+            courseType:
+              type: string
+            startDate:
+              type: string
+              format: date
+            endDate:
+              type: string
+              format: date
+            priceStructure:
+              type: string
+            cost:
+              type: number
+              format: double
+            classSize:
+              type: integer
+            active:
+              type: boolean
+            subjects:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  title:
+                    type: string
+            days:
+              type: array
+              items:
+                type: object
+                properties:
+                  day:
+                    type: integer
+                  startTime:
+                    type: string
+                  endTime:
+                    type: string
+              required:
+                - courseId
+                - title
+        meta:
+          $ref: "#/components/schemas/EventMetaData"
+
+      example:
+        type: "ADD_COURSE"
+        payload:
+          courseId: 162f13bc-6d71-44b8-bb39-6e3ac54fdf18
+          title: Match
+          description: Some Math course
+          stageId: 2
+          stageLevelId: 5
+          courseType: class
+          startDate: 2020-08-26
+          endDate: 2020-12-31
+          priceStructure: monthly
+          cost: 200.00
+          classSize: 10
+          active: true
+          subjects:
+            -
+              id: 1
+            -
+              id: 2
+          days:
+            -
+              day: 1
+              startTime: "8:00 AM"
+              endTime: "11:00 AM"
+            -
+              day: 4
+              startTime: "1:00 PM"
+              endTime: "3:00 PM"
+        meta:
+          id: dcc673b9-b2bc-44d1-9417-c1789f0a7599
+          application: c230b660-121d-43be-9c88-ff0e64985198
+          account: a414a5ed-530d-4ef1-be91-ddd91944344a
+          sequence: 0
+
+
+
+    AddCourseFormEvent:
+      properties:
+        "type":
+          type: string
+        "payload[courseId]":
+          type: string
+          format: uuid
+        "payload[title]":
+          type: string
+        "payload[description]":
+          type: string
+        "payload[stageId]":
+          type: string
+        "payload[stageLevelId]":
+          type: string
+        "payload[courseType]":
+          type: string
+        "payload[startDate]":
+          type: string
+        "payload[priceStructure]":
+          type: string
+        "payload[cost]":
+          type: number
+          format: double
+        "payload[classSize]":
+          type: integer
+        "payload[endDate]":
+          type: string
+        "payload[active]":
+          type: boolean
+        "payload[subjects]":
+          type: array
+          items:
+            type: string
+        "payload[days]":
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+              startTime:
+                type: string
+                format: date-time
+              endTime:
+                type: string
+                format: date-time
+        "meta[id]":
+          type: string
+          format: uuid
+        "meta[application]":
+          type: string
+          format: uuid
+      example:
+        type: "ADD_USER"
+        payload: {"name":"John Doe"}
+        meta:
+          id: 56268018-3057-4a75-80f2-281df7221c9a
+          seqeuenceNo: 0
+          application: dcdc8542-8aeb-4bac-b529-d3542ed3a769
+          created: "2020-04-14T20:00:59+00:00"
+
+    Success:
+      title: Success Message
+      type: object
+      properties:
+        message:
+          type: string
+        sequenceNo:
+          type: number
+      example:
+        message: Ok
+        sequenceNo: 0
+
+    EventsResponse:
+      type: object
+      properties:
+        events:
+          title: data
+          type:  array
+          items:
+            oneOf:
+              -
+                $ref: '#/components/schemas/Event'
+        currentCount:
+          title: currentCount
+          type: number
+
+    EventMetaData:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        application:
+          type: string
+          format: uuid
+        account:
+          type: string
+          format: uuid
+        sequence:
+          type: integer
+    HealthResponse:
+      type: object
+      properties:
+        version:
+          type: string
+          description: |
+            the version of the api
+    Error:
+      title: Error Message
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+      example:
+        message: Error Encountered
+        code: 400
+
+
+
+
+
