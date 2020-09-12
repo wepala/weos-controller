@@ -7,6 +7,7 @@ import (
 	"github.com/boj/redistore"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gorilla/sessions"
+	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"

@@ -17,7 +17,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL}
 
   test:
-    image: golang:1.13.8
+    image: msanatan/weos-plugins
     container_name: test_weoscontroller
     volumes:
       - .:/app

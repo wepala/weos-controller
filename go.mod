@@ -8,6 +8,7 @@ require (
 	github.com/getkin/kin-openapi v0.15.0
 	github.com/gorilla/mux v1.7.4
 	github.com/gorilla/sessions v1.2.0
+	github.com/lib/pq v1.8.0
 	github.com/matryer/moq v0.0.0-20200607124540-4638a53893e6 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sirupsen/logrus v1.6.0
