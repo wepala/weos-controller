@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -821,5 +822,49 @@ func Test_WECON_2(t *testing.T) {
 			t.Errorf("expected result to be %s, got %s", "foo", string(result))
 		}
 	})
+	t.Run("first and second handler called, second handler responds with content from first", func(t *testing.T) {
+		rw := httptest.NewRecorder()
+		mockHandler1 := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			r = r.WithContext(context.WithValue(r.Context(), "value", "foo"))
+			r = r.WithContext(context.WithValue(r.Context(), "test", "ing"))
+			rw.(service.WeOSResponseWriter).UpdateRequest(r)
+		})
 
+		mockHandler2 := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			rw.WriteHeader(200)
+			rw.Write([]byte(r.Context().Value("value").(string)))
+		})
+
+		mockService := &ServiceInterfaceMock{
+			GetConfigFunc: func() *openapi3.Swagger {
+				return config
+			},
+			GetGlobalMiddlewareConfigFunc: func() (configs []*service.MiddlewareConfig, err error) {
+				return nil, nil
+			},
+			GetHandlersFunc: func(config *service.PathConfig, mockHandler http.Handler) (funcs []http.HandlerFunc, err error) {
+				return []http.HandlerFunc{mockHandler1, mockHandler2}, nil
+			},
+			GetPathConfigFunc: func(path string, operation string) (config *service.PathConfig, err error) {
+				return nil, nil
+			},
+		}
+
+		httpapi := service.NewHTTPServer(mockService, false, "")
+		httpapi.ServeHTTP(rw, request)
+		//check to see if the first status code is registered
+		response := rw.Result()
+		if response.StatusCode != 200 {
+			t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
+		}
+
+		result, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			t.Fatalf("error retreiving response %s", err)
+		}
+
+		if string(result) != "foo" {
+			t.Errorf("expected result to be %s, got %s", "foo", string(result))
+		}
+	})
 }
