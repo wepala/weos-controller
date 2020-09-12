@@ -27,6 +27,8 @@ func NewHTTPCmd() (*cobra.Command, *http.Server) {
 			if debug {
 				log.SetLevel(log.DebugLevel)
 			}
+			//set log format to json WECON-3
+			log.SetFormatter(&log.JSONFormatter{})
 			//create controller service
 			controllerService, err := service.NewControllerService(apiYaml, service.NewPluginLoader())
 			if err != nil {
