@@ -217,12 +217,21 @@ func NewControllerService(apiConfig string, pluginLoader PluginLoaderInterface) 
 				case "warn":
 					log.SetLevel(log.WarnLevel)
 					break
-
+				case "info":
+					log.SetLevel(log.InfoLevel)
+					break
+				case "trace":
+					log.SetLevel(log.TraceLevel)
+					break
 				}
 			}
 
 			if globalConfig.Logger.Formatter == "json" {
 				log.SetFormatter(&log.JSONFormatter{})
+			}
+
+			if globalConfig.Logger.Formatter == "text" {
+				log.SetFormatter(&log.TextFormatter{})
 			}
 
 			log.SetReportCaller(globalConfig.Logger.ReportCaller)
