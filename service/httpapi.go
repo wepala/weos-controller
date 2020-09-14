@@ -19,10 +19,6 @@ type MockHandler struct {
 	PathInfo *openapi3.PathItem
 }
 
-
-
-
-
 func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	//return a response based on the status code set on the handler with the content type header set to the content type
 
@@ -283,6 +279,49 @@ func (h *MockHandler) getMockResponses(responseRef *openapi3.ResponseRef, rw htt
 	return false
 }
 
+//setup a custom response write so that handlers can be wrapped in a handlerfunc
+type WeOSResponseWriter interface {
+	UpdateRequest(request *http.Request)
+}
+
+type customResponseWriter struct {
+	http.ResponseWriter
+	nextRequest *http.Request
+	done        bool
+}
+
+func (w *customResponseWriter) WriteHeader(status int) {
+	w.done = true
+	w.ResponseWriter.WriteHeader(status)
+}
+
+func (w *customResponseWriter) Write(b []byte) (int, error) {
+	w.done = true
+	return w.ResponseWriter.Write(b)
+}
+
+func (w *customResponseWriter) UpdateRequest(request *http.Request) {
+	w.nextRequest = request
+}
+
+func Wrap(handler http.Handler) negroni.HandlerFunc {
+	return negroni.HandlerFunc(func(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		var drw *customResponseWriter
+		var ok bool
+		if drw, ok = rw.(*customResponseWriter); !ok {
+			drw = &customResponseWriter{
+				ResponseWriter: rw,
+				nextRequest:    r,
+			}
+		}
+
+		handler.ServeHTTP(drw, r)
+		if !drw.done {
+			next(rw, drw.nextRequest)
+		}
+	})
+}
+
 func NewHTTPServer(service ServiceInterface, serveStatic bool, staticFolder string) http.Handler {
 	router := mux.NewRouter()
 	if serveStatic {
@@ -311,8 +350,12 @@ func NewHTTPServer(service ServiceInterface, serveStatic bool, staticFolder stri
 				if err != nil {
 					log.Errorf("error encountered retrieving the handlers for the route '%s', got: '%s'", path, err.Error())
 				}
+
+				var negroniHandlers []negroni.Handler
+
 				for _, handler := range handlers {
-					n.UseHandler(handler)
+					n.Use(Wrap(handler))
+					negroniHandlers = append(negroniHandlers, Wrap(handler))
 				}
 
 				// Replace wildcard with regex
@@ -329,7 +372,6 @@ func NewHTTPServer(service ServiceInterface, serveStatic bool, staticFolder stri
 					path += "}" // close the regexp
 				}
 				log.Debugf("Adding path %s", path)
-
 				router.Handle(path, n).Methods(method)
 				log.Debugf("added %d handler(s) to path %s %s", len(handlers), path, method)
 

@@ -7,6 +7,7 @@ import (
 	"github.com/boj/redistore"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gorilla/sessions"
+	_ "github.com/lib/pq"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
@@ -20,6 +21,7 @@ type PathConfig struct {
 	Mock       bool                `yaml:"mock"`
 	Middleware []*MiddlewareConfig `yaml:"middleware"`
 	Session    *SessionConfig      `yaml:"session"`
+	Logger     *LoggerConfig       `yaml:"logger"`
 	Data       interface{}
 }
 
@@ -29,6 +31,12 @@ type SessionStoreConfig struct {
 	Network  string `yaml:"network"`
 	Address  string `yaml:"address"`
 	Password string `yaml:"password"`
+}
+
+type LoggerConfig struct {
+	Level        string `json:"level"`
+	Formatter    string `json:"formatter"`
+	ReportCaller bool   `json:"report-caller"`
 }
 
 type SessionConfig struct {
@@ -194,6 +202,40 @@ func NewControllerService(apiConfig string, pluginLoader PluginLoaderInterface) 
 
 	//check if session is configured and then setup session
 	if globalConfig, err := svc.GetGlobalConfig(); err == nil && globalConfig != nil {
+		if globalConfig.Logger != nil {
+			if globalConfig.Logger.Level != "" {
+				switch globalConfig.Logger.Level {
+				case "debug":
+					log.SetLevel(log.DebugLevel)
+					break
+				case "fatal":
+					log.SetLevel(log.FatalLevel)
+					break
+				case "error":
+					log.SetLevel(log.ErrorLevel)
+					break
+				case "warn":
+					log.SetLevel(log.WarnLevel)
+					break
+				case "info":
+					log.SetLevel(log.InfoLevel)
+					break
+				case "trace":
+					log.SetLevel(log.TraceLevel)
+					break
+				}
+			}
+
+			if globalConfig.Logger.Formatter == "json" {
+				log.SetFormatter(&log.JSONFormatter{})
+			}
+
+			if globalConfig.Logger.Formatter == "text" {
+				log.SetFormatter(&log.TextFormatter{})
+			}
+
+			log.SetReportCaller(globalConfig.Logger.ReportCaller)
+		}
 		if globalConfig.Session != nil {
 			if globalConfig.Session.StoreConfig != nil {
 				switch globalConfig.Session.StoreConfig.Type {

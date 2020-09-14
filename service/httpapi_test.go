@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -156,7 +157,7 @@ func runHttpServerTests(tests []*HTTPTest, serveStatic bool, staticFolder string
 }
 
 func TestMockHandler_ServeHTTP(t *testing.T) {
-	t.SkipNow()
+	//t.SkipNow()
 	loader := openapi3.NewSwaggerLoader()
 	config, err := loader.LoadSwaggerFromFile("testdata/api/x-mock-status-code.yaml")
 
@@ -195,11 +196,11 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 			t.Errorf("expected json response, %q", err.Error())
 		}
 
-		if database.Id != "someid" {
+		if database.Id != "35a54035-753d-4123-bea2-ff3ee25b0eea" {
 			t.Errorf("expected the id on the response to be %s, got %s", "someid", database.Id)
 		}
 
-		if database.Wern != "somewern" {
+		if database.Wern != "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea" {
 			t.Errorf("expected the id on the response to be %s, got %s", "somewern", database.Wern)
 		}
 	})
@@ -408,11 +409,11 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 			t.Errorf("expected json response, %q", err.Error())
 		}
 
-		if database.Id != "default" {
+		if database.Id != "35a54035-753d-4123-bea2-ff3ee25b0eea" {
 			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Id)
 		}
 
-		if database.Wern != "default" {
+		if database.Wern != "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea" {
 			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Wern)
 		}
 	})
@@ -444,11 +445,11 @@ func TestMockHandler_ServeHTTP(t *testing.T) {
 			t.Errorf("expected json response, %q", err.Error())
 		}
 
-		if database.Id != "default" {
+		if database.Id != "35a54035-753d-4123-bea2-ff3ee25b0eea" {
 			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Id)
 		}
 
-		if database.Wern != "default" {
+		if database.Wern != "weos:tt:data:12345:35a54035-753d-4123-bea2-ff3ee25b0eea" {
 			t.Errorf("expected the id on the response to be %s, got %s", "default", database.Wern)
 		}
 	})
@@ -721,6 +722,149 @@ func TestOtherSwaggerFiles(t *testing.T) {
 
 		if string(body) == "" {
 			t.Error("Expected something to be returned")
+		}
+	})
+}
+
+func Test_WECON_2(t *testing.T) {
+	loader := openapi3.NewSwaggerLoader()
+	config, err := loader.LoadSwaggerFromFile("testdata/api/x-mock-status-code.yaml")
+
+	if err != nil {
+		t.Fatalf("error loading mock api config %s", err)
+	}
+
+	request := loadHttpRequestFixture(filepath.Join("testdata/html/http", "about_page_200.input.http"), t)
+	t.Run("first and second handler called, second handler responds", func(t *testing.T) {
+		rw := httptest.NewRecorder()
+		mockHandler1 := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+
+		})
+
+		mockHandler2 := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			rw.WriteHeader(200)
+			rw.Write([]byte(`bar`))
+		})
+
+		mockService := &ServiceInterfaceMock{
+			GetConfigFunc: func() *openapi3.Swagger {
+				return config
+			},
+			GetGlobalMiddlewareConfigFunc: func() (configs []*service.MiddlewareConfig, err error) {
+				return nil, nil
+			},
+			GetHandlersFunc: func(config *service.PathConfig, mockHandler http.Handler) (funcs []http.HandlerFunc, err error) {
+				return []http.HandlerFunc{mockHandler1, mockHandler2}, nil
+			},
+			GetPathConfigFunc: func(path string, operation string) (config *service.PathConfig, err error) {
+				return nil, nil
+			},
+		}
+
+		httpapi := service.NewHTTPServer(mockService, false, "")
+		httpapi.ServeHTTP(rw, request)
+		//check to see if the first status code is registered
+		response := rw.Result()
+		if response.StatusCode != 200 {
+			t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
+		}
+
+		result, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			t.Fatalf("error retreiving response %s", err)
+		}
+
+		if string(result) != "bar" {
+			t.Errorf("expected result to be %s, got %s", "bar", string(result))
+		}
+	})
+	t.Run("second handler no response if first handler responses", func(t *testing.T) {
+		rw := httptest.NewRecorder()
+		mockHandler1 := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			rw.WriteHeader(500)
+			rw.Write([]byte(`foo`))
+		})
+
+		mockHandler2 := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			rw.WriteHeader(200)
+			rw.Write([]byte(`bar`))
+		})
+
+		mockService := &ServiceInterfaceMock{
+			GetConfigFunc: func() *openapi3.Swagger {
+				return config
+			},
+			GetGlobalMiddlewareConfigFunc: func() (configs []*service.MiddlewareConfig, err error) {
+				return nil, nil
+			},
+			GetHandlersFunc: func(config *service.PathConfig, mockHandler http.Handler) (funcs []http.HandlerFunc, err error) {
+				return []http.HandlerFunc{mockHandler1, mockHandler2}, nil
+			},
+			GetPathConfigFunc: func(path string, operation string) (config *service.PathConfig, err error) {
+				return nil, nil
+			},
+		}
+
+		httpapi := service.NewHTTPServer(mockService, false, "")
+		httpapi.ServeHTTP(rw, request)
+		//check to see if the first status code is registered
+		response := rw.Result()
+		if response.StatusCode != 500 {
+			t.Errorf("expected the status code to be %d, got %d", 500, response.StatusCode)
+		}
+
+		result, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			t.Fatalf("error retreiving response %s", err)
+		}
+
+		if string(result) != "foo" {
+			t.Errorf("expected result to be %s, got %s", "foo", string(result))
+		}
+	})
+	t.Run("first and second handler called, second handler responds with content from first", func(t *testing.T) {
+		rw := httptest.NewRecorder()
+		mockHandler1 := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			r = r.WithContext(context.WithValue(r.Context(), "value", "foo"))
+			r = r.WithContext(context.WithValue(r.Context(), "test", "ing"))
+			rw.(service.WeOSResponseWriter).UpdateRequest(r)
+		})
+
+		mockHandler2 := http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			rw.WriteHeader(200)
+			rw.Write([]byte(r.Context().Value("value").(string)))
+		})
+
+		mockService := &ServiceInterfaceMock{
+			GetConfigFunc: func() *openapi3.Swagger {
+				return config
+			},
+			GetGlobalMiddlewareConfigFunc: func() (configs []*service.MiddlewareConfig, err error) {
+				return nil, nil
+			},
+			GetHandlersFunc: func(config *service.PathConfig, mockHandler http.Handler) (funcs []http.HandlerFunc, err error) {
+				return []http.HandlerFunc{mockHandler1, mockHandler2}, nil
+			},
+			GetPathConfigFunc: func(path string, operation string) (config *service.PathConfig, err error) {
+				return nil, nil
+			},
+		}
+
+		httpapi := service.NewHTTPServer(mockService, false, "")
+		httpapi.ServeHTTP(rw, request)
+		//check to see if the first status code is registered
+		response := rw.Result()
+		if response.StatusCode != 200 {
+			t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
+		}
+
+		result, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			t.Fatalf("error retreiving response %s", err)
+		}
+
+		if string(result) != "foo" {
+			t.Errorf("expected result to be %s, got %s", "foo", string(result))
 		}
 	})
 }
