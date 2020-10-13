@@ -24,7 +24,7 @@ var serveCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(serveCmd)
+	RootCmd.AddCommand(serveCmd)
 	serveCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", viper.GetBool("DEBUG"), "indicate if to run in debug mode")
 	serveCmd.PersistentFlags().StringVarP(&staticPath, "staticFolder", "s", "./static", "path to static folder")
 	serveCmd.PersistentFlags().BoolVar(&serveStatic, "serveStatic", true, "serve the static folder (defaults to true)")
