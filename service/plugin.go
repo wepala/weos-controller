@@ -72,7 +72,7 @@ func (loader *PluginLoader) GetRepository(fileName string) (RepositoryInterface,
 	return loader.repositories[fileName], nil
 }
 
-func NewPluginLoader() *PluginLoader {
+var NewPluginLoader = func() *PluginLoader {
 	return &PluginLoader{plugins: make(map[string]PluginInterface)}
 }
 
