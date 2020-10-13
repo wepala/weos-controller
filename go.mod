@@ -1,4 +1,4 @@
-module bitbucket.org/wepala/weos-controller
+module github.com/wepala/weos-controller
 
 go 1.13
 
