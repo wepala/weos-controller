@@ -1,8 +1,8 @@
 package cmd_test
 
 import (
-	"bitbucket.org/wepala/weos-controller/cmd"
 	"github.com/spf13/cobra"
+	"github.com/wepala/weos-controller/cmd"
 	"io"
 	"net/http"
 	"runtime"

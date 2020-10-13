@@ -1,9 +1,9 @@
 package cmd
 
 import (
-	"bitbucket.org/wepala/weos-controller/service"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/wepala/weos-controller/service"
 	"golang.org/x/net/context"
 	_ "golang.org/x/sys/unix"
 	"net/http"

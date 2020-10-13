@@ -4,8 +4,8 @@
 package service_test
 
 import (
-	"bitbucket.org/wepala/weos-controller/service"
 	"github.com/wepala/go-testhelpers"
+	"github.com/wepala/weos-controller/service"
 	"io/ioutil"
 	"net/http"
 	"testing"

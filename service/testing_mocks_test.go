@@ -4,11 +4,11 @@
 package service_test
 
 import (
-	"bitbucket.org/wepala/weos-controller/service"
 	"encoding/json"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
+	"github.com/wepala/weos-controller/service"
 	"net/http"
 	"sync"
 )

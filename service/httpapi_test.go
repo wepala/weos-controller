@@ -14,9 +14,9 @@ import (
 	"strings"
 	"testing"
 
-	"bitbucket.org/wepala/weos-controller/service"
 	"github.com/getkin/kin-openapi/openapi3"
 	log "github.com/sirupsen/logrus"
+	"github.com/wepala/weos-controller/service"
 )
 
 //go:generate moq -out testing_mocks_test.go -pkg service_test . ServiceInterface

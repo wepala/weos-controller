@@ -3,7 +3,7 @@ pipelines:
   default:
     - step:
         script: # Modify the commands below to build your repository.
-          - PACKAGE_PATH="${GOPATH}/src/bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+          - PACKAGE_PATH="${GOPATH}/src/github.com/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
           - mkdir -pv "${PACKAGE_PATH}"
           - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
           - cd "${PACKAGE_PATH}"
@@ -13,7 +13,7 @@ pipelines:
       - step:
           name: test and build
           script:
-            - PACKAGE_PATH="${GOPATH}/src/bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+            - PACKAGE_PATH="${GOPATH}/src/github.com/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
             - mkdir -pv "${PACKAGE_PATH}"
             - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
             - cd "${PACKAGE_PATH}"
@@ -23,7 +23,7 @@ pipelines:
             - chmod u+x weos-controller
             - chmod o+x weos-controller
             - tar -cvf weos-controller.latest.tar weos-controller
-            - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "files=@weos-controller.latest.tar"
+            - curl -X POST --user "${BB_AUTH_STRING}" "https://api.github.com/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "files=@weos-controller.latest.tar"
             - cp weos-controller.latest.tar ${BITBUCKET_CLONE_DIR}
           artifacts:
             - weos-controller.latest.tar
@@ -31,7 +31,7 @@ pipelines:
       - step:
           name: test and build
           script:
-            - PACKAGE_PATH="${GOPATH}/src/bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+            - PACKAGE_PATH="${GOPATH}/src/github.com/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
             - mkdir -pv "${PACKAGE_PATH}"
             - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
             - cd "${PACKAGE_PATH}"
@@ -41,7 +41,7 @@ pipelines:
             - chmod u+x weos-controller
             - chmod o+x weos-controller
             - tar -cvf weos-controller.dev.tar weos-controller
-            - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "files=@weos-controller.dev.tar"
+            - curl -X POST --user "${BB_AUTH_STRING}" "https://api.github.com/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "files=@weos-controller.dev.tar"
             - cp weos-controller.dev.tar ${BITBUCKET_CLONE_DIR}
           artifacts:
             - weos-controller.dev.tar
@@ -50,7 +50,7 @@ pipelines:
       - step:
           name: test and build
           script:
-            - PACKAGE_PATH="${GOPATH}/src/bitbucket.org/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
+            - PACKAGE_PATH="${GOPATH}/src/github.com/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}"
             - mkdir -pv "${PACKAGE_PATH}"
             - tar -cO --exclude-vcs --exclude=bitbucket-pipelines.yml . | tar -xv -C "${PACKAGE_PATH}"
             - cd "${PACKAGE_PATH}"
@@ -60,7 +60,7 @@ pipelines:
             - chmod u+x weos-controller
             - chmod o+x weos-controller
             - tar cvf weos-controller.${BITBUCKET_TAG}.tar weos-controller
-            - curl -X POST --user "${BB_AUTH_STRING}" "https://api.bitbucket.org/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "files=@weos-controller.${BITBUCKET_TAG}.tar"
+            - curl -X POST --user "${BB_AUTH_STRING}" "https://api.github.com/2.0/repositories/${BITBUCKET_REPO_OWNER}/${BITBUCKET_REPO_SLUG}/downloads" -F "files=@weos-controller.${BITBUCKET_TAG}.tar"
             - cp weos-controller.${BITBUCKET_TAG}.tar ${BITBUCKET_CLONE_DIR}
           artifacts:
             - weos-contoller*

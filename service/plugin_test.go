@@ -1,7 +1,7 @@
 package service_test
 
 import (
-	"bitbucket.org/wepala/weos-controller/service"
+	"github.com/wepala/weos-controller/service"
 	"plugin"
 	"testing"
 )

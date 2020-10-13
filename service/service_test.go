@@ -1,11 +1,11 @@
 package service_test
 
 import (
-	"bitbucket.org/wepala/weos-controller/service"
 	"encoding/json"
 	"github.com/boj/redistore"
 	"github.com/gorilla/sessions"
 	log "github.com/sirupsen/logrus"
+	"github.com/wepala/weos-controller/service"
 	"net/http"
 	"net/http/httptest"
 	"os"
