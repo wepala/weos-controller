@@ -374,17 +374,6 @@ func NewHTTPServer(service ServiceInterface, serveStatic bool, staticFolder stri
 				log.Debugf("Adding path %s", path)
 				router.Handle(path, n).Methods(method)
 				log.Debugf("added %d handler(s) to path %s %s", len(handlers), path, method)
-
-				//Add handler for each path's OPTIONS call
-				pathMethods = append(pathMethods, "OPTIONS")
-				router.HandleFunc(path, func(rw http.ResponseWriter, r *http.Request) {
-					//return a response based on the status code set on the handler with the content type header set to the content type
-					rw.Header().Add("Access-Control-Allow-Methods", strings.Join(pathMethods, ", "))
-					rw.Header().Add("Access-Control-Allow-Origin", "*")
-					rw.Header().Add("Accept", "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8")
-					rw.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
-					rw.WriteHeader(200)
-				}).Methods("OPTIONS")
 			}
 
 		}
