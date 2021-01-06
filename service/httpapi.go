@@ -348,7 +348,7 @@ func NewHTTPServer(service ServiceInterface, serveStatic bool, staticFolder stri
 				}
 				err = service.ConfigurePath(path, pathConfig)
 				if err != nil {
-					log.Errorf("error encountered configuring the route '%s', got: '%s'", path, err.Error())
+					log.Errorf("error encountered configuring the path '%s', got: '%s'", path, err.Error())
 				}
 				handlers, err := service.GetHandlers(pathConfig, &MockHandler{PathInfo: pathObject})
 				if err != nil {
