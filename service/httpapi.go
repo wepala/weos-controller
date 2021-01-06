@@ -346,16 +346,14 @@ func NewHTTPServer(service ServiceInterface, serveStatic bool, staticFolder stri
 				if err != nil {
 					log.Errorf("error encountered getting the path config for the route '%s', got: '%s'", path, err.Error())
 				}
-				handlers, err := service.GetHandlers(pathConfig, &MockHandler{PathInfo: pathObject})
-				if err != nil {
-					log.Errorf("error encountered retrieving the handlers for the route '%s', got: '%s'", path, err.Error())
-				}
-
 				err = service.ConfigurePath(path, pathConfig)
 				if err != nil {
 					log.Errorf("error encountered configuring the route '%s', got: '%s'", path, err.Error())
 				}
-
+				handlers, err := service.GetHandlers(pathConfig, &MockHandler{PathInfo: pathObject})
+				if err != nil {
+					log.Errorf("error encountered retrieving the handlers for the route '%s', got: '%s'", path, err.Error())
+				}
 				var negroniHandlers []negroni.Handler
 
 				for _, handler := range handlers {
