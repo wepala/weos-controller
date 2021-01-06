@@ -759,6 +759,9 @@ func Test_WECON_2(t *testing.T) {
 			GetPathConfigFunc: func(path string, operation string) (config *service.PathConfig, err error) {
 				return nil, nil
 			},
+			ConfigurePathFunc: func(path string, config *service.PathConfig) error {
+				return nil
+			},
 		}
 
 		httpapi := service.NewHTTPServer(mockService, false, "")
@@ -802,6 +805,9 @@ func Test_WECON_2(t *testing.T) {
 			},
 			GetPathConfigFunc: func(path string, operation string) (config *service.PathConfig, err error) {
 				return nil, nil
+			},
+			ConfigurePathFunc: func(path string, config *service.PathConfig) error {
+				return nil
 			},
 		}
 
@@ -847,6 +853,9 @@ func Test_WECON_2(t *testing.T) {
 			},
 			GetPathConfigFunc: func(path string, operation string) (config *service.PathConfig, err error) {
 				return nil, nil
+			},
+			ConfigurePathFunc: func(path string, config *service.PathConfig) error {
+				return nil
 			},
 		}
 

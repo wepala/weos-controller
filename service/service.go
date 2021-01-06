@@ -4,16 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/boj/redistore"
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/gorilla/sessions"
-	_ "github.com/lib/pq"
-	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/boj/redistore"
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/gorilla/sessions"
+	_ "github.com/lib/pq"
+	log "github.com/sirupsen/logrus"
 )
 
 //go:generate moq -out testing_mocks_test.go -pkg service_test . ServiceInterface PluginInterface PluginLoaderInterface
@@ -115,6 +116,37 @@ func (s *controllerService) GetPathConfig(path string, operation string) (*PathC
 	return &pathConfig, nil
 }
 
+func (s *controllerService) ConfigurePath(path string, config *PathConfig) error {
+	var middlewareConfig []*MiddlewareConfig
+	if config != nil {
+		middlewareConfig = config.Middleware
+	}
+	sort.Sort(NewMiddlewareConfigSorter(middlewareConfig))
+	for _, mc := range middlewareConfig {
+		s.logger.Debugf("loading plugin %s", mc.Plugin.FileName)
+		plugin, err := s.pluginLoader.GetPlugin(mc.Plugin.FileName)
+		if err != nil {
+			s.logger.Errorf("error loading plugin %s", err)
+			return err
+		}
+		plugin.AddLogger(s.logger)
+
+		if mc.Plugin.Config != nil {
+			bytes, err := json.Marshal(config)
+			if err != nil {
+				log.Error("error unmarshaling plugin path config", err)
+				return err
+			}
+			err = plugin.AddPathConfig(path, bytes)
+			if err != nil {
+				log.Error("error loading plugin path config", err)
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func (s *controllerService) GetConfig() *openapi3.Swagger {
 	return s.config
 }
@@ -173,6 +205,7 @@ type ServiceInterface interface {
 	GetPathConfig(path string, operation string) (*PathConfig, error)
 	GetConfig() *openapi3.Swagger
 	GetHandlers(config *PathConfig, mockHandler http.Handler) ([]http.HandlerFunc, error)
+	ConfigurePath(path string, config *PathConfig) error
 	GetGlobalMiddlewareConfig() ([]*MiddlewareConfig, error)
 }
 

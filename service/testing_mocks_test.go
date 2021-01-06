@@ -13,13 +13,6 @@ import (
 	"sync"
 )
 
-var (
-	lockServiceInterfaceMockGetConfig                 sync.RWMutex
-	lockServiceInterfaceMockGetGlobalMiddlewareConfig sync.RWMutex
-	lockServiceInterfaceMockGetHandlers               sync.RWMutex
-	lockServiceInterfaceMockGetPathConfig             sync.RWMutex
-)
-
 // Ensure, that ServiceInterfaceMock does implement service.ServiceInterface.
 // If this is not the case, regenerate this file with moq.
 var _ service.ServiceInterface = &ServiceInterfaceMock{}
@@ -30,6 +23,9 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //
 //         // make and configure a mocked service.ServiceInterface
 //         mockedServiceInterface := &ServiceInterfaceMock{
+//             ConfigurePathFunc: func(path string, config *service.PathConfig) error {
+// 	               panic("mock out the ConfigurePath method")
+//             },
 //             GetConfigFunc: func() *openapi3.Swagger {
 // 	               panic("mock out the GetConfig method")
 //             },
@@ -49,6 +45,9 @@ var _ service.ServiceInterface = &ServiceInterfaceMock{}
 //
 //     }
 type ServiceInterfaceMock struct {
+	// ConfigurePathFunc mocks the ConfigurePath method.
+	ConfigurePathFunc func(path string, config *service.PathConfig) error
+
 	// GetConfigFunc mocks the GetConfig method.
 	GetConfigFunc func() *openapi3.Swagger
 
@@ -63,6 +62,13 @@ type ServiceInterfaceMock struct {
 
 	// calls tracks calls to the methods.
 	calls struct {
+		// ConfigurePath holds details about calls to the ConfigurePath method.
+		ConfigurePath []struct {
+			// Path is the path argument value.
+			Path string
+			// Config is the config argument value.
+			Config *service.PathConfig
+		}
 		// GetConfig holds details about calls to the GetConfig method.
 		GetConfig []struct {
 		}
@@ -84,6 +90,46 @@ type ServiceInterfaceMock struct {
 			Operation string
 		}
 	}
+	lockConfigurePath             sync.RWMutex
+	lockGetConfig                 sync.RWMutex
+	lockGetGlobalMiddlewareConfig sync.RWMutex
+	lockGetHandlers               sync.RWMutex
+	lockGetPathConfig             sync.RWMutex
+}
+
+// ConfigurePath calls ConfigurePathFunc.
+func (mock *ServiceInterfaceMock) ConfigurePath(path string, config *service.PathConfig) error {
+	if mock.ConfigurePathFunc == nil {
+		panic("ServiceInterfaceMock.ConfigurePathFunc: method is nil but ServiceInterface.ConfigurePath was just called")
+	}
+	callInfo := struct {
+		Path   string
+		Config *service.PathConfig
+	}{
+		Path:   path,
+		Config: config,
+	}
+	mock.lockConfigurePath.Lock()
+	mock.calls.ConfigurePath = append(mock.calls.ConfigurePath, callInfo)
+	mock.lockConfigurePath.Unlock()
+	return mock.ConfigurePathFunc(path, config)
+}
+
+// ConfigurePathCalls gets all the calls that were made to ConfigurePath.
+// Check the length with:
+//     len(mockedServiceInterface.ConfigurePathCalls())
+func (mock *ServiceInterfaceMock) ConfigurePathCalls() []struct {
+	Path   string
+	Config *service.PathConfig
+} {
+	var calls []struct {
+		Path   string
+		Config *service.PathConfig
+	}
+	mock.lockConfigurePath.RLock()
+	calls = mock.calls.ConfigurePath
+	mock.lockConfigurePath.RUnlock()
+	return calls
 }
 
 // GetConfig calls GetConfigFunc.
@@ -93,9 +139,9 @@ func (mock *ServiceInterfaceMock) GetConfig() *openapi3.Swagger {
 	}
 	callInfo := struct {
 	}{}
-	lockServiceInterfaceMockGetConfig.Lock()
+	mock.lockGetConfig.Lock()
 	mock.calls.GetConfig = append(mock.calls.GetConfig, callInfo)
-	lockServiceInterfaceMockGetConfig.Unlock()
+	mock.lockGetConfig.Unlock()
 	return mock.GetConfigFunc()
 }
 
@@ -106,9 +152,9 @@ func (mock *ServiceInterfaceMock) GetConfigCalls() []struct {
 } {
 	var calls []struct {
 	}
-	lockServiceInterfaceMockGetConfig.RLock()
+	mock.lockGetConfig.RLock()
 	calls = mock.calls.GetConfig
-	lockServiceInterfaceMockGetConfig.RUnlock()
+	mock.lockGetConfig.RUnlock()
 	return calls
 }
 
@@ -119,9 +165,9 @@ func (mock *ServiceInterfaceMock) GetGlobalMiddlewareConfig() ([]*service.Middle
 	}
 	callInfo := struct {
 	}{}
-	lockServiceInterfaceMockGetGlobalMiddlewareConfig.Lock()
+	mock.lockGetGlobalMiddlewareConfig.Lock()
 	mock.calls.GetGlobalMiddlewareConfig = append(mock.calls.GetGlobalMiddlewareConfig, callInfo)
-	lockServiceInterfaceMockGetGlobalMiddlewareConfig.Unlock()
+	mock.lockGetGlobalMiddlewareConfig.Unlock()
 	return mock.GetGlobalMiddlewareConfigFunc()
 }
 
@@ -132,9 +178,9 @@ func (mock *ServiceInterfaceMock) GetGlobalMiddlewareConfigCalls() []struct {
 } {
 	var calls []struct {
 	}
-	lockServiceInterfaceMockGetGlobalMiddlewareConfig.RLock()
+	mock.lockGetGlobalMiddlewareConfig.RLock()
 	calls = mock.calls.GetGlobalMiddlewareConfig
-	lockServiceInterfaceMockGetGlobalMiddlewareConfig.RUnlock()
+	mock.lockGetGlobalMiddlewareConfig.RUnlock()
 	return calls
 }
 
@@ -150,9 +196,9 @@ func (mock *ServiceInterfaceMock) GetHandlers(config *service.PathConfig, mockHa
 		Config:      config,
 		MockHandler: mockHandler,
 	}
-	lockServiceInterfaceMockGetHandlers.Lock()
+	mock.lockGetHandlers.Lock()
 	mock.calls.GetHandlers = append(mock.calls.GetHandlers, callInfo)
-	lockServiceInterfaceMockGetHandlers.Unlock()
+	mock.lockGetHandlers.Unlock()
 	return mock.GetHandlersFunc(config, mockHandler)
 }
 
@@ -167,9 +213,9 @@ func (mock *ServiceInterfaceMock) GetHandlersCalls() []struct {
 		Config      *service.PathConfig
 		MockHandler http.Handler
 	}
-	lockServiceInterfaceMockGetHandlers.RLock()
+	mock.lockGetHandlers.RLock()
 	calls = mock.calls.GetHandlers
-	lockServiceInterfaceMockGetHandlers.RUnlock()
+	mock.lockGetHandlers.RUnlock()
 	return calls
 }
 
@@ -185,9 +231,9 @@ func (mock *ServiceInterfaceMock) GetPathConfig(path string, operation string) (
 		Path:      path,
 		Operation: operation,
 	}
-	lockServiceInterfaceMockGetPathConfig.Lock()
+	mock.lockGetPathConfig.Lock()
 	mock.calls.GetPathConfig = append(mock.calls.GetPathConfig, callInfo)
-	lockServiceInterfaceMockGetPathConfig.Unlock()
+	mock.lockGetPathConfig.Unlock()
 	return mock.GetPathConfigFunc(path, operation)
 }
 
@@ -202,19 +248,11 @@ func (mock *ServiceInterfaceMock) GetPathConfigCalls() []struct {
 		Path      string
 		Operation string
 	}
-	lockServiceInterfaceMockGetPathConfig.RLock()
+	mock.lockGetPathConfig.RLock()
 	calls = mock.calls.GetPathConfig
-	lockServiceInterfaceMockGetPathConfig.RUnlock()
+	mock.lockGetPathConfig.RUnlock()
 	return calls
 }
-
-var (
-	lockPluginInterfaceMockAddConfig        sync.RWMutex
-	lockPluginInterfaceMockAddLogger        sync.RWMutex
-	lockPluginInterfaceMockAddPathConfig    sync.RWMutex
-	lockPluginInterfaceMockAddSession       sync.RWMutex
-	lockPluginInterfaceMockGetHandlerByName sync.RWMutex
-)
 
 // Ensure, that PluginInterfaceMock does implement service.PluginInterface.
 // If this is not the case, regenerate this file with moq.
@@ -293,6 +331,11 @@ type PluginInterfaceMock struct {
 			Name string
 		}
 	}
+	lockAddConfig        sync.RWMutex
+	lockAddLogger        sync.RWMutex
+	lockAddPathConfig    sync.RWMutex
+	lockAddSession       sync.RWMutex
+	lockGetHandlerByName sync.RWMutex
 }
 
 // AddConfig calls AddConfigFunc.
@@ -305,9 +348,9 @@ func (mock *PluginInterfaceMock) AddConfig(config json.RawMessage) error {
 	}{
 		Config: config,
 	}
-	lockPluginInterfaceMockAddConfig.Lock()
+	mock.lockAddConfig.Lock()
 	mock.calls.AddConfig = append(mock.calls.AddConfig, callInfo)
-	lockPluginInterfaceMockAddConfig.Unlock()
+	mock.lockAddConfig.Unlock()
 	return mock.AddConfigFunc(config)
 }
 
@@ -320,9 +363,9 @@ func (mock *PluginInterfaceMock) AddConfigCalls() []struct {
 	var calls []struct {
 		Config json.RawMessage
 	}
-	lockPluginInterfaceMockAddConfig.RLock()
+	mock.lockAddConfig.RLock()
 	calls = mock.calls.AddConfig
-	lockPluginInterfaceMockAddConfig.RUnlock()
+	mock.lockAddConfig.RUnlock()
 	return calls
 }
 
@@ -336,9 +379,9 @@ func (mock *PluginInterfaceMock) AddLogger(logger logrus.Ext1FieldLogger) {
 	}{
 		Logger: logger,
 	}
-	lockPluginInterfaceMockAddLogger.Lock()
+	mock.lockAddLogger.Lock()
 	mock.calls.AddLogger = append(mock.calls.AddLogger, callInfo)
-	lockPluginInterfaceMockAddLogger.Unlock()
+	mock.lockAddLogger.Unlock()
 	mock.AddLoggerFunc(logger)
 }
 
@@ -351,9 +394,9 @@ func (mock *PluginInterfaceMock) AddLoggerCalls() []struct {
 	var calls []struct {
 		Logger logrus.Ext1FieldLogger
 	}
-	lockPluginInterfaceMockAddLogger.RLock()
+	mock.lockAddLogger.RLock()
 	calls = mock.calls.AddLogger
-	lockPluginInterfaceMockAddLogger.RUnlock()
+	mock.lockAddLogger.RUnlock()
 	return calls
 }
 
@@ -369,9 +412,9 @@ func (mock *PluginInterfaceMock) AddPathConfig(handler string, config json.RawMe
 		Handler: handler,
 		Config:  config,
 	}
-	lockPluginInterfaceMockAddPathConfig.Lock()
+	mock.lockAddPathConfig.Lock()
 	mock.calls.AddPathConfig = append(mock.calls.AddPathConfig, callInfo)
-	lockPluginInterfaceMockAddPathConfig.Unlock()
+	mock.lockAddPathConfig.Unlock()
 	return mock.AddPathConfigFunc(handler, config)
 }
 
@@ -386,9 +429,9 @@ func (mock *PluginInterfaceMock) AddPathConfigCalls() []struct {
 		Handler string
 		Config  json.RawMessage
 	}
-	lockPluginInterfaceMockAddPathConfig.RLock()
+	mock.lockAddPathConfig.RLock()
 	calls = mock.calls.AddPathConfig
-	lockPluginInterfaceMockAddPathConfig.RUnlock()
+	mock.lockAddPathConfig.RUnlock()
 	return calls
 }
 
@@ -402,9 +445,9 @@ func (mock *PluginInterfaceMock) AddSession(session sessions.Store) {
 	}{
 		Session: session,
 	}
-	lockPluginInterfaceMockAddSession.Lock()
+	mock.lockAddSession.Lock()
 	mock.calls.AddSession = append(mock.calls.AddSession, callInfo)
-	lockPluginInterfaceMockAddSession.Unlock()
+	mock.lockAddSession.Unlock()
 	mock.AddSessionFunc(session)
 }
 
@@ -417,9 +460,9 @@ func (mock *PluginInterfaceMock) AddSessionCalls() []struct {
 	var calls []struct {
 		Session sessions.Store
 	}
-	lockPluginInterfaceMockAddSession.RLock()
+	mock.lockAddSession.RLock()
 	calls = mock.calls.AddSession
-	lockPluginInterfaceMockAddSession.RUnlock()
+	mock.lockAddSession.RUnlock()
 	return calls
 }
 
@@ -433,9 +476,9 @@ func (mock *PluginInterfaceMock) GetHandlerByName(name string) http.HandlerFunc 
 	}{
 		Name: name,
 	}
-	lockPluginInterfaceMockGetHandlerByName.Lock()
+	mock.lockGetHandlerByName.Lock()
 	mock.calls.GetHandlerByName = append(mock.calls.GetHandlerByName, callInfo)
-	lockPluginInterfaceMockGetHandlerByName.Unlock()
+	mock.lockGetHandlerByName.Unlock()
 	return mock.GetHandlerByNameFunc(name)
 }
 
@@ -448,16 +491,11 @@ func (mock *PluginInterfaceMock) GetHandlerByNameCalls() []struct {
 	var calls []struct {
 		Name string
 	}
-	lockPluginInterfaceMockGetHandlerByName.RLock()
+	mock.lockGetHandlerByName.RLock()
 	calls = mock.calls.GetHandlerByName
-	lockPluginInterfaceMockGetHandlerByName.RUnlock()
+	mock.lockGetHandlerByName.RUnlock()
 	return calls
 }
-
-var (
-	lockPluginLoaderInterfaceMockGetPlugin     sync.RWMutex
-	lockPluginLoaderInterfaceMockGetRepository sync.RWMutex
-)
 
 // Ensure, that PluginLoaderInterfaceMock does implement service.PluginLoaderInterface.
 // If this is not the case, regenerate this file with moq.
@@ -501,6 +539,8 @@ type PluginLoaderInterfaceMock struct {
 			FileName string
 		}
 	}
+	lockGetPlugin     sync.RWMutex
+	lockGetRepository sync.RWMutex
 }
 
 // GetPlugin calls GetPluginFunc.
@@ -513,9 +553,9 @@ func (mock *PluginLoaderInterfaceMock) GetPlugin(fileName string) (service.Plugi
 	}{
 		FileName: fileName,
 	}
-	lockPluginLoaderInterfaceMockGetPlugin.Lock()
+	mock.lockGetPlugin.Lock()
 	mock.calls.GetPlugin = append(mock.calls.GetPlugin, callInfo)
-	lockPluginLoaderInterfaceMockGetPlugin.Unlock()
+	mock.lockGetPlugin.Unlock()
 	return mock.GetPluginFunc(fileName)
 }
 
@@ -528,9 +568,9 @@ func (mock *PluginLoaderInterfaceMock) GetPluginCalls() []struct {
 	var calls []struct {
 		FileName string
 	}
-	lockPluginLoaderInterfaceMockGetPlugin.RLock()
+	mock.lockGetPlugin.RLock()
 	calls = mock.calls.GetPlugin
-	lockPluginLoaderInterfaceMockGetPlugin.RUnlock()
+	mock.lockGetPlugin.RUnlock()
 	return calls
 }
 
@@ -544,9 +584,9 @@ func (mock *PluginLoaderInterfaceMock) GetRepository(fileName string) (service.R
 	}{
 		FileName: fileName,
 	}
-	lockPluginLoaderInterfaceMockGetRepository.Lock()
+	mock.lockGetRepository.Lock()
 	mock.calls.GetRepository = append(mock.calls.GetRepository, callInfo)
-	lockPluginLoaderInterfaceMockGetRepository.Unlock()
+	mock.lockGetRepository.Unlock()
 	return mock.GetRepositoryFunc(fileName)
 }
 
@@ -559,8 +599,8 @@ func (mock *PluginLoaderInterfaceMock) GetRepositoryCalls() []struct {
 	var calls []struct {
 		FileName string
 	}
-	lockPluginLoaderInterfaceMockGetRepository.RLock()
+	mock.lockGetRepository.RLock()
 	calls = mock.calls.GetRepository
-	lockPluginLoaderInterfaceMockGetRepository.RUnlock()
+	mock.lockGetRepository.RUnlock()
 	return calls
 }
