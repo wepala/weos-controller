@@ -57,7 +57,7 @@ type MiddlewareConfig struct {
 		Config   *json.RawMessage `yaml:"config"`
 	} `yaml:"plugin"`
 	Handler    string                 `yaml:"handler"`
-	PathConfig *json.RawMessage       `yaml:"path-config"`
+	PathConfig *json.RawMessage       `yaml:"pathConfig"`
 	Context    map[string]interface{} `yaml:"context"`
 	Priority   int                    `yaml:"priority"`
 }
