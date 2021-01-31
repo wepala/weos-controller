@@ -21,6 +21,10 @@ x-weos-config:
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     port: ${POSTGRES_PORT}
+  middleware:
+    - RequestID
+    - Recover
+    - Static
 
 paths:
   /health:
@@ -28,11 +32,6 @@ paths:
     get:
       x-weos-config:
         handler: HealthChecker
-        middleware:
-          - CasbinAuth
-          - CORs
-          - CSRF
-          - Prometheus
       responses:
         "200":
           description: Health Response

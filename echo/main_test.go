@@ -2,7 +2,6 @@ package echo_test
 
 import (
 	"github.com/labstack/echo/v4"
-	"github.com/wepala/weos-controller/core"
 	echo2 "github.com/wepala/weos-controller/echo"
 	"github.com/wepala/weos/module"
 	"net/http"
@@ -11,10 +10,15 @@ import (
 )
 
 type TestPlugin struct {
-	*PluginInterfaceMock
+	*echo2.APIPlugin
+	plugin *PluginInterfaceMock
 }
 
-func (TestPlugin) HealthChecker(c echo.Context) error {
+func (t *TestPlugin) InitModules(mod *module.WeOSMod) {
+	t.plugin.InitModules(mod)
+}
+
+func (*TestPlugin) HealthChecker(c echo.Context) error {
 	return c.String(http.StatusOK, "Hello, World!")
 }
 
@@ -25,25 +29,22 @@ func TestStart(t *testing.T) {
 		t.Fatalf("error setting up environment variables '%s'", err)
 	}
 	plugin := &PluginInterfaceMock{
-		AddConfigFunc: func(config *core.APIConfig) error {
-			if config.Database.Host != "localhost" {
-				t.Errorf("expected the database host to be '%s', got '%s'", "localhost", config.Database.Host)
-			}
-			return nil
-		},
 		InitModulesFunc: func(mod *module.WeOSMod) {
 
 		},
 	}
 
+	apiPlugin := echo2.NewAPIPlugin(e)
+
 	testPlugin := &TestPlugin{
+		apiPlugin,
 		plugin,
 	}
 
 	echo2.Configure(e, "../fixtures/api/api.yaml", testPlugin)
 
-	if len(plugin.AddConfigCalls()) != 1 {
-		t.Errorf("expected add config to be called %d time, called %d times", 1, len(plugin.AddConfigCalls()))
+	if testPlugin.Config.Database.Host != "localhost" {
+		t.Errorf("expected the database host to be '%s', got '%s'", "localhost", testPlugin.Config.Database.Host)
 	}
 
 	if len(plugin.InitModulesCalls()) != 1 {
