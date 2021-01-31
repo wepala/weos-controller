@@ -1,7 +1,0 @@
-HTTP/1.1 201 Created
-Connection: close
-Access-Control-Allow-Headers: 
-Access-Control-Allow-Origin: 
-Content-Type: application/json
-
-{"id":"someid","wern":"somewern"}
