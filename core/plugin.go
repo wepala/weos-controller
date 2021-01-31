@@ -13,7 +13,7 @@ import (
 //define an interface that all plugins must implement
 type PluginInterface interface {
 	AddConfig(config *APIConfig) error
-	InitModules(mod module.WeOSModule)
+	InitModules(mod *module.WeOSMod)
 }
 
 type RepositoryInterface interface {

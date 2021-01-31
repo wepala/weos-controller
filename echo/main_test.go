@@ -31,7 +31,7 @@ func TestStart(t *testing.T) {
 			}
 			return nil
 		},
-		InitModulesFunc: func(mod module.WeOSModule) {
+		InitModulesFunc: func(mod *module.WeOSMod) {
 
 		},
 	}

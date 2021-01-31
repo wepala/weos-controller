@@ -27,7 +27,7 @@ var _ core.PluginInterface = &PluginInterfaceMock{}
 //             AddConfigFunc: func(config *core.APIConfig) error {
 // 	               panic("mock out the AddConfig method")
 //             },
-//             InitModulesFunc: func(mod module.WeOSModule)  {
+//             InitModulesFunc: func(mod *module.WeOSMod)  {
 // 	               panic("mock out the InitModules method")
 //             },
 //         }
@@ -41,7 +41,7 @@ type PluginInterfaceMock struct {
 	AddConfigFunc func(config *core.APIConfig) error
 
 	// InitModulesFunc mocks the InitModules method.
-	InitModulesFunc func(mod module.WeOSModule)
+	InitModulesFunc func(mod *module.WeOSMod)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -53,7 +53,7 @@ type PluginInterfaceMock struct {
 		// InitModules holds details about calls to the InitModules method.
 		InitModules []struct {
 			// Mod is the mod argument value.
-			Mod module.WeOSModule
+			Mod *module.WeOSMod
 		}
 	}
 }
@@ -90,12 +90,12 @@ func (mock *PluginInterfaceMock) AddConfigCalls() []struct {
 }
 
 // InitModules calls InitModulesFunc.
-func (mock *PluginInterfaceMock) InitModules(mod module.WeOSModule) {
+func (mock *PluginInterfaceMock) InitModules(mod *module.WeOSMod) {
 	if mock.InitModulesFunc == nil {
 		panic("PluginInterfaceMock.InitModulesFunc: method is nil but PluginInterface.InitModules was just called")
 	}
 	callInfo := struct {
-		Mod module.WeOSModule
+		Mod *module.WeOSMod
 	}{
 		Mod: mod,
 	}
@@ -109,10 +109,10 @@ func (mock *PluginInterfaceMock) InitModules(mod module.WeOSModule) {
 // Check the length with:
 //     len(mockedPluginInterface.InitModulesCalls())
 func (mock *PluginInterfaceMock) InitModulesCalls() []struct {
-	Mod module.WeOSModule
+	Mod *module.WeOSMod
 } {
 	var calls []struct {
-		Mod module.WeOSModule
+		Mod *module.WeOSMod
 	}
 	lockPluginInterfaceMockInitModules.RLock()
 	calls = mock.calls.InitModules
