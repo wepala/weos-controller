@@ -11,7 +11,7 @@ require (
 	github.com/matryer/moq v0.0.0-20200607124540-4638a53893e6 // indirect
 	github.com/segmentio/ksuid v1.0.3
 	github.com/sirupsen/logrus v1.7.0
-	github.com/wepala/weos v0.0.7-0.20201126235147-14af84712578
+	github.com/wepala/weos v0.0.7-0.20210201190601-a5e191979d9d
 	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
 	golang.org/x/sys v0.0.0-20200826173525-f9321e4c35a6 // indirect
 )

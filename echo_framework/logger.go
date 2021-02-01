@@ -1,4 +1,4 @@
-package echo
+package echo_framework
 
 import (
 	"github.com/labstack/echo/v4"

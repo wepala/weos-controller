@@ -1,4 +1,4 @@
-package echo
+package echo_framework
 
 import (
 	"encoding/json"
@@ -46,7 +46,7 @@ func Configure(e *echo.Echo, apiConfigPath string, plugin core.PluginInterface) 
 			return e
 		}
 
-		weosMod, err := weosmodule.NewApplicationFromConfig(config.WeOSModuleConfig, NewLogger(e.Logger), nil)
+		weosMod, err := weosmodule.NewApplicationFromConfig(config.WeOSModuleConfig, e.Logger, nil)
 		if err != nil {
 			e.Logger.Fatalf("error setting up module '%s", err)
 			return e

@@ -1,8 +1,8 @@
-package echo_test
+package echo_framework_test
 
 import (
 	"github.com/labstack/echo/v4"
-	echo2 "github.com/wepala/weos-controller/echo"
+	echo2 "github.com/wepala/weos-controller/echo_framework"
 	"github.com/wepala/weos/module"
 	"net/http"
 	"os"
