@@ -38,6 +38,10 @@ func (p *APIPlugin) InitModules(mod *weosmodule.WeOSMod) {
 
 }
 
+func (p *APIPlugin) GetEchoInstance() *echo.Echo {
+	return p.e
+}
+
 //Common Middleware
 
 func (p *APIPlugin) RequestID(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
