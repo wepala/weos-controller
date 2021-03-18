@@ -110,7 +110,7 @@ func (h *MockHandler) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 }
 
 func (h *MockHandler) getMockResponses(responseRef *openapi3.ResponseRef, rw http.ResponseWriter, r *http.Request) bool {
-
+	rw.Header().Add("Access-Control-Allow-Origin", "*")
 	//values pulled from headers are stored here
 	var mockStatusVal int
 	var mockExampleLengthVal int
