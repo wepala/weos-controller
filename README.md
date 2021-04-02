@@ -20,6 +20,9 @@ You can run the serve command to give access via http. There are a few ways to s
 Getting mock responses couldn't be easier. 
 
 ##### Mock Setup
+
+**THIS IS CURRENTLY NOT SETUP FOR THE NEW DIRECTION**
+
 In your api yaml there are a couple ways you can setup mock responses; 
 
 1. Don't configure the path with a `x-weos-config` (it will automatically return example responses you have defined on the path or on the component schema of the response)
@@ -48,17 +51,7 @@ paths:
       summary: About Page
       x-weos-config:
         mock: true
-        plugins:
-          - &weosPlugin
-            filename: testdata/plugins/test.so
-            config:
-              mysql:
-                host: localhost
-                user: root
-                password: root
-        middleware:
-          - plugin: *weosPlugin
-            handler: HelloWorld
+        handler: HelloWorld
       responses:
         '200':
           description: About Page
@@ -96,8 +89,6 @@ This project uses [gitflow workflow](https://www.atlassian.com/git/tutorials/com
 
 To aid with this use the git flow cli (you will be able to create feature branches e.g. git flow feature start APO-1)
 
-#### Generating moqs 
-Go to service folder and run `moq -out testing_mocks_test.go -pkg service_test . ServiceInterface PluginInterface PluginLoaderInterface`
 
 #### New Features ####
 
