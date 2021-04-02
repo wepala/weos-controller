@@ -1,5 +1,0 @@
-GET /post/example.js HTTP/1.1
-Host: localhost:8080
-Accept-Encoding: gzip
-User-Agent: Go-http-client/1.1
-
