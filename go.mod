@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/getkin/kin-openapi v0.15.0
-	github.com/labstack/echo/v4 v4.1.17
+	github.com/labstack/echo/v4 v4.2.1
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/onsi/ginkgo v1.15.2 // indirect
 	github.com/onsi/gomega v1.11.0 // indirect
