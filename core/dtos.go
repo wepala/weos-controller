@@ -10,5 +10,6 @@ type APIConfig struct {
 
 type PathConfig struct {
 	Handler    string   `json:"handler" ,yaml:"handler"`
+	Group      bool     `json:"group" ,yaml:"group"`
 	Middleware []string `json:"middleware"`
 }

@@ -37,3 +37,13 @@ paths:
           description: Health Response
         "500":
           description: API Internal Error
+  /admin:
+    summary: Admin Endpoint
+    get:
+      x-weos-config:
+        group: True
+        middleware:
+          - Static
+      responses:
+        200:
+          description: Admin Endpoint
