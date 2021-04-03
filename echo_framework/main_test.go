@@ -51,7 +51,7 @@ func TestStart(t *testing.T) {
 		t.Errorf("expected init modules to be called %d time, called %d times", 1, len(plugin.InitModulesCalls()))
 	}
 
-	if len(e.Routes()) != 1 {
-		t.Errorf("expected %d route, got %d", 1, len(e.Routes()))
+	if len(e.Routes()) != 23 {
+		t.Errorf("expected %d route, got %d", 23, len(e.Routes()))
 	}
 }

@@ -92,14 +92,14 @@ func Configure(e *echo.Echo, apiConfigPath string, plugin core.PluginInterface) 
 					}
 
 					t := reflect.ValueOf(plugin)
-					m := t.MethodByName(weosConfig.Handler)
-					if !m.IsValid() {
+					handler := t.MethodByName(weosConfig.Handler)
+					//only show error if handler was set
+					if weosConfig.Handler != "" && !handler.IsValid() {
 						e.Logger.Fatalf("invalid handler set '%s'", weosConfig.Handler)
 					}
 
 					var middlewares []echo.MiddlewareFunc
 					for _, middlewareName := range weosConfig.Middleware {
-						t := reflect.ValueOf(plugin)
 						m := t.MethodByName(middlewareName)
 						if !m.IsValid() {
 							e.Logger.Fatalf("invalid handler set '%s'", middlewareName)
@@ -114,23 +114,23 @@ func Configure(e *echo.Echo, apiConfigPath string, plugin core.PluginInterface) 
 						//TODO make it so that it automatically matches the paths to a group based on the prefix
 						switch method {
 						case "GET":
-							e.GET(path, m.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.GET(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "POST":
-							e.POST(path, m.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.POST(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "PUT":
-							e.PUT(path, m.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.PUT(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "PATCH":
-							e.PATCH(path, m.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.PATCH(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "DELETE":
-							e.DELETE(path, m.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.DELETE(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "HEAD":
-							e.HEAD(path, m.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.HEAD(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "OPTIONS":
-							e.OPTIONS(path, m.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.OPTIONS(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "TRACE":
-							e.TRACE(path, m.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.TRACE(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "CONNECT":
-							e.CONNECT(path, m.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.CONNECT(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 
 						}
 					}
