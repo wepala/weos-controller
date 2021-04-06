@@ -1,9 +1,9 @@
-package core
+package weoscontroller
 
-import weosmodule "github.com/wepala/weos/module"
+import "github.com/wepala/weos"
 
 type APIConfig struct {
-	*weosmodule.WeOSModuleConfig
+	*weos.ApplicationConfig
 	RecordingBaseFolder string
 	Middleware          []string `json:"middleware"`
 }

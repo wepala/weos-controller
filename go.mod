@@ -11,6 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/segmentio/ksuid v1.0.3
 	github.com/sirupsen/logrus v1.7.0
-	github.com/wepala/weos v0.0.7-0.20210201190601-a5e191979d9d
+	github.com/spf13/viper v1.7.1 // indirect
+	github.com/wepala/weos v0.0.7-0.20210405143825-1c327233f75b
 	github.com/ziutek/mymysql v1.5.4 // indirect
 )

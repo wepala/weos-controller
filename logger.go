@@ -1,4 +1,4 @@
-package echo_framework
+package weoscontroller
 
 import (
 	"github.com/labstack/echo/v4"

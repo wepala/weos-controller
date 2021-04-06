@@ -1,11 +1,9 @@
-package echo_framework
+package weoscontroller
 
 import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/segmentio/ksuid"
-	"github.com/wepala/weos-controller/core"
-	weosmodule "github.com/wepala/weos/module"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -14,37 +12,23 @@ import (
 
 //Handlers container for all handlers
 
-func NewAPIPlugin(e *echo.Echo) *APIPlugin {
-	return &APIPlugin{
-		HTTPClient:        http.DefaultClient,
-		CommandDispatcher: &weosmodule.DefaultDispatcher{},
-		e:                 e,
-	}
+type API struct {
+	Config *APIConfig
+	e      *echo.Echo
 }
 
-type APIPlugin struct {
-	HTTPClient        *http.Client
-	CommandDispatcher weosmodule.Dispatcher
-	Config            *core.APIConfig
-	e                 *echo.Echo
-}
-
-func (p *APIPlugin) AddConfig(config *core.APIConfig) error {
+func (p *API) AddConfig(config *APIConfig) error {
 	p.Config = config
 	return nil
 }
 
-func (p *APIPlugin) InitModules(mod *weosmodule.WeOSMod) {
-
-}
-
-func (p *APIPlugin) GetEchoInstance() *echo.Echo {
+func (p *API) GetEchoInstance() *echo.Echo {
 	return p.e
 }
 
 //Common Middleware
 
-func (p *APIPlugin) RequestID(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+func (p *API) RequestID(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.RequestIDWithConfig(middleware.RequestIDConfig{
 		Generator: func() string {
 			return ksuid.New().String()
@@ -52,19 +36,19 @@ func (p *APIPlugin) RequestID(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	})(handlerFunc)
 }
 
-func (p *APIPlugin) Static(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+func (p *API) Static(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.Static("/static")(handlerFunc)
 }
 
-func (p *APIPlugin) Logger(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+func (p *API) Logger(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.Logger()(handlerFunc)
 }
 
-func (p *APIPlugin) Recover(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+func (p *API) Recover(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.Recover()(handlerFunc)
 }
 
-func (p *APIPlugin) RequestRecording(next echo.HandlerFunc) echo.HandlerFunc {
+func (p *API) RequestRecording(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if err := next(c); err != nil {
 			c.Error(err)
@@ -100,6 +84,6 @@ func (p *APIPlugin) RequestRecording(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func (p *APIPlugin) HealthChecker(c echo.Context) error {
+func (p *API) HealthChecker(c echo.Context) error {
 	return c.String(http.StatusOK, "Hello, World!")
 }
