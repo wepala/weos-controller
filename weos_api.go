@@ -22,8 +22,12 @@ func (p *API) AddConfig(config *APIConfig) error {
 	return nil
 }
 
-func (p *API) GetEchoInstance() *echo.Echo {
+func (p *API) EchoInstance() *echo.Echo {
 	return p.e
+}
+
+func (p *API) SetEchoInstance(e *echo.Echo) {
+	p.e = e
 }
 
 //Common Middleware

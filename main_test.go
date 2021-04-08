@@ -38,7 +38,7 @@ func TestStart(t *testing.T) {
 		plugin: plugin,
 	}
 
-	weoscontroller.Configure(e, "./fixtures/api/api.yaml", testPlugin)
+	weoscontroller.Initialize(e, "./fixtures/api/api.yaml", testPlugin)
 
 	if testPlugin.Config.Database.Host != "localhost" {
 		t.Errorf("expected the database host to be '%s', got '%s'", "localhost", testPlugin.Config.Database.Host)
@@ -50,6 +50,10 @@ func TestStart(t *testing.T) {
 
 	if len(e.Routes()) != 23 {
 		t.Errorf("expected %d route, got %d", 23, len(e.Routes()))
+	}
+
+	if testPlugin.API.EchoInstance() == nil {
+		t.Errorf("expected echo instance to be set")
 	}
 }
 
@@ -70,7 +74,7 @@ func TestParsingRoutesWithParams(t *testing.T) {
 		plugin: plugin,
 	}
 
-	weoscontroller.Configure(e, "./fixtures/api/routestest.yaml", testPlugin)
+	weoscontroller.Initialize(e, "./fixtures/api/routestest.yaml", testPlugin)
 
 	if testPlugin.Config.Database.Host != "localhost" {
 		t.Errorf("expected the database host to be '%s', got '%s'", "localhost", testPlugin.Config.Database.Host)

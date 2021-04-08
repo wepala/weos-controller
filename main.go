@@ -11,10 +11,14 @@ import (
 	"strings"
 )
 
-func Configure(e *echo.Echo, apiConfigPath string, api APIInterface) *echo.Echo {
+func Initialize(e *echo.Echo, apiConfigPath string, api APIInterface) *echo.Echo {
 	if apiConfigPath == "" {
 		apiConfigPath = "./api.yaml"
 	}
+
+	//set echo instance because the instance may not already be in the api that is passed in but the handlers must have access to it
+	api.SetEchoInstance(e)
+
 	content, err := ioutil.ReadFile(apiConfigPath)
 	if err != nil {
 		e.Logger.Fatalf("error loading api specification '%s'", err)

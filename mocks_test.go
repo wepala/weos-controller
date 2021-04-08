@@ -4,6 +4,7 @@
 package weoscontroller_test
 
 import (
+	"github.com/labstack/echo/v4"
 	"github.com/wepala/weos-controller"
 	"sync"
 )
@@ -21,8 +22,14 @@ var _ weoscontroller.APIInterface = &APIInterfaceMock{}
 // 			AddConfigFunc: func(config *weoscontroller.APIConfig) error {
 // 				panic("mock out the AddConfig method")
 // 			},
+// 			EchoInstanceFunc: func() *echo.Echo {
+// 				panic("mock out the EchoInstance method")
+// 			},
 // 			InitializeFunc: func() error {
 // 				panic("mock out the Initialize method")
+// 			},
+// 			SetEchoInstanceFunc: func(e *echo.Echo)  {
+// 				panic("mock out the SetEchoInstance method")
 // 			},
 // 		}
 //
@@ -34,8 +41,14 @@ type APIInterfaceMock struct {
 	// AddConfigFunc mocks the AddConfig method.
 	AddConfigFunc func(config *weoscontroller.APIConfig) error
 
+	// EchoInstanceFunc mocks the EchoInstance method.
+	EchoInstanceFunc func() *echo.Echo
+
 	// InitializeFunc mocks the Initialize method.
 	InitializeFunc func() error
+
+	// SetEchoInstanceFunc mocks the SetEchoInstance method.
+	SetEchoInstanceFunc func(e *echo.Echo)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -44,12 +57,22 @@ type APIInterfaceMock struct {
 			// Config is the config argument value.
 			Config *weoscontroller.APIConfig
 		}
+		// EchoInstance holds details about calls to the EchoInstance method.
+		EchoInstance []struct {
+		}
 		// Initialize holds details about calls to the Initialize method.
 		Initialize []struct {
 		}
+		// SetEchoInstance holds details about calls to the SetEchoInstance method.
+		SetEchoInstance []struct {
+			// E is the e argument value.
+			E *echo.Echo
+		}
 	}
-	lockAddConfig  sync.RWMutex
-	lockInitialize sync.RWMutex
+	lockAddConfig       sync.RWMutex
+	lockEchoInstance    sync.RWMutex
+	lockInitialize      sync.RWMutex
+	lockSetEchoInstance sync.RWMutex
 }
 
 // AddConfig calls AddConfigFunc.
@@ -83,6 +106,32 @@ func (mock *APIInterfaceMock) AddConfigCalls() []struct {
 	return calls
 }
 
+// EchoInstance calls EchoInstanceFunc.
+func (mock *APIInterfaceMock) EchoInstance() *echo.Echo {
+	if mock.EchoInstanceFunc == nil {
+		panic("APIInterfaceMock.EchoInstanceFunc: method is nil but APIInterface.EchoInstance was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockEchoInstance.Lock()
+	mock.calls.EchoInstance = append(mock.calls.EchoInstance, callInfo)
+	mock.lockEchoInstance.Unlock()
+	return mock.EchoInstanceFunc()
+}
+
+// EchoInstanceCalls gets all the calls that were made to EchoInstance.
+// Check the length with:
+//     len(mockedAPIInterface.EchoInstanceCalls())
+func (mock *APIInterfaceMock) EchoInstanceCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockEchoInstance.RLock()
+	calls = mock.calls.EchoInstance
+	mock.lockEchoInstance.RUnlock()
+	return calls
+}
+
 // Initialize calls InitializeFunc.
 func (mock *APIInterfaceMock) Initialize() error {
 	if mock.InitializeFunc == nil {
@@ -106,5 +155,36 @@ func (mock *APIInterfaceMock) InitializeCalls() []struct {
 	mock.lockInitialize.RLock()
 	calls = mock.calls.Initialize
 	mock.lockInitialize.RUnlock()
+	return calls
+}
+
+// SetEchoInstance calls SetEchoInstanceFunc.
+func (mock *APIInterfaceMock) SetEchoInstance(e *echo.Echo) {
+	if mock.SetEchoInstanceFunc == nil {
+		panic("APIInterfaceMock.SetEchoInstanceFunc: method is nil but APIInterface.SetEchoInstance was just called")
+	}
+	callInfo := struct {
+		E *echo.Echo
+	}{
+		E: e,
+	}
+	mock.lockSetEchoInstance.Lock()
+	mock.calls.SetEchoInstance = append(mock.calls.SetEchoInstance, callInfo)
+	mock.lockSetEchoInstance.Unlock()
+	mock.SetEchoInstanceFunc(e)
+}
+
+// SetEchoInstanceCalls gets all the calls that were made to SetEchoInstance.
+// Check the length with:
+//     len(mockedAPIInterface.SetEchoInstanceCalls())
+func (mock *APIInterfaceMock) SetEchoInstanceCalls() []struct {
+	E *echo.Echo
+} {
+	var calls []struct {
+		E *echo.Echo
+	}
+	mock.lockSetEchoInstance.RLock()
+	calls = mock.calls.SetEchoInstance
+	mock.lockSetEchoInstance.RUnlock()
 	return calls
 }
