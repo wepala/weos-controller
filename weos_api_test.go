@@ -18,7 +18,7 @@ import (
 func TestAPI_RequestRecording(t *testing.T) {
 	// Setup
 	e := echo.New()
-	req := httptest.NewRequest(http.MethodPut, "http://example.com/endpoint", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
+	req := httptest.NewRequest(http.MethodPut, "/endpoint", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	api := &weoscontroller.API{Config: &weoscontroller.APIConfig{
@@ -73,5 +73,9 @@ func loadHttpRequestFixture(filename string, t *testing.T) *http.Request {
 		t.Fatalf("test fixture '%s' not loaded %v", filename, err)
 	}
 
-	return request
+	actualRequest, err := http.NewRequest(request.Method, request.URL.String(), reader)
+	if err != nil {
+		t.Fatalf("test fixture '%s' not loaded %v", filename, err)
+	}
+	return actualRequest
 }

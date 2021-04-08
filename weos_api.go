@@ -68,7 +68,7 @@ func (p *API) RequestRecording(next echo.HandlerFunc) echo.HandlerFunc {
 		reqf, err := os.Create(baseFolder + "/" + name + ".input.http")
 		if err == nil {
 			//record request
-			requestBytes, _ := httputil.DumpRequestOut(c.Request(), true)
+			requestBytes, _ := httputil.DumpRequest(c.Request(), true)
 			_, err := reqf.Write(requestBytes)
 			if err != nil {
 				return err
