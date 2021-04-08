@@ -9,7 +9,7 @@ import (
 )
 
 type TestAPI struct {
-	*weoscontroller.API
+	weoscontroller.API
 	plugin *APIInterfaceMock
 }
 
@@ -38,7 +38,7 @@ func TestStart(t *testing.T) {
 		plugin: plugin,
 	}
 
-	weoscontroller.Configure(e, "../fixtures/api/api.yaml", testPlugin)
+	weoscontroller.Configure(e, "./fixtures/api/api.yaml", testPlugin)
 
 	if testPlugin.Config.Database.Host != "localhost" {
 		t.Errorf("expected the database host to be '%s', got '%s'", "localhost", testPlugin.Config.Database.Host)
@@ -50,5 +50,41 @@ func TestStart(t *testing.T) {
 
 	if len(e.Routes()) != 23 {
 		t.Errorf("expected %d route, got %d", 23, len(e.Routes()))
+	}
+}
+
+func TestParsingRoutesWithParams(t *testing.T) {
+	e := echo.New()
+	err := os.Setenv("POSTGRES_HOST", "localhost")
+	if err != nil {
+		t.Fatalf("error setting up environment variables '%s'", err)
+	}
+	plugin := &APIInterfaceMock{
+		InitializeFunc: func() error {
+			return nil
+		},
+	}
+
+	//we're only nesting the plugin interface for testing
+	testPlugin := &TestAPI{
+		plugin: plugin,
+	}
+
+	weoscontroller.Configure(e, "./fixtures/api/routestest.yaml", testPlugin)
+
+	if testPlugin.Config.Database.Host != "localhost" {
+		t.Errorf("expected the database host to be '%s', got '%s'", "localhost", testPlugin.Config.Database.Host)
+	}
+
+	if len(plugin.InitializeCalls()) != 1 {
+		t.Errorf("expected init modules to be called %d time, called %d times", 1, len(plugin.InitializeCalls()))
+	}
+
+	if len(e.Routes()) != 2 {
+		t.Errorf("expected %d route, got %d", 2, len(e.Routes()))
+	}
+
+	if e.Routes()[1].Path != "/user/:id/:contentID" {
+		t.Errorf("expected the path to be '%s', got '%s'", "/user/:id/:contentID", e.Routes()[1].Path)
 	}
 }

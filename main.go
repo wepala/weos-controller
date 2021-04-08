@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -108,25 +109,28 @@ func Configure(e *echo.Echo, apiConfigPath string, api APIInterface) *echo.Echo 
 						group.Use(middlewares...)
 					} else {
 						//TODO make it so that it automatically matches the paths to a group based on the prefix
+						//update path so that the open api way of specifying url parameters is change to the echo style of url parameters
+						re := regexp.MustCompile(`\{([a-zA-Z0-9\-_]+?)\}`)
+						echoPath := re.ReplaceAllString(path, `:$1`)
 						switch method {
 						case "GET":
-							e.GET(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.GET(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "POST":
-							e.POST(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.POST(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "PUT":
-							e.PUT(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.PUT(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "PATCH":
-							e.PATCH(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.PATCH(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "DELETE":
-							e.DELETE(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.DELETE(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "HEAD":
-							e.HEAD(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.HEAD(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "OPTIONS":
-							e.OPTIONS(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.OPTIONS(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "TRACE":
-							e.TRACE(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.TRACE(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "CONNECT":
-							e.CONNECT(path, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.CONNECT(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 
 						}
 					}
