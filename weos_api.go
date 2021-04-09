@@ -54,9 +54,6 @@ func (p *API) Recover(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 func (p *API) RequestRecording(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		if err := next(c); err != nil {
-			c.Error(err)
-		}
 		name := strings.Replace(c.Path(), "/", "_", -1)
 		baseFolder := p.Config.RecordingBaseFolder
 		if baseFolder == "" {
@@ -83,6 +80,10 @@ func (p *API) RequestRecording(next echo.HandlerFunc) echo.HandlerFunc {
 				p.e.Logger.Errorf("Recording failed with errors: %s", r)
 			}
 		}()
+
+		if err := next(c); err != nil {
+			c.Error(err)
+		}
 
 		return nil
 	}

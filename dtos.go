@@ -6,6 +6,7 @@ type APIConfig struct {
 	*weos.ApplicationConfig
 	RecordingBaseFolder string
 	Middleware          []string `json:"middleware"`
+	PreMiddleware       []string `json:"pre-middleware"`
 }
 
 type PathConfig struct {

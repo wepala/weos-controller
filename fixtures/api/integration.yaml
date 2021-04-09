@@ -21,17 +21,17 @@ x-weos-config:
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     port: ${POSTGRES_PORT}
+  pre-middleware:
+    - PreGlobalMiddleware
   middleware:
-    - RequestID
-    - Recover
-    - Static
+    - GlobalMiddleware
 
 paths:
   /health:
     summary: Health Check
     get:
       x-weos-config:
-        handler: HealthChecker
+        handler: HelloWorld
       responses:
         "200":
           description: Health Response
@@ -41,9 +41,10 @@ paths:
     summary: Some user endpoint
     get:
       x-weos-config:
-        handler: HealthChecker
-        pre-middlware:
-          - RequestRecording
+        handler: FooBar
+        middleware:
+          - Middleware
+          - PreMiddleware
       responses:
         200:
           description: Admin Endpoint

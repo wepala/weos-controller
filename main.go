@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-func Initialize(e *echo.Echo, apiConfigPath string, api APIInterface) *echo.Echo {
+func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo {
 	if apiConfigPath == "" {
 		apiConfigPath = "./api.yaml"
 	}
@@ -55,6 +55,21 @@ func Initialize(e *echo.Echo, apiConfigPath string, api APIInterface) *echo.Echo
 			return e
 		}
 
+		//setup middleware  - https://echo.labstack.com/middleware/
+
+		//setup global pre middleware
+		var preMiddlewares []echo.MiddlewareFunc
+		for _, middlewareName := range config.PreMiddleware {
+			t := reflect.ValueOf(api)
+			m := t.MethodByName(middlewareName)
+			if !m.IsValid() {
+				e.Logger.Fatalf("invalid handler set '%s'", middlewareName)
+			}
+			preMiddlewares = append(preMiddlewares, m.Interface().(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc))
+		}
+		//all routes setup after this will use this middleware
+		e.Pre(preMiddlewares...)
+
 		//setup global middleware
 		var middlewares []echo.MiddlewareFunc
 		for _, middlewareName := range config.Middleware {
@@ -65,7 +80,9 @@ func Initialize(e *echo.Echo, apiConfigPath string, api APIInterface) *echo.Echo
 			}
 			middlewares = append(middlewares, m.Interface().(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc))
 		}
+		//all routes setup after this will use this middleware
 		e.Use(middlewares...)
+
 		err = api.Initialize()
 		if err != nil {
 			e.Logger.Fatalf("error initializing application '%s'", err)
@@ -108,7 +125,7 @@ func Initialize(e *echo.Echo, apiConfigPath string, api APIInterface) *echo.Echo
 						middlewares = append(middlewares, m.Interface().(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc))
 					}
 
-					if weosConfig.Group {
+					if weosConfig.Group { //TODO move this form here because it creates weird behavior
 						group := e.Group(path)
 						group.Use(middlewares...)
 					} else {
