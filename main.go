@@ -56,8 +56,6 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo
 			return e
 		}
 
-		//setup jwt configuration
-
 		//setup middleware  - https://echo.labstack.com/middleware/
 
 		//setup global pre middleware

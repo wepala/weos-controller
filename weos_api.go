@@ -33,6 +33,14 @@ func (p *API) SetEchoInstance(e *echo.Echo) {
 
 //Common Middleware
 
+//Functionality to check claims will be added here
+func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+	return middleware.JWTWithConfig(middleware.JWTConfig{
+		SigningKey:  []byte(a.Config.JWTConfig.Key),
+		TokenLookup: a.Config.JWTConfig.TokenLookup,
+	})(handlerFunc)
+}
+
 func (p *API) RequestID(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.RequestIDWithConfig(middleware.RequestIDConfig{
 		Generator: func() string {
