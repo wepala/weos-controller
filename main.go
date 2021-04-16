@@ -2,13 +2,14 @@ package weoscontroller
 
 import (
 	"encoding/json"
-	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/labstack/echo/v4"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/labstack/echo/v4"
 )
 
 func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo {
@@ -54,6 +55,8 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo
 			e.Logger.Fatalf("error setting up module '%s", err)
 			return e
 		}
+
+		//setup jwt configuration
 
 		//setup middleware  - https://echo.labstack.com/middleware/
 

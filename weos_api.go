@@ -1,13 +1,14 @@
 package weoscontroller
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/segmentio/ksuid"
 	"net/http"
 	"net/http/httputil"
 	"os"
 	"strings"
+
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/segmentio/ksuid"
 )
 
 //Handlers container for all handlers
