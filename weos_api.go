@@ -41,13 +41,23 @@ func (p *API) SetEchoInstance(e *echo.Echo) {
 
 //Functionality to check claims will be added here
 func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
-	return middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey:    []byte(a.Config.JWTConfig.Key),
-		TokenLookup:   a.Config.JWTConfig.TokenLookup,
-		SigningMethod: a.Config.JWTConfig.SigningMethod,
-		AuthScheme:    a.Config.JWTConfig.AuthScheme,
-		ContextKey:    a.Config.JWTConfig.ContextKey,
-	})(handlerFunc)
+	var config middleware.JWTConfig
+	if a.Config.JWTConfig.Key != "" {
+		config.SigningKey = []byte(a.Config.JWTConfig.Key)
+	}
+	if a.Config.JWTConfig.TokenLookup != "" {
+		config.TokenLookup = a.Config.JWTConfig.TokenLookup
+	}
+	if a.Config.JWTConfig.SigningMethod != "" {
+		config.SigningMethod = a.Config.JWTConfig.SigningMethod
+	}
+	if a.Config.JWTConfig.AuthScheme != "" {
+		config.AuthScheme = a.Config.JWTConfig.AuthScheme
+	}
+	if a.Config.JWTConfig.ContextKey != "" {
+		config.ContextKey = a.Config.JWTConfig.ContextKey
+	}
+	return middleware.JWTWithConfig(config)(handlerFunc)
 }
 
 func (p *API) RequestID(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
