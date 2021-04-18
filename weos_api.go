@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/segmentio/ksuid"
@@ -16,6 +17,11 @@ import (
 type API struct {
 	Config *APIConfig
 	e      *echo.Echo
+}
+
+//custom claims struct for authentication
+type CustomClaims struct {
+	jwt.StandardClaims
 }
 
 func (p *API) AddConfig(config *APIConfig) error {
@@ -36,8 +42,11 @@ func (p *API) SetEchoInstance(e *echo.Echo) {
 //Functionality to check claims will be added here
 func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.JWTWithConfig(middleware.JWTConfig{
-		SigningKey:  []byte(a.Config.JWTConfig.Key),
-		TokenLookup: a.Config.JWTConfig.TokenLookup,
+		SigningKey:    []byte(a.Config.JWTConfig.Key),
+		TokenLookup:   a.Config.JWTConfig.TokenLookup,
+		SigningMethod: a.Config.JWTConfig.SigningMethod,
+		AuthScheme:    a.Config.JWTConfig.AuthScheme,
+		ContextKey:    a.Config.JWTConfig.ContextKey,
 	})(handlerFunc)
 }
 

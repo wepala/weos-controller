@@ -94,11 +94,11 @@ func TestParsingJWTConfigurations(t *testing.T) {
 		t.Errorf("expected the jwt config key to be '%s', got '%s'", "bigtoe", testPlugin.Config.JWTConfig.TokenLookup)
 	}
 
-	if testPlugin.API.Config.JWTConfig.Claims["email"] != "email@mail" {
+	if testPlugin.API.Config.JWTConfig.Claims["email"] != "string" {
 		t.Errorf("expected the jwt config email claims to be '%s', got '%s'", "email@mail", testPlugin.Config.JWTConfig.Claims["email"])
 	}
 
-	if testPlugin.API.Config.JWTConfig.Claims["real"] != false {
+	if testPlugin.API.Config.JWTConfig.Claims["real"] != "bool" {
 		t.Errorf("expected the jwt config real claims to be '%s', got '%s'", "real", testPlugin.Config.JWTConfig.Claims["real"])
 	}
 
