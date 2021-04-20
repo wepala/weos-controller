@@ -55,7 +55,6 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo
 			e.Logger.Fatalf("error setting up module '%s", err)
 			return e
 		}
-
 		//setup middleware  - https://echo.labstack.com/middleware/
 
 		//setup global pre middleware

@@ -21,6 +21,7 @@ type PathConfig struct {
 type JWTConfig struct {
 	Key           string                 `json:"key"`
 	SigningKeys   map[string]interface{} `json:"signingKeys"`
+	KeyPath       string                 `json:"keyPath"`
 	TokenLookup   string                 `json:"tokenLookup"`
 	Claims        map[string]interface{} `json:"claims"`
 	AuthScheme    string                 `json:"authScheme"`

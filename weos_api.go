@@ -1,6 +1,7 @@
 package weoscontroller
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -48,6 +49,12 @@ func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	}
 	if len(a.Config.JWTConfig.SigningKeys) > 0 {
 		config.SigningKeys = a.Config.JWTConfig.SigningKeys
+	}
+	if a.Config.JWTConfig.KeyPath != "" {
+		content, err := ioutil.ReadFile(a.Config.JWTConfig.KeyPath)
+		if err != nil {
+			config.SigningKey = content
+		}
 	}
 	if a.Config.JWTConfig.TokenLookup != "" {
 		config.TokenLookup = a.Config.JWTConfig.TokenLookup
