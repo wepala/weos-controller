@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/segmentio/ksuid"
 	"net/http"
+	"net/http/httptest"
 	"net/http/httputil"
 	"os"
 	"strings"
@@ -84,6 +85,47 @@ func (p *API) RequestRecording(next echo.HandlerFunc) echo.HandlerFunc {
 		if err := next(c); err != nil {
 			c.Error(err)
 		}
+
+		return nil
+	}
+}
+
+func (p *API) ResponseRecording(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		name := strings.Replace(c.Path(), "/", "_", -1)
+		baseFolder := p.Config.RecordingBaseFolder
+		if baseFolder == "" {
+			baseFolder = "testdata/http"
+		}
+
+		responseRecorder := httptest.NewRecorder()
+		c.Response().Writer = MultiWriter(c.Response().Writer, responseRecorder)
+
+		if err := next(c); err != nil {
+			c.Error(err)
+		}
+
+		p.e.Logger.Infof("Record response to %s", baseFolder+"/"+name+".golden.http")
+		respf, err := os.Create(baseFolder + "/" + name + ".golden.http")
+		if err == nil {
+			//record response
+
+			responseBytes, _ := httputil.DumpResponse(responseRecorder.Result(), true)
+			_, err = respf.Write(responseBytes)
+			if err != nil {
+				c.Error(err)
+			}
+
+		} else {
+			return err
+		}
+
+		defer func() {
+			respf.Close()
+			if r := recover(); r != nil {
+				p.e.Logger.Errorf("Recording failed with errors: %s", r)
+			}
+		}()
 
 		return nil
 	}
