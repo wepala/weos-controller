@@ -3,12 +3,12 @@ package weoscontroller
 import (
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"net/http/httputil"
 	"os"
 	"strings"
 
 	"github.com/SermoDigital/jose/crypto"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/segmentio/ksuid"
@@ -19,11 +19,6 @@ import (
 type API struct {
 	Config *APIConfig
 	e      *echo.Echo
-}
-
-//custom claims struct for authentication
-type CustomClaims struct {
-	jwt.StandardClaims
 }
 
 func (p *API) AddConfig(config *APIConfig) error {
@@ -40,6 +35,26 @@ func (p *API) SetEchoInstance(e *echo.Echo) {
 }
 
 //Common Middleware
+
+func (p *API) RequestID(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+	return middleware.RequestIDWithConfig(middleware.RequestIDConfig{
+		Generator: func() string {
+			return ksuid.New().String()
+		},
+	})(handlerFunc)
+}
+
+func (p *API) Static(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+	return middleware.Static("/static")(handlerFunc)
+}
+
+func (p *API) Logger(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+	return middleware.Logger()(handlerFunc)
+}
+
+func (p *API) Recover(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+	return middleware.Recover()(handlerFunc)
+}
 
 //Functionality to check claims will be added here
 func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
@@ -92,26 +107,6 @@ func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.JWTWithConfig(config)(handlerFunc)
 }
 
-func (p *API) RequestID(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
-	return middleware.RequestIDWithConfig(middleware.RequestIDConfig{
-		Generator: func() string {
-			return ksuid.New().String()
-		},
-	})(handlerFunc)
-}
-
-func (p *API) Static(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
-	return middleware.Static("/static")(handlerFunc)
-}
-
-func (p *API) Logger(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
-	return middleware.Logger()(handlerFunc)
-}
-
-func (p *API) Recover(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
-	return middleware.Recover()(handlerFunc)
-}
-
 func (p *API) RequestRecording(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		name := strings.Replace(c.Path(), "/", "_", -1)
@@ -144,6 +139,47 @@ func (p *API) RequestRecording(next echo.HandlerFunc) echo.HandlerFunc {
 		if err := next(c); err != nil {
 			c.Error(err)
 		}
+
+		return nil
+	}
+}
+
+func (p *API) ResponseRecording(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		name := strings.Replace(c.Path(), "/", "_", -1)
+		baseFolder := p.Config.RecordingBaseFolder
+		if baseFolder == "" {
+			baseFolder = "testdata/http"
+		}
+
+		responseRecorder := httptest.NewRecorder()
+		c.Response().Writer = MultiWriter(c.Response().Writer, responseRecorder)
+
+		if err := next(c); err != nil {
+			c.Error(err)
+		}
+
+		p.e.Logger.Infof("Record response to %s", baseFolder+"/"+name+".golden.http")
+		respf, err := os.Create(baseFolder + "/" + name + ".golden.http")
+		if err == nil {
+			//record response
+
+			responseBytes, _ := httputil.DumpResponse(responseRecorder.Result(), true)
+			_, err = respf.Write(responseBytes)
+			if err != nil {
+				c.Error(err)
+			}
+
+		} else {
+			return err
+		}
+
+		defer func() {
+			respf.Close()
+			if r := recover(); r != nil {
+				p.e.Logger.Errorf("Recording failed with errors: %s", r)
+			}
+		}()
 
 		return nil
 	}
