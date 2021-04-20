@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/json"
-	"github.com/labstack/echo/v4"
-	weoscontroller "github.com/wepala/weos-controller"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +11,10 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo/v4"
+	weoscontroller "github.com/wepala/weos-controller"
 )
 
 func TestAPI_RequestRecording(t *testing.T) {
@@ -54,6 +56,96 @@ func TestAPI_RequestRecording(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unable to delete test fixture created '%s', got error '%s'", "./_endpoint.input.http", err)
 	}
+}
+
+func TestAPI_Authenticate(t *testing.T) {
+
+	t.Run("successful jwt authenticate", func(t *testing.T) {
+		// Setup
+		e := echo.New()
+		key := "secureSecretText"
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{})
+		signedToken, err := token.SignedString([]byte(key))
+		var bearer = "Bearer " + signedToken
+		if err != nil {
+			t.Errorf("got an error setting up tests %s", err)
+		}
+		req := httptest.NewRequest(http.MethodPost, "/endpoint", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set("Authorization", bearer)
+		rec := httptest.NewRecorder()
+		api := &weoscontroller.API{Config: &weoscontroller.APIConfig{
+			RecordingBaseFolder: ".",
+			JWTConfig: &weoscontroller.JWTConfig{
+				Key:             key,
+				SigningKeys:     map[string]interface{}{},
+				Certificate:     nil,
+				CertificatePath: "",
+				TokenLookup:     "",
+				AuthScheme:      "",
+				SigningMethod:   "HS256",
+				ContextKey:      "",
+			},
+		}}
+
+		e.POST("/endpoint", func(c echo.Context) error {
+			return c.String(http.StatusOK, "test")
+		}, api.Authenticate)
+
+		api.SetEchoInstance(e)
+		e.ServeHTTP(rec, req)
+
+		response := rec.Result()
+		defer response.Body.Close()
+
+		if response.StatusCode != 200 {
+			t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
+		}
+	})
+	t.Run("jwt authenticate no token", func(t *testing.T) {
+		// Setup
+		e := echo.New()
+		key := "secureSecretText"
+		req := httptest.NewRequest(http.MethodPost, "/endpoint", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		api := &weoscontroller.API{Config: &weoscontroller.APIConfig{
+			RecordingBaseFolder: ".",
+			JWTConfig: &weoscontroller.JWTConfig{
+				Key:             key,
+				SigningKeys:     map[string]interface{}{},
+				Certificate:     nil,
+				CertificatePath: "",
+				TokenLookup:     "",
+				AuthScheme:      "",
+				SigningMethod:   "HS256",
+				ContextKey:      "",
+			},
+		}}
+
+		e.POST("/endpoint", func(c echo.Context) error {
+			return c.String(http.StatusOK, "test")
+		}, api.Authenticate)
+
+		api.SetEchoInstance(e)
+		e.ServeHTTP(rec, req)
+
+		response := rec.Result()
+		defer response.Body.Close()
+
+		if response.StatusCode != 400 {
+			t.Errorf("expected the status code to be %d, got %d", 400, response.StatusCode)
+		}
+
+		bodyBytes, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			t.Errorf("got an error getting response body %s", err)
+		}
+		responseMessage := strings.TrimSpace(string(bodyBytes))
+		if responseMessage != `{"message":"missing or malformed jwt"}` {
+			t.Errorf("expected the response message to be %s got %s", `{"message":"missing or malformed jwt"}`, responseMessage)
+		}
+	})
 }
 
 //loadHttpRequestFixture wrapper around the test helper to make it easier to use it with test table
