@@ -53,8 +53,13 @@ func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	if a.Config.JWTConfig.KeyPath != "" {
 		content, err := ioutil.ReadFile(a.Config.JWTConfig.KeyPath)
 		if err != nil {
+			a.e.Logger.Fatalf("unable to read the jwt key, got error '%s'", err)
+		} else {
 			config.SigningKey = content
 		}
+	}
+	if config.SigningKey == nil && config.SigningKeys == nil {
+		a.e.Logger.Fatalf("no jwt secret was configured.")
 	}
 	if a.Config.JWTConfig.TokenLookup != "" {
 		config.TokenLookup = a.Config.JWTConfig.TokenLookup
