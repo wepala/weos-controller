@@ -42,8 +42,12 @@ func (p *API) SetEchoInstance(e *echo.Echo) {
 //Functionality to check claims will be added here
 func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	var config middleware.JWTConfig
+
 	if a.Config.JWTConfig.Key != "" {
 		config.SigningKey = []byte(a.Config.JWTConfig.Key)
+	}
+	if len(a.Config.JWTConfig.SigningKeys) > 0 {
+		config.SigningKeys = a.Config.JWTConfig.SigningKeys
 	}
 	if a.Config.JWTConfig.TokenLookup != "" {
 		config.TokenLookup = a.Config.JWTConfig.TokenLookup
