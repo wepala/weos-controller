@@ -3,6 +3,7 @@ module github.com/wepala/weos-controller
 go 1.13
 
 require (
+	github.com/SermoDigital/jose v0.9.1
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/getkin/kin-openapi v0.15.0
 	github.com/labstack/echo/v4 v4.2.1
