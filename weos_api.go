@@ -51,26 +51,37 @@ func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	if len(a.Config.JWTConfig.SigningKeys) > 0 {
 		config.SigningKeys = a.Config.JWTConfig.SigningKeys
 	}
-	if a.Config.JWTConfig.CertificatePath != "" {
+	if a.Config.JWTConfig.SigningMethod != "" {
+		config.SigningMethod = a.Config.JWTConfig.SigningMethod
+	}
+	if a.Config.JWTConfig.CertificatePath != "" && a.Config.JWTConfig.Certificate == nil {
 		content, err := ioutil.ReadFile(a.Config.JWTConfig.CertificatePath)
 		if err != nil {
 			a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
 		} else {
-			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(content)
-			if err != nil {
-				a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+			if config.SigningMethod == "RS256" || config.SigningMethod == "RS384" || config.SigningMethod == "RS512" {
+				publicKey, err := crypto.ParseRSAPublicKeyFromPEM(content)
+				if err != nil {
+					a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+				}
+				a.Config.JWTConfig.Certificate = publicKey
+			} else if config.SigningMethod == "EC256" || config.SigningMethod == "EC384" || config.SigningMethod == "EC512" {
+				publicKey, err := crypto.ParseECPublicKeyFromPEM(content)
+				if err != nil {
+					a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+				}
+				a.Config.JWTConfig.Certificate = publicKey
 			}
-			config.SigningKey = publicKey
 		}
+	}
+	if a.Config.JWTConfig.Certificate != nil {
+		config.SigningKey = a.Config.JWTConfig.Certificate
 	}
 	if config.SigningKey == nil && config.SigningKeys == nil {
 		a.e.Logger.Fatalf("no jwt secret was configured.")
 	}
 	if a.Config.JWTConfig.TokenLookup != "" {
 		config.TokenLookup = a.Config.JWTConfig.TokenLookup
-	}
-	if a.Config.JWTConfig.SigningMethod != "" {
-		config.SigningMethod = a.Config.JWTConfig.SigningMethod
 	}
 	if a.Config.JWTConfig.AuthScheme != "" {
 		config.AuthScheme = a.Config.JWTConfig.AuthScheme
