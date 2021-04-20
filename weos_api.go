@@ -70,27 +70,26 @@ func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 		config.SigningMethod = a.Config.JWTConfig.SigningMethod
 	}
 	if a.Config.JWTConfig.CertificatePath != "" && a.Config.JWTConfig.Certificate == nil {
-		content, err := ioutil.ReadFile(a.Config.JWTConfig.CertificatePath)
+		bytes, err := ioutil.ReadFile(a.Config.JWTConfig.CertificatePath)
+		a.Config.JWTConfig.Certificate = bytes
 		if err != nil {
 			a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
-		} else {
-			if config.SigningMethod == "RS256" || config.SigningMethod == "RS384" || config.SigningMethod == "RS512" {
-				publicKey, err := crypto.ParseRSAPublicKeyFromPEM(content)
-				if err != nil {
-					a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
-				}
-				a.Config.JWTConfig.Certificate = publicKey
-			} else if config.SigningMethod == "EC256" || config.SigningMethod == "EC384" || config.SigningMethod == "EC512" {
-				publicKey, err := crypto.ParseECPublicKeyFromPEM(content)
-				if err != nil {
-					a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
-				}
-				a.Config.JWTConfig.Certificate = publicKey
-			}
 		}
 	}
 	if a.Config.JWTConfig.Certificate != nil {
-		config.SigningKey = a.Config.JWTConfig.Certificate
+		if config.SigningMethod == "RS256" || config.SigningMethod == "RS384" || config.SigningMethod == "RS512" {
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(a.Config.JWTConfig.Certificate)
+			if err != nil {
+				a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+			}
+			config.SigningKey = publicKey
+		} else if config.SigningMethod == "EC256" || config.SigningMethod == "EC384" || config.SigningMethod == "EC512" {
+			publicKey, err := crypto.ParseECPublicKeyFromPEM(a.Config.JWTConfig.Certificate)
+			if err != nil {
+				a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+			}
+			config.SigningKey = publicKey
+		}
 	}
 	if config.SigningKey == nil && config.SigningKeys == nil {
 		a.e.Logger.Fatalf("no jwt secret was configured.")
