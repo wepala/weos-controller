@@ -1,6 +1,7 @@
 package weoscontroller
 
 import (
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"os"
@@ -50,12 +51,17 @@ func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	if len(a.Config.JWTConfig.SigningKeys) > 0 {
 		config.SigningKeys = a.Config.JWTConfig.SigningKeys
 	}
-	if a.Config.JWTConfig.Certificate != "" {
-		key, err := crypto.ParseRSAPublicKeyFromPEM([]byte(a.Config.JWTConfig.Certificate))
+	if a.Config.JWTConfig.CertificatePath != "" {
+		content, err := ioutil.ReadFile(a.Config.JWTConfig.CertificatePath)
 		if err != nil {
-			a.e.Logger.Fatalf("got an error getting key from certificate '%s'", err)
+			a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+		} else {
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(content)
+			if err != nil {
+				a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+			}
+			config.SigningKey = publicKey
 		}
-		config.SigningKey = key
 	}
 	if config.SigningKey == nil && config.SigningKeys == nil {
 		a.e.Logger.Fatalf("no jwt secret was configured.")
