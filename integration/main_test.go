@@ -5,14 +5,15 @@ package integration_test
 import (
 	"bufio"
 	"bytes"
-	"github.com/labstack/echo/v4"
-	weoscontroller "github.com/wepala/weos-controller"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/labstack/echo/v4"
+	weoscontroller "github.com/wepala/weos-controller"
 )
 
 type TestAPI interface {
