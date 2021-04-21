@@ -76,7 +76,7 @@ func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
 		}
 	}
-	if a.Config.JWTConfig.Certificate != nil {
+	if len(a.Config.JWTConfig.Certificate) > 0 {
 		if config.SigningMethod == "RS256" || config.SigningMethod == "RS384" || config.SigningMethod == "RS512" {
 			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(a.Config.JWTConfig.Certificate)
 			if err != nil {
