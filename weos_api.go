@@ -69,7 +69,7 @@ func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	if a.Config.JWTConfig.SigningMethod != "" {
 		config.SigningMethod = a.Config.JWTConfig.SigningMethod
 	}
-	if a.Config.JWTConfig.CertificatePath != "" && a.Config.JWTConfig.Certificate == nil {
+	if a.Config.JWTConfig.CertificatePath != "" && len(a.Config.JWTConfig.Certificate) == 0 {
 		bytes, err := ioutil.ReadFile(a.Config.JWTConfig.CertificatePath)
 		a.Config.JWTConfig.Certificate = bytes
 		if err != nil {
