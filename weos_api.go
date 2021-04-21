@@ -1,14 +1,17 @@
 package weoscontroller
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/segmentio/ksuid"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/http/httputil"
 	"os"
 	"strings"
+
+	"github.com/SermoDigital/jose/crypto"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"github.com/segmentio/ksuid"
 )
 
 //Handlers container for all handlers
@@ -51,6 +54,56 @@ func (p *API) Logger(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 
 func (p *API) Recover(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.Recover()(handlerFunc)
+}
+
+//Functionality to check claims will be added here
+func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+	var config middleware.JWTConfig
+
+	if a.Config.JWTConfig.Key != "" {
+		config.SigningKey = []byte(a.Config.JWTConfig.Key)
+	}
+	if len(a.Config.JWTConfig.SigningKeys) > 0 {
+		config.SigningKeys = a.Config.JWTConfig.SigningKeys
+	}
+	if a.Config.JWTConfig.SigningMethod != "" {
+		config.SigningMethod = a.Config.JWTConfig.SigningMethod
+	}
+	if a.Config.JWTConfig.CertificatePath != "" && a.Config.JWTConfig.Certificate == nil {
+		bytes, err := ioutil.ReadFile(a.Config.JWTConfig.CertificatePath)
+		a.Config.JWTConfig.Certificate = bytes
+		if err != nil {
+			a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+		}
+	}
+	if a.Config.JWTConfig.Certificate != nil {
+		if config.SigningMethod == "RS256" || config.SigningMethod == "RS384" || config.SigningMethod == "RS512" {
+			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(a.Config.JWTConfig.Certificate)
+			if err != nil {
+				a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+			}
+			config.SigningKey = publicKey
+		} else if config.SigningMethod == "EC256" || config.SigningMethod == "EC384" || config.SigningMethod == "EC512" {
+			publicKey, err := crypto.ParseECPublicKeyFromPEM(a.Config.JWTConfig.Certificate)
+			if err != nil {
+				a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+			}
+			config.SigningKey = publicKey
+		}
+	}
+	if config.SigningKey == nil && config.SigningKeys == nil {
+		a.e.Logger.Fatalf("no jwt secret was configured.")
+	}
+	if a.Config.JWTConfig.TokenLookup != "" {
+		config.TokenLookup = a.Config.JWTConfig.TokenLookup
+	}
+	if a.Config.JWTConfig.AuthScheme != "" {
+		config.AuthScheme = a.Config.JWTConfig.AuthScheme
+	}
+	if a.Config.JWTConfig.ContextKey != "" {
+		config.ContextKey = a.Config.JWTConfig.ContextKey
+	}
+	return middleware.JWTWithConfig(config)(handlerFunc)
 }
 
 func (p *API) RequestRecording(next echo.HandlerFunc) echo.HandlerFunc {

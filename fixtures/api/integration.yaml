@@ -25,6 +25,14 @@ x-weos-config:
     - PreGlobalMiddleware
   middleware:
     - GlobalMiddleware
+  jwtConfig:
+    key: ${JWT_KEY}
+    tokenLookup: ${JWT_LOOKUP}
+    claims: 
+      email: "email@mail"
+      real: false
+
+
 
 paths:
   /health:

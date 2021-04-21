@@ -25,6 +25,15 @@ x-weos-config:
     - RequestID
     - Recover
     - Static
+  jwtConfig:
+    key: ${JWT_KEY}
+    tokenLookup: ${JWT_LOOKUP}
+    claims: 
+      email: string
+      real: bool
+    authScheme: ${JWT_SCHEME}
+    contextKey: ${JWT_CONTEXT}
+    signingMethod: ${JWT_SIGNING_METHOD}
 
 paths:
   /health:
