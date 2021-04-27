@@ -127,7 +127,7 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo
 					}
 
 					if weosConfig.Group { //TODO move this form here because it creates weird behavior
-						group := e.Group(path)
+						group := e.Group(config.BasePath + path)
 						group.Use(middlewares...)
 					} else {
 						//TODO make it so that it automatically matches the paths to a group based on the prefix
