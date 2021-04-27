@@ -6,6 +6,7 @@ import (
 
 type APIConfig struct {
 	*weos.ApplicationConfig
+	BasePath            string `json:"basePath" ,yaml:"basePath"`
 	RecordingBaseFolder string
 	Middleware          []string   `json:"middleware"`
 	PreMiddleware       []string   `json:"pre-middleware"`

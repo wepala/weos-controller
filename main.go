@@ -37,8 +37,9 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo
 	}
 
 	//parse the main config
+	var config *APIConfig
 	if swagger.ExtensionProps.Extensions["x-weos-config"] != nil {
-		var config *APIConfig
+
 		data, err := swagger.ExtensionProps.Extensions["x-weos-config"].(json.RawMessage).MarshalJSON()
 		if err != nil {
 			e.Logger.Fatalf("error loading api config '%s", err)
@@ -135,23 +136,23 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo
 						echoPath := re.ReplaceAllString(path, `:$1`)
 						switch method {
 						case "GET":
-							e.GET(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.GET(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "POST":
-							e.POST(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.POST(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "PUT":
-							e.PUT(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.PUT(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "PATCH":
-							e.PATCH(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.PATCH(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "DELETE":
-							e.DELETE(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.DELETE(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "HEAD":
-							e.HEAD(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.HEAD(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "OPTIONS":
-							e.OPTIONS(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.OPTIONS(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "TRACE":
-							e.TRACE(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.TRACE(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "CONNECT":
-							e.CONNECT(echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.CONNECT(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 
 						}
 					}
