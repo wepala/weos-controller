@@ -36,6 +36,10 @@ func (p *API) SetEchoInstance(e *echo.Echo) {
 
 //Common Middleware
 
+func (p *API) HTTPSRedirect(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+	return middleware.HTTPSRedirect()(handlerFunc)
+}
+
 func (p *API) RequestID(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.RequestIDWithConfig(middleware.RequestIDConfig{
 		Generator: func() string {
