@@ -13,6 +13,7 @@ import (
 )
 
 func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo {
+	e.HideBanner = true
 	if apiConfigPath == "" {
 		apiConfigPath = "./api.yaml"
 	}
