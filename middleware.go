@@ -222,6 +222,11 @@ func StaticWithConfig(config StaticConfig) echo.MiddlewareFunc {
 			var f fs.File
 			f, err = config.FileSystem.Open(name)
 			if err != nil {
+				//try with index
+				f, err = config.FileSystem.Open(strings.Trim(name, "/") + "/" + config.Index)
+				if err != nil {
+					return err
+				}
 				return err
 			}
 			defer f.Close()
