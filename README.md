@@ -8,13 +8,83 @@ The Controller is meant to handle incoming requests and route to the appropriate
 
 ### How do I get set up? ###
 
-You can run the serve command to give access via http. There are a few ways to start the server
+This module should be imported into an api and initialized. 
 
-#### Http Serve
-1. Use cli parameters `weos-controller serve http localhost:8080 -a site-api.yml -c site-config.yml`
-1. Use environment variables set environment variable `API_YAML` and `CONFIG_YAML` and then start the server `weos-controller serve http-mock`
-1. Configure parameters in a config file `weos-controller serve http localhost:8080 -c weoscontroller.yml`
-1. Place a config in the home folder of the service `weos-controller serve http localhost:8080`
+```shell
+go get github.com/wepala/weos-controller
+```
+
+Then setup a configuration file `api.yaml` for example
+
+```yaml
+openapi: 3.0.2
+info:
+  title: WeOS REST API
+  version: 1.0.0
+  description:  REST API for passing information into WeOS
+
+x-weos-config:
+  session:
+    key: "${SESSION_KEY}"
+    path: ""
+  logger:
+    level: ${LOG_LEVEL}
+    report-caller: true
+    formatter: ${LOG_FORMAT}
+  applicationId: ${APPLICATION_ID}
+  applicationTitle: ${APPLICATION_TITLE}
+  accountId: ${ACCOUNT_ID}
+  database:
+    host: ${POSTGRES_HOST}
+    database: ${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    port: ${POSTGRES_PORT}
+  middleware:
+    - RequestID
+    - Recover
+    - Static
+  jwtConfig:
+    key: ${JWT_KEY}
+    tokenLookup: ${JWT_LOOKUP}
+    claims: 
+      email: string
+      real: bool
+    authScheme: ${JWT_SCHEME}
+    contextKey: ${JWT_CONTEXT}
+    signingMethod: ${JWT_SIGNING_METHOD}
+
+paths:
+  /health:
+    summary: Health Check
+    get:
+      x-weos-config:
+        handler: HealthChecker
+      responses:
+        "200":
+          description: Health Response
+        "500":
+          description: API Internal Error
+  /admin:
+    summary: Admin Endpoint
+    get:
+      x-weos-config:
+        group: True
+        middleware:
+          - Static
+      responses:
+        200:
+          description: Admin Endpoint
+```
+
+NB: The content of the yaml can also be passed into the `Initialize` method
+
+##### Config Explained
+
+The configuration uses the [OAS 3.0 api specification](https://swagger.io/specification/). Using a standard format allows
+us to take advantage of the rich tooling that is available. WeOS specific configuration can be found under the weos 
+specific configuration extension `x-weos-config`. When this extension is applied to a path, the configuration details
+is available as a path config. 
 
 #### Mock Responses
 Getting mock responses couldn't be easier. 

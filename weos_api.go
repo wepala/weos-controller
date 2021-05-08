@@ -17,12 +17,21 @@ import (
 //Handlers container for all handlers
 
 type API struct {
-	Config *APIConfig
-	e      *echo.Echo
+	Config      *APIConfig
+	e           *echo.Echo
+	PathConfigs map[string]*PathConfig
 }
 
 func (p *API) AddConfig(config *APIConfig) error {
 	p.Config = config
+	return nil
+}
+
+func (p *API) AddPathConfig(path string, config *PathConfig) error {
+	if p.PathConfigs == nil {
+		p.PathConfigs = make(map[string]*PathConfig)
+	}
+	p.PathConfigs[path] = config
 	return nil
 }
 

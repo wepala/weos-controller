@@ -1,4 +1,4 @@
-//go:generate moq -out mocks_test.go -pkg weoscontroller_test . APIInterface
+//go:generate moq -out mocks_test.go -pkg weoscontroller . APIInterface
 package weoscontroller
 
 import (
@@ -7,6 +7,7 @@ import (
 
 //define an interface that all plugins must implement
 type APIInterface interface {
+	AddPathConfig(path string, config *PathConfig) error
 	AddConfig(config *APIConfig) error
 	Initialize() error
 	EchoInstance() *echo.Echo

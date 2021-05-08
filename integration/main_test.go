@@ -66,6 +66,9 @@ func TestMiddlware(t *testing.T) {
 		AddConfigFunc: func(config *weoscontroller.APIConfig) error {
 			return nil
 		},
+		AddPathConfigFunc: func(path string, config *weoscontroller.PathConfig) error {
+			return nil
+		},
 		SetEchoInstanceFunc: func(e *echo.Echo) {
 			echoInstance = e
 		},
@@ -152,5 +155,9 @@ func TestMiddlware(t *testing.T) {
 
 	if len(api.PreGlobalMiddlewareCalls()) != 1 {
 		t.Errorf("expected %d call to global pre middleware, got %d", 1, len(api.PreGlobalMiddlewareCalls()))
+	}
+
+	if len(api.AddPathConfigCalls()) < 1 {
+		t.Error("expected the path config to be called")
 	}
 }
