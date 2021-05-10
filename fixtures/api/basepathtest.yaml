@@ -45,6 +45,9 @@ paths:
         handler: HealthChecker
         pre-middlware:
           - RequestRecording
+        config:
+          RequestRecording:
+            RecordingBaseFolder: testdata/http
       responses:
         200:
           description: Admin Endpoint

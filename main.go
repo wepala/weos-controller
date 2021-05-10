@@ -12,18 +12,27 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo {
-	if apiConfigPath == "" {
-		apiConfigPath = "./api.yaml"
+func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
+	e.HideBanner = true
+	if apiConfig == "" {
+		apiConfig = "./api.yaml"
 	}
 
 	//set echo instance because the instance may not already be in the api that is passed in but the handlers must have access to it
 	api.SetEchoInstance(e)
 
-	content, err := ioutil.ReadFile(apiConfigPath)
-	if err != nil {
-		e.Logger.Fatalf("error loading api specification '%s'", err)
+	var content []byte
+	var err error
+	//try load file if it's a yaml file otherwise it's the contents of a yaml file WEOS-1009
+	if strings.Contains(apiConfig, ".yaml") || strings.Contains(apiConfig, "/yml") {
+		content, err = ioutil.ReadFile(apiConfig)
+		if err != nil {
+			e.Logger.Fatalf("error loading api specification '%s'", err)
+		}
+	} else {
+		content = []byte(apiConfig)
 	}
+
 	//change the $ref to another marker so that it doesn't get considered an environment variable WECON-1
 	tempFile := strings.ReplaceAll(string(content), "$ref", "__ref__")
 	//replace environment variables in file
@@ -128,12 +137,20 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfigPath string) *echo.Echo
 
 					if weosConfig.Group { //TODO move this form here because it creates weird behavior
 						group := e.Group(config.BasePath + path)
+						err = api.AddPathConfig(config.BasePath+path, weosConfig)
+						if err != nil {
+							e.Logger.Fatalf("error adding path config '%s' '%s'", config.BasePath+path, err)
+						}
 						group.Use(middlewares...)
 					} else {
 						//TODO make it so that it automatically matches the paths to a group based on the prefix
 						//update path so that the open api way of specifying url parameters is change to the echo style of url parameters
 						re := regexp.MustCompile(`\{([a-zA-Z0-9\-_]+?)\}`)
 						echoPath := re.ReplaceAllString(path, `:$1`)
+						err = api.AddPathConfig(config.BasePath+echoPath, weosConfig)
+						if err != nil {
+							e.Logger.Fatalf("error adding path config '%s' '%s'", echoPath, err)
+						}
 						switch method {
 						case "GET":
 							e.GET(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
