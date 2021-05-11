@@ -3,7 +3,6 @@ package weoscontroller
 import (
 	"embed"
 	"fmt"
-	"github.com/labstack/echo/v4/middleware"
 	"html/template"
 	"io"
 	"io/fs"
@@ -13,6 +12,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/bytes"
