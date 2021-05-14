@@ -5,7 +5,7 @@ package integration_test
 
 import (
 	"github.com/labstack/echo/v4"
-	weoscontroller "github.com/wepala/weos-controller"
+	"github.com/wepala/weos-controller"
 	"sync"
 )
 
@@ -21,6 +21,9 @@ var _ TestAPI = &TestAPIMock{}
 // 		mockedTestAPI := &TestAPIMock{
 // 			AddConfigFunc: func(config *weoscontroller.APIConfig) error {
 // 				panic("mock out the AddConfig method")
+// 			},
+// 			AddPathConfigFunc: func(path string, config *weoscontroller.PathConfig) error {
+// 				panic("mock out the AddPathConfig method")
 // 			},
 // 			EchoInstanceFunc: func() *echo.Echo {
 // 				panic("mock out the EchoInstance method")
@@ -59,6 +62,9 @@ type TestAPIMock struct {
 	// AddConfigFunc mocks the AddConfig method.
 	AddConfigFunc func(config *weoscontroller.APIConfig) error
 
+	// AddPathConfigFunc mocks the AddPathConfig method.
+	AddPathConfigFunc func(path string, config *weoscontroller.PathConfig) error
+
 	// EchoInstanceFunc mocks the EchoInstance method.
 	EchoInstanceFunc func() *echo.Echo
 
@@ -92,6 +98,13 @@ type TestAPIMock struct {
 		AddConfig []struct {
 			// Config is the config argument value.
 			Config *weoscontroller.APIConfig
+		}
+		// AddPathConfig holds details about calls to the AddPathConfig method.
+		AddPathConfig []struct {
+			// Path is the path argument value.
+			Path string
+			// Config is the config argument value.
+			Config *weoscontroller.PathConfig
 		}
 		// EchoInstance holds details about calls to the EchoInstance method.
 		EchoInstance []struct {
@@ -136,6 +149,7 @@ type TestAPIMock struct {
 		}
 	}
 	lockAddConfig           sync.RWMutex
+	lockAddPathConfig       sync.RWMutex
 	lockEchoInstance        sync.RWMutex
 	lockFooBar              sync.RWMutex
 	lockGlobalMiddleware    sync.RWMutex
@@ -175,6 +189,41 @@ func (mock *TestAPIMock) AddConfigCalls() []struct {
 	mock.lockAddConfig.RLock()
 	calls = mock.calls.AddConfig
 	mock.lockAddConfig.RUnlock()
+	return calls
+}
+
+// AddPathConfig calls AddPathConfigFunc.
+func (mock *TestAPIMock) AddPathConfig(path string, config *weoscontroller.PathConfig) error {
+	if mock.AddPathConfigFunc == nil {
+		panic("TestAPIMock.AddPathConfigFunc: method is nil but TestAPI.AddPathConfig was just called")
+	}
+	callInfo := struct {
+		Path   string
+		Config *weoscontroller.PathConfig
+	}{
+		Path:   path,
+		Config: config,
+	}
+	mock.lockAddPathConfig.Lock()
+	mock.calls.AddPathConfig = append(mock.calls.AddPathConfig, callInfo)
+	mock.lockAddPathConfig.Unlock()
+	return mock.AddPathConfigFunc(path, config)
+}
+
+// AddPathConfigCalls gets all the calls that were made to AddPathConfig.
+// Check the length with:
+//     len(mockedTestAPI.AddPathConfigCalls())
+func (mock *TestAPIMock) AddPathConfigCalls() []struct {
+	Path   string
+	Config *weoscontroller.PathConfig
+} {
+	var calls []struct {
+		Path   string
+		Config *weoscontroller.PathConfig
+	}
+	mock.lockAddPathConfig.RLock()
+	calls = mock.calls.AddPathConfig
+	mock.lockAddPathConfig.RUnlock()
 	return calls
 }
 

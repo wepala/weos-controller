@@ -9,18 +9,21 @@ import (
 	"sync"
 )
 
-// Ensure, that APIInterfaceMock does implement weoscontroller.APIInterface.
+// Ensure, that APIInterfaceMock does implement APIInterface.
 // If this is not the case, regenerate this file with moq.
 var _ weoscontroller.APIInterface = &APIInterfaceMock{}
 
-// APIInterfaceMock is a mock implementation of weoscontroller.APIInterface.
+// APIInterfaceMock is a mock implementation of APIInterface.
 //
 // 	func TestSomethingThatUsesAPIInterface(t *testing.T) {
 //
-// 		// make and configure a mocked weoscontroller.APIInterface
+// 		// make and configure a mocked APIInterface
 // 		mockedAPIInterface := &APIInterfaceMock{
 // 			AddConfigFunc: func(config *weoscontroller.APIConfig) error {
 // 				panic("mock out the AddConfig method")
+// 			},
+// 			AddPathConfigFunc: func(path string, config *weoscontroller.PathConfig) error {
+// 				panic("mock out the AddPathConfig method")
 // 			},
 // 			EchoInstanceFunc: func() *echo.Echo {
 // 				panic("mock out the EchoInstance method")
@@ -33,13 +36,16 @@ var _ weoscontroller.APIInterface = &APIInterfaceMock{}
 // 			},
 // 		}
 //
-// 		// use mockedAPIInterface in code that requires weoscontroller.APIInterface
+// 		// use mockedAPIInterface in code that requires APIInterface
 // 		// and then make assertions.
 //
 // 	}
 type APIInterfaceMock struct {
 	// AddConfigFunc mocks the AddConfig method.
 	AddConfigFunc func(config *weoscontroller.APIConfig) error
+
+	// AddPathConfigFunc mocks the AddPathConfig method.
+	AddPathConfigFunc func(path string, config *weoscontroller.PathConfig) error
 
 	// EchoInstanceFunc mocks the EchoInstance method.
 	EchoInstanceFunc func() *echo.Echo
@@ -57,6 +63,13 @@ type APIInterfaceMock struct {
 			// Config is the config argument value.
 			Config *weoscontroller.APIConfig
 		}
+		// AddPathConfig holds details about calls to the AddPathConfig method.
+		AddPathConfig []struct {
+			// Path is the path argument value.
+			Path string
+			// Config is the config argument value.
+			Config *weoscontroller.PathConfig
+		}
 		// EchoInstance holds details about calls to the EchoInstance method.
 		EchoInstance []struct {
 		}
@@ -70,6 +83,7 @@ type APIInterfaceMock struct {
 		}
 	}
 	lockAddConfig       sync.RWMutex
+	lockAddPathConfig   sync.RWMutex
 	lockEchoInstance    sync.RWMutex
 	lockInitialize      sync.RWMutex
 	lockSetEchoInstance sync.RWMutex
@@ -103,6 +117,41 @@ func (mock *APIInterfaceMock) AddConfigCalls() []struct {
 	mock.lockAddConfig.RLock()
 	calls = mock.calls.AddConfig
 	mock.lockAddConfig.RUnlock()
+	return calls
+}
+
+// AddPathConfig calls AddPathConfigFunc.
+func (mock *APIInterfaceMock) AddPathConfig(path string, config *weoscontroller.PathConfig) error {
+	if mock.AddPathConfigFunc == nil {
+		panic("APIInterfaceMock.AddPathConfigFunc: method is nil but APIInterface.AddPathConfig was just called")
+	}
+	callInfo := struct {
+		Path   string
+		Config *weoscontroller.PathConfig
+	}{
+		Path:   path,
+		Config: config,
+	}
+	mock.lockAddPathConfig.Lock()
+	mock.calls.AddPathConfig = append(mock.calls.AddPathConfig, callInfo)
+	mock.lockAddPathConfig.Unlock()
+	return mock.AddPathConfigFunc(path, config)
+}
+
+// AddPathConfigCalls gets all the calls that were made to AddPathConfig.
+// Check the length with:
+//     len(mockedAPIInterface.AddPathConfigCalls())
+func (mock *APIInterfaceMock) AddPathConfigCalls() []struct {
+	Path   string
+	Config *weoscontroller.PathConfig
+} {
+	var calls []struct {
+		Path   string
+		Config *weoscontroller.PathConfig
+	}
+	mock.lockAddPathConfig.RLock()
+	calls = mock.calls.AddPathConfig
+	mock.lockAddPathConfig.RUnlock()
 	return calls
 }
 

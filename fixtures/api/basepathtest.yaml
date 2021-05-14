@@ -1,0 +1,53 @@
+openapi: 3.0.2
+info:
+  title: WeOS REST API
+  version: 1.0.0
+  description:  REST API for passing information into WeOS
+
+x-weos-config:
+  basePath: /weos
+  session:
+    key: "${SESSION_KEY}"
+    path: ""
+  logger:
+    level: ${LOG_LEVEL}
+    report-caller: true
+    formatter: ${LOG_FORMAT}
+  applicationId: ${APPLICATION_ID}
+  applicationTitle: ${APPLICATION_TITLE}
+  accountId: ${ACCOUNT_ID}
+  database:
+    host: ${POSTGRES_HOST}
+    database: ${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+    port: ${POSTGRES_PORT}
+  middleware:
+    - RequestID
+    - Recover
+    - Static
+
+paths:
+  /health:
+    summary: Health Check
+    get:
+      x-weos-config:
+        handler: HealthChecker
+      responses:
+        "200":
+          description: Health Response
+        "500":
+          description: API Internal Error
+  /user/{id}/{contentID}:
+    summary: Some user endpoint
+    get:
+      x-weos-config:
+        handler: HealthChecker
+        pre-middlware:
+          - RequestRecording
+        config:
+          RequestRecording:
+            RecordingBaseFolder: testdata/http
+      responses:
+        200:
+          description: Admin Endpoint
