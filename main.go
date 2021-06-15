@@ -153,6 +153,10 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 						}
 						switch method {
 						case "GET":
+							if weosConfig.DisableCors {
+								//TODO configure CORS
+							}
+
 							e.GET(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "POST":
 							e.POST(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
