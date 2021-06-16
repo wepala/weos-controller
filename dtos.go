@@ -2,6 +2,7 @@ package weoscontroller
 
 import (
 	"encoding/json"
+
 	"github.com/wepala/weos"
 )
 
@@ -26,6 +27,7 @@ type JWTConfig struct {
 	SigningKeys     map[string]interface{} `json:"signingKeys"`
 	Certificate     []byte                 `json:"certificate"`
 	CertificatePath string                 `json:"certificatePath"`
+	JWKSUrl         string                 `json:"jwksUrl"`
 	TokenLookup     string                 `json:"tokenLookup"`
 	Claims          map[string]interface{} `json:"claims"`
 	AuthScheme      string                 `json:"authScheme"`
