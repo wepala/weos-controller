@@ -94,7 +94,7 @@ func (a *API) getKey(token *jwt.Token) (interface{}, error) {
 
 	var pubkey interface{}
 	if err := key.Raw(&pubkey); err != nil {
-		return nil, fmt.Errorf("Unable to get the public key. Error: %s", err.Error())
+		return nil, fmt.Errorf("unable to get the public key. error: %s", err.Error())
 	}
 
 	return pubkey, nil
