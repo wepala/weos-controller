@@ -23,11 +23,11 @@ type PathConfig struct {
 }
 
 type JWTConfig struct {
-	Key             string                 `json:"key"`
-	SigningKeys     map[string]interface{} `json:"signingKeys"`
+	Key             string                 `json:"key"`         //Signing key needed for validating token
+	SigningKeys     map[string]interface{} `json:"signingKeys"` //Key map used for validating token.  Can be used in place of a single key
 	Certificate     []byte                 `json:"certificate"`
-	CertificatePath string                 `json:"certificatePath"`
-	JWKSUrl         string                 `json:"jwksUrl"`
+	CertificatePath string                 `json:"certificatePath"` //Path the signing certificate used to validate token.  Can  be used in place of a key
+	JWKSUrl         string                 `json:"jwksUrl"`         //URL to JSON Web Key set.  Can be used in place of a Key
 	TokenLookup     string                 `json:"tokenLookup"`
 	Claims          map[string]interface{} `json:"claims"`
 	AuthScheme      string                 `json:"authScheme"`
