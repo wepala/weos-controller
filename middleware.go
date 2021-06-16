@@ -3,7 +3,6 @@ package weoscontroller
 import (
 	"embed"
 	"fmt"
-	"github.com/labstack/echo/v4/middleware"
 	"html/template"
 	"io"
 	"io/fs"
@@ -13,6 +12,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/bytes"
@@ -273,4 +274,20 @@ func listDir(t *template.Template, name string, res *echo.Response) (err error) 
 		}{f.Name(), f.IsDir(), bytes.Format(f.Size())})
 	}
 	return t.Execute(res, data)
+}
+
+// cors middleware handler adds cors to app paths
+func EnableCORS(method string, path string) echo.MiddlewareFunc {
+	if method == "PUT" {
+		return middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins: []string{path},
+			AllowHeaders: []string{"*"},
+			AllowMethods: []string{http.MethodPut, http.MethodGet, http.MethodOptions},
+		})
+	}
+	return middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{path},
+		AllowHeaders: []string{"*"},
+		AllowMethods: []string{method},
+	})
 }
