@@ -2,6 +2,7 @@ package weoscontroller
 
 import (
 	"encoding/json"
+
 	"github.com/wepala/weos"
 )
 
@@ -19,7 +20,7 @@ type PathConfig struct {
 	Group       bool            `json:"group" ,yaml:"group"`
 	Middleware  []string        `json:"middleware"`
 	Config      json.RawMessage `json:"config"`
-	DisableCors bool            `json:"disable-cors`
+	DisableCors bool            `json:"disable-cors"`
 }
 
 type JWTConfig struct {
