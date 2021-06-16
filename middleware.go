@@ -291,3 +291,24 @@ func EnableCORS(method string, path string) echo.MiddlewareFunc {
 		AllowMethods: []string{method},
 	})
 }
+
+type WEOSError struct {
+	Message    string `json:"message"`
+	StatusCode int    `json:"statusCode"`
+	Error      error  `json:"error"`
+}
+
+func customHTTPErrorHandler(err error, c echo.Context) {
+	code := http.StatusInternalServerError
+	if he, ok := err.(*echo.HTTPError); ok {
+		code = he.Code
+	}
+	weosError := &WEOSError{
+		StatusCode: code,
+		Error:      err,
+	}
+	if err := c.JSON(code, weosError); err != nil {
+		c.Logger().Error(err)
+	}
+	c.Logger().Error(err)
+}
