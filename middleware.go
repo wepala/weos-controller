@@ -317,26 +317,25 @@ func NewControllerError(message string, err error, code int) *WeOSControllerErro
 }
 
 func customHTTPErrorHandler(err error, c echo.Context) {
-	if errors.Is(err, &weos.DomainError{}) {
-		code := 400
-		controllerError := NewControllerError("domain error: ", err, code)
-		if err := c.JSON(code, controllerError); err != nil {
-			c.Logger().Error(err)
-		}
-	}
-	if errors.Is(err, &weos.WeOSError{}) {
-		code := 500
-		controllerError := NewControllerError("weos error: ", err, code)
-		if err := c.JSON(code, controllerError); err != nil {
-			c.Logger().Error(err)
-		}
-	}
-	if errors.Is(err, &echo.HTTPError{}) {
-		e := &echo.HTTPError{}
+	e := &WeOSControllerError{}
+	if errors.Is(err, &WeOSControllerError{}) {
 		errors.As(err, &e)
-		code := e.Code
-		controllerError := NewControllerError("http error: ", err, code)
-		if err := c.JSON(code, controllerError); err != nil {
+		if e.statusCode == 0 {
+			if errors.Is(e.err, &weos.DomainError{}) {
+				code := 400
+				if err := c.JSON(code, e.err.Error()); err != nil {
+					c.Logger().Error(err)
+				}
+			}
+			if errors.Is(e.err, &weos.WeOSError{}) {
+				code := 500
+				if err := c.JSON(code, e.err.Error()); err != nil {
+					c.Logger().Error(err)
+				}
+			}
+		}
+		code := 500
+		if err := c.JSON(code, e.err.Error()); err != nil {
 			c.Logger().Error(err)
 		}
 	}
