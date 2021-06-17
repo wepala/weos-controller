@@ -2,6 +2,7 @@ package weoscontroller
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -14,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/wepala/weos"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/bytes"
@@ -299,7 +301,7 @@ type WeOSControllerError struct {
 }
 
 func (e *WeOSControllerError) Error() string {
-	return e.message
+	return e.message + ":" + e.err.Error()
 }
 
 func (e *WeOSControllerError) Unwrap() error {
@@ -315,13 +317,28 @@ func NewControllerError(message string, err error, code int) *WeOSControllerErro
 }
 
 func customHTTPErrorHandler(err error, c echo.Context) {
-	code := http.StatusInternalServerError
-	if he, ok := err.(*echo.HTTPError); ok {
-		code = he.Code
+	if errors.Is(err, &weos.DomainError{}) {
+		code := 400
+		controllerError := NewControllerError("domain error: ", err, code)
+		if err := c.JSON(code, controllerError); err != nil {
+			c.Logger().Error(err)
+		}
 	}
-	controllerError := NewControllerError("", err, code)
-	if err := c.JSON(code, controllerError); err != nil {
-		c.Logger().Error(err)
+	if errors.Is(err, &weos.WeOSError{}) {
+		code := 500
+		controllerError := NewControllerError("weos error: ", err, code)
+		if err := c.JSON(code, controllerError); err != nil {
+			c.Logger().Error(err)
+		}
+	}
+	if errors.Is(err, &echo.HTTPError{}) {
+		e := &echo.HTTPError{}
+		errors.As(err, &e)
+		code := e.Code
+		controllerError := NewControllerError("http error: ", err, code)
+		if err := c.JSON(code, controllerError); err != nil {
+			c.Logger().Error(err)
+		}
 	}
 	c.Logger().Error(err)
 }
