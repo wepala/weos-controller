@@ -235,8 +235,24 @@ paths:
   /user/{id}/{contentID}:
     summary: Some user endpoint
     get:
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: id of the user
+        - in: path
+          name: contentID
+          schema:
+            type: string
+          required: true
+          description: contentId of the user
       x-weos-config:
         handler: HealthChecker
+        disable-cors: true
+        middleware:
+          - Authenticate
         pre-middlware:
           - RequestRecording
       responses:
