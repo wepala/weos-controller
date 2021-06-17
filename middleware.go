@@ -292,10 +292,26 @@ func EnableCORS(method string, path string) echo.MiddlewareFunc {
 	})
 }
 
-type WEOSError struct {
-	Message    string `json:"message"`
-	StatusCode int    `json:"statusCode"`
-	Error      error  `json:"error"`
+type WeOSControllerError struct {
+	message    string
+	statusCode int
+	err        error
+}
+
+func (e *WeOSControllerError) Error() string {
+	return e.message
+}
+
+func (e *WeOSControllerError) Unwrap() error {
+	return e.err
+}
+
+func NewControllerError(message string, err error, code int) *WeOSControllerError {
+	return &WeOSControllerError{
+		message:    message,
+		err:        err,
+		statusCode: code,
+	}
 }
 
 func customHTTPErrorHandler(err error, c echo.Context) {
@@ -303,11 +319,8 @@ func customHTTPErrorHandler(err error, c echo.Context) {
 	if he, ok := err.(*echo.HTTPError); ok {
 		code = he.Code
 	}
-	weosError := &WEOSError{
-		StatusCode: code,
-		Error:      err,
-	}
-	if err := c.JSON(code, weosError); err != nil {
+	controllerError := NewControllerError("", err, code)
+	if err := c.JSON(code, controllerError); err != nil {
 		c.Logger().Error(err)
 	}
 	c.Logger().Error(err)
