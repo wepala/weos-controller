@@ -295,49 +295,50 @@ func EnableCORS(method string, path string) echo.MiddlewareFunc {
 }
 
 type WeOSControllerError struct {
-	message    string
-	statusCode int
-	err        error
+	Message    string
+	StatusCode int
+	Err        error
 }
 
 func (e *WeOSControllerError) Error() string {
-	return e.message + ":" + e.err.Error()
+	return e.Message + ":" + e.Err.Error()
 }
 
 func (e *WeOSControllerError) Unwrap() error {
-	return e.err
+	return e.Err
 }
 
 func NewControllerError(message string, err error, code int) *WeOSControllerError {
 	return &WeOSControllerError{
-		message:    message,
-		err:        err,
-		statusCode: code,
+		Message:    message,
+		Err:        err,
+		StatusCode: code,
 	}
 }
 
-func customHTTPErrorHandler(err error, c echo.Context) {
+func CustomErrorHandler(err error, c echo.Context) {
 	e := &WeOSControllerError{}
-	if errors.Is(err, &WeOSControllerError{}) {
+	if _, ok := err.(*WeOSControllerError); ok {
 		errors.As(err, &e)
-		if e.statusCode == 0 {
-			if errors.Is(e.err, &weos.DomainError{}) {
+		if e.StatusCode == 0 {
+			if _, ok := e.Err.(*weos.DomainError); ok {
 				code := 400
-				if err := c.JSON(code, e.err.Error()); err != nil {
-					c.Logger().Error(err)
-				}
+				c.JSON(code, e.Err)
+				c.Logger().Error(err)
+				return
 			}
-			if errors.Is(e.err, &weos.WeOSError{}) {
+			if _, ok := e.Err.(*weos.WeOSError); ok {
 				code := 500
-				if err := c.JSON(code, e.err.Error()); err != nil {
-					c.Logger().Error(err)
-				}
+				c.JSON(code, e.Err)
+				c.Logger().Error(err)
+				return
 			}
-		}
-		code := 500
-		if err := c.JSON(code, e.err.Error()); err != nil {
+		} else {
+			c.JSON(e.StatusCode, e.Err)
 			c.Logger().Error(err)
+			return
 		}
 	}
 	c.Logger().Error(err)
+	return
 }
