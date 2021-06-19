@@ -7,26 +7,18 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
-	module "github.com/wepala/sellwithwe-module"
-	sellwithwemodule "github.com/wepala/sellwithwe-module"
 	"github.com/wepala/weos"
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
+type StorePayload struct {
+	Name string
+}
+
 func TestMiddleware_CustomErrorHanlderDomain(t *testing.T) {
 	e := echo.New()
-	payload := &sellwithwemodule.StorePayload{
+	payload := &StorePayload{
 		Name: "",
-		Phones: []*module.PhoneNumber{
-			{
-				Value: "123456",
-			},
-		},
-		Emails: []*module.Email{
-			{
-				Value: "somemail@mail.com",
-			},
-		},
 	}
 	reqBytes, _ := json.Marshal(payload)
 	body := bytes.NewReader(reqBytes)
@@ -53,18 +45,8 @@ func TestMiddleware_CustomErrorHanlderDomain(t *testing.T) {
 
 func TestMiddleware_CustomErrorHanlderWeOS(t *testing.T) {
 	e := echo.New()
-	payload := &sellwithwemodule.StorePayload{
+	payload := &StorePayload{
 		Name: "",
-		Phones: []*module.PhoneNumber{
-			{
-				Value: "123456",
-			},
-		},
-		Emails: []*module.Email{
-			{
-				Value: "somemail@mail.com",
-			},
-		},
 	}
 	reqBytes, _ := json.Marshal(payload)
 	body := bytes.NewReader(reqBytes)
