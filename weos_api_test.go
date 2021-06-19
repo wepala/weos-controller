@@ -123,7 +123,7 @@ func TestAPI_Authenticate(t *testing.T) {
 			Type:  "PUBLIC KEY",
 			Bytes: publicKeyBytes,
 		}
-		publicPem, err := os.Create("./fixtures/certificates/publicRS.txt")
+		publicPem, err := os.Create("./publicRS.txt")
 		if err != nil {
 			t.Errorf("got an error setting up tests %s", err)
 		}
@@ -148,7 +148,7 @@ func TestAPI_Authenticate(t *testing.T) {
 				Key:             "",
 				SigningKeys:     map[string]interface{}{},
 				Certificate:     nil,
-				CertificatePath: "./fixtures/certificates/publicRS.txt",
+				CertificatePath: "./publicRS.txt",
 				TokenLookup:     "",
 				AuthScheme:      "",
 				SigningMethod:   "RS256",
@@ -169,6 +169,8 @@ func TestAPI_Authenticate(t *testing.T) {
 		if response.StatusCode != 200 {
 			t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
 		}
+
+		os.Remove("./publicRS.txt")
 	})
 	t.Run("jwt authenticate no token", func(t *testing.T) {
 		// Setup
@@ -313,6 +315,7 @@ func TestAPI_Authenticate(t *testing.T) {
 		if responseMessage != `{"message":"invalid or expired jwt"}` {
 			t.Errorf("expected the response message to be %s got %s", `{"message":"invalid or expired jwt"}`, responseMessage)
 		}
+
 	})
 }
 func TestAPI_ResponseRecording(t *testing.T) {
