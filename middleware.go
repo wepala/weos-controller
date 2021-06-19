@@ -2,6 +2,7 @@ package weoscontroller
 
 import (
 	"embed"
+	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -14,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/wepala/weos"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/bytes"
@@ -290,4 +292,53 @@ func EnableCORS(method string, path string) echo.MiddlewareFunc {
 		AllowHeaders: []string{"*"},
 		AllowMethods: []string{method},
 	})
+}
+
+type WeOSControllerError struct {
+	Message    string
+	StatusCode int
+	Err        error
+}
+
+func (e *WeOSControllerError) Error() string {
+	return e.Message + ":" + e.Err.Error()
+}
+
+func (e *WeOSControllerError) Unwrap() error {
+	return e.Err
+}
+
+func NewControllerError(message string, err error, code int) *WeOSControllerError {
+	return &WeOSControllerError{
+		Message:    message,
+		Err:        err,
+		StatusCode: code,
+	}
+}
+
+func CustomErrorHandler(err error, c echo.Context) {
+	e := &WeOSControllerError{}
+	if _, ok := err.(*WeOSControllerError); ok {
+		errors.As(err, &e)
+		if e.StatusCode == 0 {
+			if _, ok := e.Err.(*weos.DomainError); ok {
+				code := 400
+				c.JSON(code, e.Err)
+				c.Logger().Error(err)
+				return
+			}
+			if _, ok := e.Err.(*weos.WeOSError); ok {
+				code := 500
+				c.JSON(code, e.Err)
+				c.Logger().Error(err)
+				return
+			}
+		} else {
+			c.JSON(e.StatusCode, e.Err)
+			c.Logger().Error(err)
+			return
+		}
+	}
+	c.Logger().Error(err)
+	return
 }
