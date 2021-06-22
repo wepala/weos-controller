@@ -91,8 +91,6 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 			}
 			middlewares = append(middlewares, m.Interface().(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc))
 		}
-		//add default echo auth middleware
-		middlewares = append(middlewares, AuthMiddleware)
 		//all routes setup after this will use this middleware
 		e.Use(middlewares...)
 
