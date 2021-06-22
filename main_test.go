@@ -103,7 +103,6 @@ func TestParsingJWTConfigurations(t *testing.T) {
 	}
 
 }
-
 func TestParsingRoutesWithParams(t *testing.T) {
 	e := echo.New()
 	err := os.Setenv("POSTGRES_HOST", "localhost")
