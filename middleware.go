@@ -342,3 +342,7 @@ func CustomErrorHandler(err error, c echo.Context) {
 	c.Logger().Error(err)
 	return
 }
+
+func AuthMiddleware(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+	return middleware.JWTWithConfig(middleware.DefaultJWTConfig)(handlerFunc)
+}
