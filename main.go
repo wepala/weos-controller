@@ -155,47 +155,47 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 						switch method {
 						case "GET":
 							if !weosConfig.DisableCors {
-								middlewares = append(middlewares, EnableCORS(method, config.BasePath+echoPath))
+								middlewares = append(middlewares, EnableCORS(method))
 							}
 							e.GET(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "POST":
 							if !weosConfig.DisableCors {
-								middlewares = append(middlewares, EnableCORS(method, config.BasePath+echoPath))
+								middlewares = append(middlewares, EnableCORS(method))
 							}
 							e.POST(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "PUT":
 							if !weosConfig.DisableCors {
-								middlewares = append(middlewares, EnableCORS(method, config.BasePath+echoPath))
+								middlewares = append(middlewares, EnableCORS(method))
 							}
 							e.PUT(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "PATCH":
 							if !weosConfig.DisableCors {
-								middlewares = append(middlewares, EnableCORS(method, config.BasePath+echoPath))
+								middlewares = append(middlewares, EnableCORS(method))
 							}
 							e.PATCH(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "DELETE":
 							if !weosConfig.DisableCors {
-								middlewares = append(middlewares, EnableCORS(method, config.BasePath+echoPath))
+								middlewares = append(middlewares, EnableCORS(method))
 							}
 							e.DELETE(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "HEAD":
 							if !weosConfig.DisableCors {
-								middlewares = append(middlewares, EnableCORS(method, config.BasePath+echoPath))
+								middlewares = append(middlewares, EnableCORS(method))
 							}
 							e.HEAD(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "OPTIONS":
 							if !weosConfig.DisableCors {
-								middlewares = append(middlewares, EnableCORS(method, config.BasePath+echoPath))
+								middlewares = append(middlewares, EnableCORS(method))
 							}
 							e.OPTIONS(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "TRACE":
 							if !weosConfig.DisableCors {
-								middlewares = append(middlewares, EnableCORS(method, config.BasePath+echoPath))
+								middlewares = append(middlewares, EnableCORS(method))
 							}
 							e.TRACE(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 						case "CONNECT":
 							if !weosConfig.DisableCors {
-								middlewares = append(middlewares, EnableCORS(method, config.BasePath+echoPath))
+								middlewares = append(middlewares, EnableCORS(method))
 							}
 							e.CONNECT(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
 
