@@ -286,12 +286,13 @@ func EnableCORS(method string) echo.MiddlewareFunc {
 			AllowHeaders: []string{"*"},
 			AllowMethods: []string{http.MethodPut, http.MethodGet, http.MethodOptions},
 		})
+	} else {
+		return middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins: []string{"*"},
+			AllowHeaders: []string{"*"},
+			AllowMethods: []string{method},
+		})
 	}
-	return middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: []string{"*"},
-		AllowHeaders: []string{"*"},
-		AllowMethods: []string{method},
-	})
 }
 
 type WeOSControllerError struct {
