@@ -284,7 +284,7 @@ func EnableCORS(method string) echo.MiddlewareFunc {
 		return middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins: []string{"*"},
 			AllowHeaders: []string{"*"},
-			AllowMethods: []string{http.MethodOptions, http.MethodGet, http.MethodPut},
+			AllowMethods: []string{http.MethodOptions, http.MethodPut, http.MethodGet, http.MethodPost},
 		})
 	} else {
 		return middleware.CORSWithConfig(middleware.CORSConfig{
