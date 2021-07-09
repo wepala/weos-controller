@@ -49,8 +49,8 @@ func TestStart(t *testing.T) {
 		t.Errorf("expected init modules to be called %d time, called %d times", 1, len(plugin.InitializeCalls()))
 	}
 
-	if len(e.Routes()) != 23 {
-		t.Errorf("expected %d route, got %d", 23, len(e.Routes()))
+	if len(e.Routes()) != 24 {
+		t.Errorf("expected %d route, got %d", 24, len(e.Routes()))
 	}
 
 	if testPlugin.API.EchoInstance() == nil {
@@ -131,11 +131,11 @@ func TestParsingRoutesWithParams(t *testing.T) {
 	}
 
 	if len(e.Routes()) != 2 {
-		t.Errorf("expected %d route, got %d", 2, len(e.Routes()))
+		t.Errorf("expected %d route, got %d", 1, len(e.Routes()))
 	}
 
-	if e.Routes()[1].Path != "/user/:id/:contentID" {
-		t.Errorf("expected the path to be '%s', got '%s'", "/user/:id/:contentID", e.Routes()[1].Path)
+	if e.Routes()[0].Path != "/user/:id/:contentID" {
+		t.Errorf("expected the path to be '%s', got '%s'", "/user/:id/:contentID", e.Routes()[0].Path)
 	}
 }
 
@@ -267,8 +267,8 @@ paths:
 		t.Errorf("expected init modules to be called %d time, called %d times", 1, len(plugin.InitializeCalls()))
 	}
 
-	if len(e.Routes()) != 2 {
-		t.Errorf("expected %d route, got %d", 2, len(e.Routes()))
+	if len(e.Routes()) != 4 {
+		t.Errorf("expected %d route, got %d", 4, len(e.Routes()))
 	}
 
 	if e.Routes()[0].Path != "/weos/health" {

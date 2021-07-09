@@ -38,16 +38,3 @@ paths:
           description: Health Response
         "500":
           description: API Internal Error
-  /user/{id}/{contentID}:
-    summary: Some user endpoint
-    get:
-      x-weos-config:
-        handler: HealthChecker
-        pre-middlware:
-          - RequestRecording
-        config:
-          RequestRecording:
-            RecordingBaseFolder: testdata/http
-      responses:
-        200:
-          description: Admin Endpoint
