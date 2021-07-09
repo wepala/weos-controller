@@ -280,19 +280,11 @@ func listDir(t *template.Template, name string, res *echo.Response) (err error) 
 
 // cors middleware handler adds cors to app paths
 func EnableCORS(method string) echo.MiddlewareFunc {
-	if method == "PUT" {
-		return middleware.CORSWithConfig(middleware.CORSConfig{
-			AllowOrigins: []string{"*"},
-			AllowHeaders: []string{"*"},
-			AllowMethods: []string{http.MethodOptions, http.MethodPut, http.MethodGet, http.MethodPost},
-		})
-	} else {
-		return middleware.CORSWithConfig(middleware.CORSConfig{
-			AllowOrigins: []string{"*"},
-			AllowHeaders: []string{"*"},
-			AllowMethods: []string{method},
-		})
-	}
+	return middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowHeaders: []string{"*"},
+		AllowMethods: []string{method},
+	})
 }
 
 type WeOSControllerError struct {
