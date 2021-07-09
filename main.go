@@ -111,6 +111,35 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 		//update path so that the open api way of specifying url parameters is change to the echo style of url parameters
 		re := regexp.MustCompile(`\{([a-zA-Z0-9\-_]+?)\}`)
 		echoPath := re.ReplaceAllString(path, `:$1`)
+		//prep the middleware by setting up defaults
+		allowedOrigins := []string{"*"}
+		allowedHeaders := []string{"*"}
+
+		var pathConfig *PathConfig
+		pathConfigData := pathData.ExtensionProps.Extensions["x-weos-config"]
+		if pathConfigData != nil {
+			bytes, err := pathConfigData.(json.RawMessage).MarshalJSON()
+			if err != nil {
+				e.Logger.Fatalf("error reading weos config on the path '%s' '%s'", path, err)
+			}
+
+			if err = json.Unmarshal(bytes, &pathConfig); err != nil {
+				e.Logger.Fatalf("error reading weos config on the path '%s' '%s'", path, err)
+				return e
+			}
+
+			if !pathConfig.DisableCors {
+				//check what the configuration has and overwrite accordingly
+				if len(pathConfig.AllowedOrigins) > 0 {
+					allowedOrigins = pathConfig.AllowedOrigins
+				}
+
+				if len(pathConfig.AllowedHeaders) > 0 {
+					allowedHeaders = pathConfig.AllowedHeaders
+				}
+			}
+		}
+
 		var methodsFound []string
 		for _, method := range knownActions {
 			var operationConfig *PathConfig
@@ -159,24 +188,30 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 						if err != nil {
 							e.Logger.Fatalf("error adding path config '%s' '%s'", echoPath, err)
 						}
+						corsMiddleware := middleware.CORSWithConfig(middleware.CORSConfig{
+							AllowOrigins: allowedOrigins,
+							AllowHeaders: allowedHeaders,
+							AllowMethods: methodsFound,
+						})
+						pathMiddleware := append([]echo.MiddlewareFunc{corsMiddleware}, middlewares...)
 
 						switch method {
 						case "GET":
-							e.GET(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.GET(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), pathMiddleware...)
 						case "POST":
-							e.POST(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.POST(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), pathMiddleware...)
 						case "PUT":
-							e.PUT(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.PUT(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), pathMiddleware...)
 						case "PATCH":
-							e.PATCH(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.PATCH(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), pathMiddleware...)
 						case "DELETE":
-							e.DELETE(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.DELETE(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), pathMiddleware...)
 						case "HEAD":
-							e.HEAD(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.HEAD(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), pathMiddleware...)
 						case "TRACE":
-							e.TRACE(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.TRACE(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), pathMiddleware...)
 						case "CONNECT":
-							e.CONNECT(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), middlewares...)
+							e.CONNECT(config.BasePath+echoPath, handler.Interface().(func(ctx echo.Context) error), pathMiddleware...)
 
 						}
 					}
@@ -185,41 +220,12 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 			}
 		}
 		//setup CORS check on options method
-
-		//prep the middleware by setting up defaults
-		allowedOrigins := []string{"*"}
-		allowedHeaders := []string{"*"}
-
-		var pathConfig *PathConfig
-		pathConfigData := pathData.ExtensionProps.Extensions["x-weos-config"]
-		if pathConfigData != nil {
-			bytes, err := pathConfigData.(json.RawMessage).MarshalJSON()
-			if err != nil {
-				e.Logger.Fatalf("error reading weos config on the path '%s' '%s'", path, err)
-			}
-
-			if err = json.Unmarshal(bytes, &pathConfig); err != nil {
-				e.Logger.Fatalf("error reading weos config on the path '%s' '%s'", path, err)
-				return e
-			}
-
-			if !pathConfig.DisableCors {
-				//check what the configuration has and overwrite accordingly
-				if len(pathConfig.AllowedOrigins) > 0 {
-					allowedOrigins = pathConfig.AllowedOrigins
-				}
-
-				if len(pathConfig.AllowedHeaders) > 0 {
-					allowedHeaders = pathConfig.AllowedHeaders
-				}
-			}
-		}
-
 		corsMiddleware := middleware.CORSWithConfig(middleware.CORSConfig{
 			AllowOrigins: allowedOrigins,
 			AllowHeaders: allowedHeaders,
 			AllowMethods: methodsFound,
 		})
+
 		e.OPTIONS(config.BasePath+echoPath, func(context echo.Context) error {
 			return nil
 		}, corsMiddleware)
