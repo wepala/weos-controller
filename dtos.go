@@ -16,11 +16,13 @@ type APIConfig struct {
 }
 
 type PathConfig struct {
-	Handler     string          `json:"handler" ,yaml:"handler"`
-	Group       bool            `json:"group" ,yaml:"group"`
-	Middleware  []string        `json:"middleware"`
-	Config      json.RawMessage `json:"config"`
-	DisableCors bool            `json:"disable-cors"`
+	Handler        string          `json:"handler" ,yaml:"handler"`
+	Group          bool            `json:"group" ,yaml:"group"`
+	Middleware     []string        `json:"middleware"`
+	Config         json.RawMessage `json:"config"`
+	DisableCors    bool            `json:"disable-cors"`
+	AllowedHeaders []string        `json:"allowed-headers" ,yaml:"allowed-headers"`
+	AllowedOrigins []string        `json:"allowed-origins" ,yaml:"allowed-origins"`
 }
 
 type JWTConfig struct {

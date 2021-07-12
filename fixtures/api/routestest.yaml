@@ -27,16 +27,6 @@ x-weos-config:
     - Static
 
 paths:
-  /health:
-    summary: Health Check
-    get:
-      x-weos-config:
-        handler: HealthChecker
-      responses:
-        "200":
-          description: Health Response
-        "500":
-          description: API Internal Error
   /user/{id}/{contentID}:
     summary: Some user endpoint
     get:

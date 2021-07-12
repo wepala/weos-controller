@@ -56,3 +56,13 @@ paths:
       responses:
         200:
           description: Admin Endpoint
+  /putpoint/{id}/{contentID}:
+    summary: PUT Endpoint
+    x-weos-config:
+      handler: FooBar
+    put:
+      x-weos-config:
+        handler: FooBar
+      responses:
+        200:
+          description: PUT Endpoint
