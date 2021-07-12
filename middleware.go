@@ -2,7 +2,6 @@ package weoscontroller
 
 import (
 	"embed"
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -14,10 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/labstack/echo/v4/middleware"
-	"github.com/wepala/weos"
-
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/bytes"
 )
 
@@ -278,50 +275,10 @@ func listDir(t *template.Template, name string, res *echo.Response) (err error) 
 	return t.Execute(res, data)
 }
 
-type WeOSControllerError struct {
-	Message    string
-	StatusCode int
-	Err        error
-}
-
-func (e *WeOSControllerError) Error() string {
-	return e.Message + ":" + e.Err.Error()
-}
-
-func (e *WeOSControllerError) Unwrap() error {
-	return e.Err
-}
-
-func NewControllerError(message string, err error, code int) *WeOSControllerError {
-	return &WeOSControllerError{
-		Message:    message,
-		Err:        err,
-		StatusCode: code,
+func NewControllerError(message string, err error, code int) *echo.HTTPError {
+	return &echo.HTTPError{
+		Code:     code,
+		Message:  message,
+		Internal: err,
 	}
-}
-
-func CustomErrorHandler(err error, c echo.Context) {
-	e := &WeOSControllerError{}
-	if _, ok := err.(*WeOSControllerError); ok {
-		errors.As(err, &e)
-		if e.StatusCode == 0 {
-			if _, ok := e.Err.(*weos.DomainError); ok {
-				code := 400
-				c.JSON(code, e.Err)
-				c.Logger().Error(err)
-				return
-			}
-			if _, ok := e.Err.(*weos.WeOSError); ok {
-				code := 500
-				c.JSON(code, e.Err)
-				c.Logger().Error(err)
-				return
-			}
-		} else {
-			c.JSON(e.StatusCode, e.Err)
-			c.Logger().Error(err)
-			return
-		}
-	}
-	c.Logger().Error(err)
 }

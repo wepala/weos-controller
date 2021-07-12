@@ -5,6 +5,7 @@ package integration_test
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -241,6 +242,83 @@ func TestMiddleware_CORSTest(t *testing.T) {
 
 		if !strings.Contains(response.Header.Get(echo.HeaderAccessControlAllowMethods), http.MethodPut) {
 			t.Errorf("expected '%s' to be in the allowed methods, got '%s'", http.MethodPut, response.Header.Get(echo.HeaderAccessControlAllowMethods))
+		}
+	})
+}
+
+func TestErrorResponse(t *testing.T) {
+	e := echo.New()
+	var echoInstance *echo.Echo
+	var middlewareAndHandlersCalled []string
+	//setup a mock api with handlers and middleware
+	api := &TestAPIMock{
+		InitializeFunc: func() error {
+			return nil
+		},
+		AddConfigFunc: func(config *weoscontroller.APIConfig) error {
+			return nil
+		},
+		AddPathConfigFunc: func(path string, config *weoscontroller.PathConfig) error {
+			return nil
+		},
+		SetEchoInstanceFunc: func(e *echo.Echo) {
+			echoInstance = e
+		},
+		EchoInstanceFunc: func() *echo.Echo {
+			return echoInstance
+		},
+		FooBarFunc: func(c echo.Context) error {
+			return weoscontroller.NewControllerError("some error", errors.New("Some Detailed Error"), 405)
+		},
+		GlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "globalMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
+		},
+		PreGlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "preGlobalMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
+		},
+		MiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "middleware")
+				return nil
+			}
+		},
+		PreMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc { //run the middleware before calling the handler
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "preMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
+		},
+	}
+	weoscontroller.Initialize(e, api, "../fixtures/api/integration.yaml")
+
+	t.Run("test error response", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPut, "/putpoint/1/2", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		response := rec.Result()
+
+		//check response code
+		if response.StatusCode != 405 {
+			t.Errorf("expected response code to be %d, got %d", 405, response.StatusCode)
 		}
 	})
 }
