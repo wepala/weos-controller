@@ -1,6 +1,7 @@
 package weoscontroller_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"testing"
@@ -273,5 +274,32 @@ paths:
 
 	if e.Routes()[0].Path != "/weos/health" {
 		t.Errorf("expected the path to be '%s', got '%s'", "/weos/health", e.Routes()[0].Path)
+	}
+}
+
+type CustomConfig struct {
+	AWS struct {
+		Key    string `json:"key"`
+		Secret string `json:"secret"`
+	} `json:"aws"`
+}
+
+func TestCustomConfig(t *testing.T) {
+	e := echo.New()
+	plugin := &APIInterfaceMock{
+		InitializeFunc: func() error {
+			return nil
+		},
+	}
+
+	//we're only nesting the plugin interface for testing
+	testAPI := &TestAPI{
+		plugin: plugin,
+	}
+	weoscontroller.Initialize(e, testAPI, "./fixtures/api/api.yaml")
+	var customConfig *CustomConfig
+	err := json.Unmarshal(testAPI.API.Config.Config, &customConfig)
+	if err != nil {
+		t.Fatalf("unable to unmarshal config '%s'", err)
 	}
 }

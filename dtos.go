@@ -10,9 +10,10 @@ type APIConfig struct {
 	*weos.ApplicationConfig
 	BasePath            string `json:"basePath" ,yaml:"basePath"`
 	RecordingBaseFolder string
-	Middleware          []string   `json:"middleware"`
-	PreMiddleware       []string   `json:"pre-middleware"`
-	JWTConfig           *JWTConfig `json:"jwtConfig"`
+	Middleware          []string        `json:"middleware"`
+	PreMiddleware       []string        `json:"pre-middleware"`
+	JWTConfig           *JWTConfig      `json:"jwtConfig"`
+	Config              json.RawMessage `json:"config"`
 }
 
 type PathConfig struct {
