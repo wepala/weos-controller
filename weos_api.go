@@ -1,6 +1,7 @@
 package weoscontroller
 
 import (
+	"github.com/wepala/weos"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -49,12 +50,55 @@ func (p *API) HTTPSRedirect(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.HTTPSRedirect()(handlerFunc)
 }
 
-func (p *API) RequestID(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
-	return middleware.RequestIDWithConfig(middleware.RequestIDConfig{
-		Generator: func() string {
-			return ksuid.New().String()
-		},
-	})(handlerFunc)
+func (p *API) RequestID(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cc := c.(*Context)
+		req := cc.Request()
+		res := cc.Response()
+		rid := req.Header.Get(echo.HeaderXRequestID)
+		if rid == "" {
+			rid = ksuid.New().String()
+		}
+		res.Header().Set(echo.HeaderXRequestID, rid)
+
+		return next(cc.WithValue(cc, weos.REQUEST_ID, rid))
+	}
+}
+
+func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cc := c.(*Context)
+		req := cc.Request()
+		logLevel := req.Header.Get(string(weos.LOG_LEVEL))
+		if logLevel != "" {
+			return next(cc.WithValue(cc, weos.LOG_LEVEL, logLevel))
+		}
+		return next(c)
+	}
+}
+
+func (p *API) AccountID(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cc := c.(*Context)
+		req := cc.Request()
+		accountID := req.Header.Get(string(weos.ACCOUNT_ID))
+		if accountID != "" {
+			return next(cc.WithValue(cc, weos.ACCOUNT_ID, accountID))
+		}
+		return next(c)
+	}
+}
+
+func (p *API) UserID(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cc := c.(*Context)
+		req := cc.Request()
+		userID := req.Header.Get(string(weos.USER_ID))
+		if userID != "" {
+			return next(cc.WithValue(cc, weos.USER_ID, userID))
+		}
+		return next(c)
+	}
 }
 
 func (p *API) Static(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
@@ -199,4 +243,17 @@ func (p *API) ResponseRecording(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (p *API) HealthChecker(c echo.Context) error {
 	return c.String(http.StatusOK, "Hello, World!")
+}
+
+func (p *API) Context(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cc := &Context{
+			Context: c,
+		}
+		return next(cc)
+	}
+}
+
+func (p *API) Initialize() error {
+	panic("implement me")
 }
