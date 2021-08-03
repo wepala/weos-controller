@@ -82,6 +82,8 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 
 		//setup global middleware
 		var middlewares []echo.MiddlewareFunc
+		//prepend Context middleware
+		config.Middleware = append([]string{"Context"}, config.Middleware...)
 		for _, middlewareName := range config.Middleware {
 			t := reflect.ValueOf(api)
 			m := t.MethodByName(middlewareName)
@@ -127,10 +129,6 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 					}
 
 					var middlewares []echo.MiddlewareFunc
-					//set default middleware that configures custom context
-					if weosapi, ok := api.(*API); ok {
-						middlewares = append(middlewares, weosapi.Context)
-					}
 
 					for _, middlewareName := range weosConfig.Middleware {
 						m := t.MethodByName(middlewareName)
