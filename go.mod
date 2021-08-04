@@ -14,8 +14,6 @@ require (
 	github.com/onsi/gomega v1.11.0 // indirect
 	github.com/segmentio/ksuid v1.0.3
 	github.com/sirupsen/logrus v1.7.0
-	github.com/wepala/weos v0.0.7-0.20210607144120-0006285c4ee3
-	github.com/ziutek/mymysql v1.5.4 // indirect
-	golang.org/x/sys v0.0.0-20210611083646-a4fc73990273 // indirect
-	gorm.io/gorm v1.21.10 // indirect
+	github.com/wepala/weos v0.0.7-0.20210726134316-23a6f270f1e9
+	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985
 )
