@@ -1,9 +1,11 @@
 package logs
 
 import (
-	"github.com/labstack/gommon/log"
-	"go.uber.org/zap"
 	"io"
+
+	"github.com/labstack/gommon/log"
+
+	"go.uber.org/zap"
 )
 
 type Zap struct {
@@ -11,65 +13,65 @@ type Zap struct {
 }
 
 func (z *Zap) Printf(format string, args ...interface{}) {
-	panic("implement me")
+	log.Infof(format, args...)
 }
 
 func (z *Zap) Print(args ...interface{}) {
-	panic("implement me")
+	log.Info(args...)
 }
 
 func (z *Zap) Output() io.Writer {
-	panic("implement me")
+	return log.Output()
 }
 
 func (z *Zap) SetOutput(w io.Writer) {
-	panic("implement me")
+	log.SetOutput(w)
 }
 
 func (z *Zap) Prefix() string {
-	panic("implement me")
+	return log.Prefix()
 }
 
 func (z *Zap) SetPrefix(p string) {
-	panic("implement me")
+	log.SetPrefix(p)
 }
 
 func (z *Zap) Level() log.Lvl {
-	panic("implement me")
+	return log.Level()
 }
 
 func (z *Zap) SetLevel(v log.Lvl) {
-
+	log.SetLevel(v)
 }
 
-func (z Zap) SetHeader(h string) {
-	panic("implement me")
+func (z *Zap) SetHeader(h string) {
+	log.SetHeader(h)
 }
 
-func (z Zap) Printj(j log.JSON) {
-	panic("implement me")
+func (z *Zap) Printj(j log.JSON) {
+	log.Infoj(j)
 }
 
-func (z Zap) Debugj(j log.JSON) {
-	panic("implement me")
+func (z *Zap) Debugj(j log.JSON) {
+	log.Debugj(j)
 }
 
-func (z Zap) Infoj(j log.JSON) {
-	panic("implement me")
+func (z *Zap) Infoj(j log.JSON) {
+	log.Infoj(j)
 }
 
-func (z Zap) Warnj(j log.JSON) {
-	panic("implement me")
+func (z *Zap) Warnj(j log.JSON) {
+	log.Warnj(j)
 }
 
-func (z Zap) Errorj(j log.JSON) {
-	panic("implement me")
+func (z *Zap) Errorj(j log.JSON) {
+	log.Errorj(j)
 }
 
-func (z Zap) Fatalj(j log.JSON) {
-	panic("implement me")
+func (z *Zap) Fatalj(j log.JSON) {
+	log.Fatalj(j)
 }
 
-func (z Zap) Panicj(j log.JSON) {
-	panic("implement me")
+func (z *Zap) Panicj(j log.JSON) {
+	log.Panicj(j)
 }
