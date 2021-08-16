@@ -11,6 +11,7 @@ import (
 
 type Zap struct {
 	*zap.SugaredLogger
+	*zap.AtomicLevel
 }
 
 func (z *Zap) Printf(format string, args ...interface{}) {
@@ -22,11 +23,11 @@ func (z *Zap) Print(args ...interface{}) {
 }
 
 func (z *Zap) Output() io.Writer {
-	return z.Output()
+	return z.Output() // Info? or Open
 }
 
 func (z *Zap) SetOutput(w io.Writer) {
-	z.SetOutput(w)
+	z.SetOutput(w) //ErrorOutput? or NewStdLog
 }
 
 func (z *Zap) Prefix() string {
@@ -38,15 +39,15 @@ func (z *Zap) SetPrefix(p string) {
 }
 
 func (z *Zap) Level() log.Lvl {
-	return z.Level()
+	return log.Lvl(z.AtomicLevel.Level()) // AtomicLevel - Level()
 }
 
 func (z *Zap) SetLevel(v log.Lvl) {
-	z.SetLevel(v)
+	z.SetLevel(v) // AtomicLevel - SetLevel()
 }
 
 func (z *Zap) SetHeader(h string) {
-	z.SetHeader(h)
+	z.SetHeader(h) // Not Sure what header refers to
 }
 
 func (z *Zap) Printj(j log.JSON) {

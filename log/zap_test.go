@@ -6,12 +6,16 @@ import (
 	"go.uber.org/zap"
 )
 
-func TestZap_Printf(t *testing.T) {
-	zlogger, _ := zap.NewProduction()
-	defer zlogger.Sync() // flushes buffer, if any
-	sugar := zlogger.Sugar()
-	logger := Zap{sugar}
-	logger.Printf("test")
+func TestZap_Print(t *testing.T) {
+	zap := &ZapInterfaceMock{
+		InfoFunc: func(args ...interface{}) {
+			if _, ok := args[0].(string); !ok {
+				t.Fail()
+			}
+		},
+	}
+	logger := Zap{zap}
+	logger.Print("test")
 }
 
 func TestZap_Prefix(t *testing.T) {
@@ -72,6 +76,7 @@ func TestZap_SetHeader(t *testing.T) {
 	logger.SetHeader(header)
 }
 
+/*
 func TestZap_Debug(t *testing.T) {
 	zlogger, _ := zap.NewProduction()
 	defer zlogger.Sync() // flushes buffer, if any
@@ -82,3 +87,4 @@ func TestZap_Debug(t *testing.T) {
 
 	logger.Debug(Debugged)
 }
+*/
