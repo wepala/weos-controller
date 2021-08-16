@@ -4,74 +4,75 @@ import (
 	"io"
 
 	"github.com/labstack/gommon/log"
-
 	"go.uber.org/zap"
 )
+
+//go:generate moq -out zap_mock_test.go . ZapInterface
 
 type Zap struct {
 	*zap.SugaredLogger
 }
 
 func (z *Zap) Printf(format string, args ...interface{}) {
-	log.Infof(format, args...)
+	z.Infof(format, args...)
 }
 
 func (z *Zap) Print(args ...interface{}) {
-	log.Info(args...)
+	z.Info(args...)
 }
 
 func (z *Zap) Output() io.Writer {
-	return log.Output()
+	return z.Output()
 }
 
 func (z *Zap) SetOutput(w io.Writer) {
-	log.SetOutput(w)
+	z.SetOutput(w)
 }
 
 func (z *Zap) Prefix() string {
-	return log.Prefix()
+	return z.Prefix()
 }
 
 func (z *Zap) SetPrefix(p string) {
-	log.SetPrefix(p)
+	z.SetPrefix(p)
 }
 
 func (z *Zap) Level() log.Lvl {
-	return log.Level()
+	return z.Level()
 }
 
 func (z *Zap) SetLevel(v log.Lvl) {
-	log.SetLevel(v)
+	z.SetLevel(v)
 }
 
 func (z *Zap) SetHeader(h string) {
-	log.SetHeader(h)
+	z.SetHeader(h)
 }
 
 func (z *Zap) Printj(j log.JSON) {
-	log.Infoj(j)
+	z.Info(j)
 }
 
 func (z *Zap) Debugj(j log.JSON) {
-	log.Debugj(j)
+	z.Debug(j)
 }
 
 func (z *Zap) Infoj(j log.JSON) {
-	log.Infoj(j)
+	z.Info(j)
 }
 
 func (z *Zap) Warnj(j log.JSON) {
-	log.Warnj(j)
+	z.Warn(j)
 }
 
 func (z *Zap) Errorj(j log.JSON) {
-	log.Errorj(j)
+	z.Error(j)
 }
 
 func (z *Zap) Fatalj(j log.JSON) {
-	log.Fatalj(j)
+	z.Fatal(j)
 }
 
 func (z *Zap) Panicj(j log.JSON) {
-	log.Panicj(j)
+	z.Panic(j)
 }
