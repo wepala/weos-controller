@@ -1,17 +1,36 @@
 package logs
 
 import (
-	"io"
-
 	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"io"
 )
 
-//go:generate moq -out zap_mock_test.go . ZapInterface
+func NewZap(level string) (*Zap, error) {
+	var logger *zap.Logger
+	lvl := zap.NewAtomicLevel()
+	err := lvl.UnmarshalText([]byte(level))
+	if err != nil {
+		return nil, err
+	}
+	cfg := zap.NewProductionConfig()
+	cfg.Level = lvl
+	logger, err = cfg.Build()
+	if err != nil {
+		return nil, err
+	}
+	return &Zap{
+		logger.Sugar(),
+		&lvl,
+		"",
+	}, err
+}
 
 type Zap struct {
 	*zap.SugaredLogger
-	*zap.AtomicLevel
+	level  *zap.AtomicLevel
+	prefix string
 }
 
 func (z *Zap) Printf(format string, args ...interface{}) {
@@ -23,31 +42,52 @@ func (z *Zap) Print(args ...interface{}) {
 }
 
 func (z *Zap) Output() io.Writer {
-	return z.Output() // Info? or Open
+	panic("no output writer is available in the zap logger")
 }
 
 func (z *Zap) SetOutput(w io.Writer) {
-	z.SetOutput(w) //ErrorOutput? or NewStdLog
+	z.Warnf("configuring the output should be done on instantiation ")
 }
 
 func (z *Zap) Prefix() string {
-	return z.Prefix()
+	return z.prefix
 }
 
 func (z *Zap) SetPrefix(p string) {
-	z.SetPrefix(p)
+	z.prefix = p
+	z.SugaredLogger = z.Named(p)
 }
 
 func (z *Zap) Level() log.Lvl {
-	return log.Lvl(z.AtomicLevel.Level()) // AtomicLevel - Level()
+	switch z.level.Level() {
+	case zapcore.DebugLevel:
+		return log.DEBUG
+	case zapcore.InfoLevel:
+		return log.INFO
+	case zapcore.WarnLevel:
+		return log.WARN
+	case zapcore.ErrorLevel, zapcore.FatalLevel, zapcore.PanicLevel:
+		return log.ERROR
+	}
+	return log.OFF
 }
 
 func (z *Zap) SetLevel(v log.Lvl) {
-	z.SetLevel(v) // AtomicLevel - SetLevel()
+	switch v {
+	case log.DEBUG:
+		z.level.SetLevel(zapcore.DebugLevel)
+	case log.INFO:
+		z.level.SetLevel(zapcore.InfoLevel)
+	case log.WARN:
+		z.level.SetLevel(zapcore.WarnLevel)
+	case log.ERROR:
+		z.level.SetLevel(zapcore.ErrorLevel)
+	}
+
 }
 
 func (z *Zap) SetHeader(h string) {
-	z.SetHeader(h) // Not Sure what header refers to
+	z.Warnf("configuring the log template should be done on instantiation")
 }
 
 func (z *Zap) Printj(j log.JSON) {
