@@ -21,6 +21,7 @@ import (
 )
 
 //Handlers container for all handlers
+const HeaderXAccountID = "X-Account-ID"
 
 type API struct {
 	Config      *APIConfig
@@ -86,7 +87,7 @@ func (p *API) AccountID(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cc := c.(*Context)
 		req := cc.Request()
-		accountID := req.Header.Get(string(weos.ACCOUNT_ID))
+		accountID := req.Header.Get(HeaderXAccountID)
 		if accountID != "" {
 			return next(cc.WithValue(cc, weos.ACCOUNT_ID, accountID))
 		}
