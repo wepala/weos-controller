@@ -97,12 +97,13 @@ func (p *API) AccountID(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (p *API) UserID(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		cc := c.(*Context)
-		req := cc.Request()
-		userID := req.Header.Get(string(weos.USER_ID))
-		if userID != "" {
-			return next(cc.WithValue(cc, weos.USER_ID, userID))
+		user := c.Get("user")
+		if validUser, ok := user.(*jwt.Token); ok {
+			cc := c.(*Context)
+			claims := validUser.Claims.(jwt.MapClaims)
+			return next(cc.WithValue(cc, weos.USER_ID, claims["sub"].(string)))
 		}
+
 		return next(c)
 	}
 }
