@@ -88,6 +88,9 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 		config.Middleware = append([]string{"Context"}, config.Middleware...)
 		for _, middlewareName := range config.Middleware {
 			if middlewareName == "Context" {
+				t := reflect.ValueOf(api)
+				m := t.MethodByName(middlewareName)
+				middlewares = append(middlewares, m.Interface().(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc))
 				continue
 			}
 			t := reflect.ValueOf(api)
