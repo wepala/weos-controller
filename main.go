@@ -85,7 +85,7 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 		//setup global middleware
 		var middlewares []echo.MiddlewareFunc
 		//prepend Context middleware
-		// config.Middleware = append([]string{"Context"}, config.Middleware...)
+		config.Middleware = append([]string{"Context"}, config.Middleware...)
 		for _, middlewareName := range config.Middleware {
 			t := reflect.ValueOf(api)
 			m := t.MethodByName(middlewareName)
