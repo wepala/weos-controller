@@ -2,12 +2,13 @@ package weoscontroller
 
 import (
 	"encoding/json"
-	"github.com/labstack/echo/v4/middleware"
 	"io/ioutil"
 	"os"
 	"reflect"
 	"regexp"
 	"strings"
+
+	"github.com/labstack/echo/v4/middleware"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
@@ -84,7 +85,7 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 		//setup global middleware
 		var middlewares []echo.MiddlewareFunc
 		//prepend Context middleware
-		config.Middleware = append([]string{"Context"}, config.Middleware...)
+		// config.Middleware = append([]string{"Context"}, config.Middleware...)
 		for _, middlewareName := range config.Middleware {
 			t := reflect.ValueOf(api)
 			m := t.MethodByName(middlewareName)
