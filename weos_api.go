@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/wepala/weos"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,8 +11,10 @@ import (
 	"os"
 	"strings"
 
+	"github.com/wepala/weos"
+
 	"github.com/SermoDigital/jose/crypto"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/lestrrat-go/jwx/jwk"
