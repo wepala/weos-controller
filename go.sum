@@ -244,6 +244,8 @@ github.com/valyala/fasttemplate v1.2.1 h1:TVEnxayobAdVkhQfrfes2IzOB6o+z4roRkPF52
 github.com/valyala/fasttemplate v1.2.1/go.mod h1:KHLXt3tVN2HBp8eijSv/kGJopbvo7S+qRAEEKiv+SiQ=
 github.com/wepala/weos v0.0.7-0.20210726134316-23a6f270f1e9 h1:xWCkbTvvvcmv2ys4b5f77Wfz9Wet4RtZXLeqfk7Aibw=
 github.com/wepala/weos v0.0.7-0.20210726134316-23a6f270f1e9/go.mod h1:DYX0T+IsWcL8N74XgztcHrZgvU09U54pO3139bOXM/Q=
+github.com/wepala/weos v1.0.1-alpha h1:wAMFyn9Rb3LC9QnmNSLE6hGMkIXg73Ag89xTsjpa4pE=
+github.com/wepala/weos v1.0.1-alpha/go.mod h1:DYX0T+IsWcL8N74XgztcHrZgvU09U54pO3139bOXM/Q=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/zenazn/goji v0.9.0/go.mod h1:7S9M489iMyHBNxwZnk9/EHS098H4/F6TATF2mIxtB1Q=
 github.com/ziutek/mymysql v1.5.4 h1:GB0qdRGsTwQSBVYuVShFBKaXSnSnYYC2d9knnE1LHFs=
