@@ -80,6 +80,9 @@ fabric.properties
 # Test binary, built with `go test -c`
 *.test
 
+# Test generated files
+./publicRS.txt
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 

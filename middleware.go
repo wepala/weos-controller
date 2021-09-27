@@ -3,7 +3,6 @@ package weoscontroller
 import (
 	"embed"
 	"fmt"
-	"github.com/labstack/echo/v4/middleware"
 	"html/template"
 	"io"
 	"io/fs"
@@ -15,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/labstack/gommon/bytes"
 )
 
@@ -273,4 +273,12 @@ func listDir(t *template.Template, name string, res *echo.Response) (err error) 
 		}{f.Name(), f.IsDir(), bytes.Format(f.Size())})
 	}
 	return t.Execute(res, data)
+}
+
+func NewControllerError(message string, err error, code int) *echo.HTTPError {
+	return &echo.HTTPError{
+		Code:     code,
+		Message:  message,
+		Internal: err,
+	}
 }

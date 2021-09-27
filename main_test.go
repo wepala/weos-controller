@@ -1,6 +1,7 @@
 package weoscontroller_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"os"
 	"testing"
@@ -49,8 +50,8 @@ func TestStart(t *testing.T) {
 		t.Errorf("expected init modules to be called %d time, called %d times", 1, len(plugin.InitializeCalls()))
 	}
 
-	if len(e.Routes()) != 23 {
-		t.Errorf("expected %d route, got %d", 23, len(e.Routes()))
+	if len(e.Routes()) != 24 {
+		t.Errorf("expected %d route, got %d", 24, len(e.Routes()))
 	}
 
 	if testPlugin.API.EchoInstance() == nil {
@@ -103,7 +104,6 @@ func TestParsingJWTConfigurations(t *testing.T) {
 	}
 
 }
-
 func TestParsingRoutesWithParams(t *testing.T) {
 	e := echo.New()
 	err := os.Setenv("POSTGRES_HOST", "localhost")
@@ -132,11 +132,11 @@ func TestParsingRoutesWithParams(t *testing.T) {
 	}
 
 	if len(e.Routes()) != 2 {
-		t.Errorf("expected %d route, got %d", 2, len(e.Routes()))
+		t.Errorf("expected %d route, got %d", 1, len(e.Routes()))
 	}
 
-	if e.Routes()[1].Path != "/user/:id/:contentID" {
-		t.Errorf("expected the path to be '%s', got '%s'", "/user/:id/:contentID", e.Routes()[1].Path)
+	if e.Routes()[0].Path != "/user/:id/:contentID" {
+		t.Errorf("expected the path to be '%s', got '%s'", "/user/:id/:contentID", e.Routes()[0].Path)
 	}
 }
 
@@ -236,8 +236,24 @@ paths:
   /user/{id}/{contentID}:
     summary: Some user endpoint
     get:
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+          required: true
+          description: id of the user
+        - in: path
+          name: contentID
+          schema:
+            type: string
+          required: true
+          description: contentId of the user
       x-weos-config:
         handler: HealthChecker
+        disable-cors: true
+        middleware:
+          - Authenticate
         pre-middlware:
           - RequestRecording
       responses:
@@ -252,11 +268,38 @@ paths:
 		t.Errorf("expected init modules to be called %d time, called %d times", 1, len(plugin.InitializeCalls()))
 	}
 
-	if len(e.Routes()) != 2 {
-		t.Errorf("expected %d route, got %d", 2, len(e.Routes()))
+	if len(e.Routes()) != 4 {
+		t.Errorf("expected %d route, got %d", 4, len(e.Routes()))
 	}
 
 	if e.Routes()[0].Path != "/weos/health" {
 		t.Errorf("expected the path to be '%s', got '%s'", "/weos/health", e.Routes()[0].Path)
+	}
+}
+
+type CustomConfig struct {
+	AWS struct {
+		Key    string `json:"key"`
+		Secret string `json:"secret"`
+	} `json:"aws"`
+}
+
+func TestCustomConfig(t *testing.T) {
+	e := echo.New()
+	plugin := &APIInterfaceMock{
+		InitializeFunc: func() error {
+			return nil
+		},
+	}
+
+	//we're only nesting the plugin interface for testing
+	testAPI := &TestAPI{
+		plugin: plugin,
+	}
+	weoscontroller.Initialize(e, testAPI, "./fixtures/api/api.yaml")
+	var customConfig *CustomConfig
+	err := json.Unmarshal(testAPI.API.Config.Config, &customConfig)
+	if err != nil {
+		t.Fatalf("unable to unmarshal config '%s'", err)
 	}
 }

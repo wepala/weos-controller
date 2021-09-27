@@ -25,6 +25,10 @@ x-weos-config:
     - RequestID
     - Recover
     - Static
+  config:
+    aws:
+      key: "123"
+      secret: "456"
   jwtConfig:
     key: ${JWT_KEY}
     tokenLookup: ${JWT_LOOKUP}
@@ -41,6 +45,7 @@ paths:
     get:
       x-weos-config:
         handler: HealthChecker
+        disable-cors: True
       responses:
         "200":
           description: Health Response

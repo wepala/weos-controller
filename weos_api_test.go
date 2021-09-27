@@ -6,6 +6,7 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
+	"github.com/wepala/weos"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -123,7 +124,7 @@ func TestAPI_Authenticate(t *testing.T) {
 			Type:  "PUBLIC KEY",
 			Bytes: publicKeyBytes,
 		}
-		publicPem, err := os.Create("./fixtures/certificates/publicRS.txt")
+		publicPem, err := os.Create("./publicRS.txt")
 		if err != nil {
 			t.Errorf("got an error setting up tests %s", err)
 		}
@@ -148,7 +149,7 @@ func TestAPI_Authenticate(t *testing.T) {
 				Key:             "",
 				SigningKeys:     map[string]interface{}{},
 				Certificate:     nil,
-				CertificatePath: "./fixtures/certificates/publicRS.txt",
+				CertificatePath: "./publicRS.txt",
 				TokenLookup:     "",
 				AuthScheme:      "",
 				SigningMethod:   "RS256",
@@ -169,6 +170,8 @@ func TestAPI_Authenticate(t *testing.T) {
 		if response.StatusCode != 200 {
 			t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
 		}
+
+		os.Remove("./publicRS.txt")
 	})
 	t.Run("jwt authenticate no token", func(t *testing.T) {
 		// Setup
@@ -313,6 +316,7 @@ func TestAPI_Authenticate(t *testing.T) {
 		if responseMessage != `{"message":"invalid or expired jwt"}` {
 			t.Errorf("expected the response message to be %s got %s", `{"message":"invalid or expired jwt"}`, responseMessage)
 		}
+
 	})
 }
 func TestAPI_ResponseRecording(t *testing.T) {
@@ -353,5 +357,55 @@ func TestAPI_ResponseRecording(t *testing.T) {
 	err = os.Remove("./_endpoint.golden.http")
 	if err != nil {
 		t.Fatalf("unable to delete test fixture created '%s', got error '%s'", "./_endpoint.golden.http", err)
+	}
+}
+
+func TestAPI_UserID(t *testing.T) {
+	// Setup
+	e := echo.New()
+	key := "secureSecretText"
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Subject: "sojourner@examle.com",
+	})
+	signedToken, err := token.SignedString([]byte(key))
+	var bearer = "Bearer " + signedToken
+	if err != nil {
+		t.Errorf("got an error setting up tests %s", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/endpoint", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", bearer)
+	rec := httptest.NewRecorder()
+	api := &weoscontroller.API{Config: &weoscontroller.APIConfig{
+		RecordingBaseFolder: ".",
+		JWTConfig: &weoscontroller.JWTConfig{
+			Key:             key,
+			SigningKeys:     map[string]interface{}{},
+			Certificate:     nil,
+			CertificatePath: "",
+			TokenLookup:     "",
+			AuthScheme:      "",
+			SigningMethod:   "HS256",
+			ContextKey:      "",
+		},
+	}}
+
+	var userId string
+	e.POST("/endpoint", func(c echo.Context) error {
+		userId = c.(*weoscontroller.Context).RequestContext().Value(weos.USER_ID).(string)
+		return c.String(http.StatusOK, userId)
+	}, api.Context, api.Authenticate, api.UserID)
+
+	api.SetEchoInstance(e)
+	e.ServeHTTP(rec, req)
+
+	response := rec.Result()
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
+	}
+	if userId != "sojourner@examle.com" {
+		t.Errorf("expected the user id to be '%s', got '%s'", "sojourner@examle.com", userId)
 	}
 }

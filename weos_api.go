@@ -1,7 +1,9 @@
 package weoscontroller
 
 import (
-	"github.com/wepala/weos"
+	"context"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -9,13 +11,18 @@ import (
 	"os"
 	"strings"
 
+	"github.com/wepala/weos"
+
 	"github.com/SermoDigital/jose/crypto"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/segmentio/ksuid"
 )
 
 //Handlers container for all handlers
+const HeaderXAccountID = "X-Account-ID"
 
 type API struct {
 	Config      *APIConfig
@@ -81,7 +88,7 @@ func (p *API) AccountID(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cc := c.(*Context)
 		req := cc.Request()
-		accountID := req.Header.Get(string(weos.ACCOUNT_ID))
+		accountID := req.Header.Get(HeaderXAccountID)
 		if accountID != "" {
 			return next(cc.WithValue(cc, weos.ACCOUNT_ID, accountID))
 		}
@@ -91,12 +98,13 @@ func (p *API) AccountID(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (p *API) UserID(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		cc := c.(*Context)
-		req := cc.Request()
-		userID := req.Header.Get(string(weos.USER_ID))
-		if userID != "" {
-			return next(cc.WithValue(cc, weos.USER_ID, userID))
+		user := c.Get("user")
+		if validUser, ok := user.(*jwt.Token); ok {
+			cc := c.(*Context)
+			claims := validUser.Claims.(jwt.MapClaims)
+			return next(cc.WithValue(cc, weos.USER_ID, claims["sub"].(string)))
 		}
+
 		return next(c)
 	}
 }
@@ -113,10 +121,42 @@ func (p *API) Recover(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	return middleware.Recover()(handlerFunc)
 }
 
+func (a *API) getKey(token *jwt.Token) (interface{}, error) {
+
+	keySet, err := jwk.Fetch(context.Background(), a.Config.JWTConfig.JWKSUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	keyID, ok := token.Header["kid"].(string)
+	if !ok {
+		return nil, errors.New("expecting JWT header to have a key ID in the kid field")
+	}
+
+	key, found := keySet.LookupKeyID(keyID)
+
+	if !found {
+		return nil, fmt.Errorf("unable to find key %q", keyID)
+	}
+
+	var pubkey interface{}
+	if err := key.Raw(&pubkey); err != nil {
+		return nil, fmt.Errorf("unable to get the public key. error: %s", err.Error())
+	}
+
+	return pubkey, nil
+}
+
 //Functionality to check claims will be added here
 func (a *API) Authenticate(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 	var config middleware.JWTConfig
+	if a.Config.JWTConfig.JWKSUrl != "" {
+		config := middleware.JWTConfig{
+			KeyFunc: a.getKey,
+		}
 
+		return middleware.JWTWithConfig(config)(handlerFunc)
+	}
 	if a.Config.JWTConfig.Key != "" {
 		config.SigningKey = []byte(a.Config.JWTConfig.Key)
 	}
