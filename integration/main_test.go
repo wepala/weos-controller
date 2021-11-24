@@ -204,6 +204,15 @@ func TestMiddleware_CORSTest(t *testing.T) {
 			middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "fooBarHandler")
 			return nil
 		},
+		ContextFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "contextMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
+		},
 		GlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
 				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "globalMiddleware")
@@ -286,6 +295,15 @@ func TestErrorResponse(t *testing.T) {
 		},
 		FooBarFunc: func(c echo.Context) error {
 			return weoscontroller.NewControllerError("some error", errors.New("Some Detailed Error"), 405)
+		},
+		ContextFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "contextMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
 		},
 		GlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
