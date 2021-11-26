@@ -25,6 +25,9 @@ var _ TestAPI = &TestAPIMock{}
 // 			AddPathConfigFunc: func(path string, config *weoscontroller.PathConfig) error {
 // 				panic("mock out the AddPathConfig method")
 // 			},
+// 			ContextFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+// 				panic("mock out the Context method")
+// 			},
 // 			EchoInstanceFunc: func() *echo.Echo {
 // 				panic("mock out the EchoInstance method")
 // 			},
@@ -54,7 +57,7 @@ var _ TestAPI = &TestAPIMock{}
 // 			},
 // 		}
 //
-// 		// use mockedTestAPI in code that requires TestAPI
+// 		// use mockedTestAPI in code that requires weoscontroller.TestAPI
 // 		// and then make assertions.
 //
 // 	}
@@ -64,6 +67,9 @@ type TestAPIMock struct {
 
 	// AddPathConfigFunc mocks the AddPathConfig method.
 	AddPathConfigFunc func(path string, config *weoscontroller.PathConfig) error
+
+	// ContextFunc mocks the Context method.
+	ContextFunc func(handlerFunc echo.HandlerFunc) echo.HandlerFunc
 
 	// EchoInstanceFunc mocks the EchoInstance method.
 	EchoInstanceFunc func() *echo.Echo
@@ -105,6 +111,11 @@ type TestAPIMock struct {
 			Path string
 			// Config is the config argument value.
 			Config *weoscontroller.PathConfig
+		}
+		// Context holds details about calls to the Context method.
+		Context []struct {
+			// HandlerFunc is the handlerFunc argument value.
+			HandlerFunc echo.HandlerFunc
 		}
 		// EchoInstance holds details about calls to the EchoInstance method.
 		EchoInstance []struct {
@@ -150,6 +161,7 @@ type TestAPIMock struct {
 	}
 	lockAddConfig           sync.RWMutex
 	lockAddPathConfig       sync.RWMutex
+	lockContext             sync.RWMutex
 	lockEchoInstance        sync.RWMutex
 	lockFooBar              sync.RWMutex
 	lockGlobalMiddleware    sync.RWMutex
@@ -224,6 +236,37 @@ func (mock *TestAPIMock) AddPathConfigCalls() []struct {
 	mock.lockAddPathConfig.RLock()
 	calls = mock.calls.AddPathConfig
 	mock.lockAddPathConfig.RUnlock()
+	return calls
+}
+
+// Context calls ContextFunc.
+func (mock *TestAPIMock) Context(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+	if mock.ContextFunc == nil {
+		panic("TestAPIMock.ContextFunc: method is nil but TestAPI.Context was just called")
+	}
+	callInfo := struct {
+		HandlerFunc echo.HandlerFunc
+	}{
+		HandlerFunc: handlerFunc,
+	}
+	mock.lockContext.Lock()
+	mock.calls.Context = append(mock.calls.Context, callInfo)
+	mock.lockContext.Unlock()
+	return mock.ContextFunc(handlerFunc)
+}
+
+// ContextCalls gets all the calls that were made to Context.
+// Check the length with:
+//     len(mockedTestAPI.ContextCalls())
+func (mock *TestAPIMock) ContextCalls() []struct {
+	HandlerFunc echo.HandlerFunc
+} {
+	var calls []struct {
+		HandlerFunc echo.HandlerFunc
+	}
+	mock.lockContext.RLock()
+	calls = mock.calls.Context
+	mock.lockContext.RUnlock()
 	return calls
 }
 

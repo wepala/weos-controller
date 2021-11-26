@@ -80,6 +80,15 @@ func TestMiddlware(t *testing.T) {
 			middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "fooBarHandler")
 			return nil
 		},
+		ContextFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "contextMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
+		},
 		GlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
 				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "globalMiddleware")
@@ -121,8 +130,8 @@ func TestMiddlware(t *testing.T) {
 	e.ServeHTTP(rec, req)
 
 	//check that the expected handlers and middleware are called
-	if len(middlewareAndHandlersCalled) != 5 {
-		t.Fatalf("expected %d middlware and handers to be called, got %d", 5, len(middlewareAndHandlersCalled))
+	if len(middlewareAndHandlersCalled) != 6 {
+		t.Fatalf("expected %d middlware and handers to be called, got %d", 6, len(middlewareAndHandlersCalled))
 	}
 
 	//check the order in which the middleware and handlers are called
@@ -130,20 +139,24 @@ func TestMiddlware(t *testing.T) {
 		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 0, "preGlobalMiddleware", middlewareAndHandlersCalled[0])
 	}
 
-	if middlewareAndHandlersCalled[1] != "globalMiddleware" {
-		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 1, "globalMiddleware", middlewareAndHandlersCalled[1])
+	if middlewareAndHandlersCalled[1] != "contextMiddleware" {
+		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 1, "contextMiddleware", middlewareAndHandlersCalled[1])
 	}
 
-	if middlewareAndHandlersCalled[2] != "preMiddleware" {
-		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 2, "preMiddleware", middlewareAndHandlersCalled[2])
+	if middlewareAndHandlersCalled[2] != "globalMiddleware" {
+		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 2, "globalMiddleware", middlewareAndHandlersCalled[2])
 	}
 
-	if middlewareAndHandlersCalled[3] != "fooBarHandler" {
-		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 3, "fooBarHandler", middlewareAndHandlersCalled[3])
+	if middlewareAndHandlersCalled[3] != "preMiddleware" {
+		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 3, "preMiddleware", middlewareAndHandlersCalled[3])
 	}
 
-	if middlewareAndHandlersCalled[4] != "middleware" {
-		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 4, "middleware", middlewareAndHandlersCalled[4])
+	if middlewareAndHandlersCalled[4] != "fooBarHandler" {
+		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 4, "fooBarHandler", middlewareAndHandlersCalled[4])
+	}
+
+	if middlewareAndHandlersCalled[5] != "middleware" {
+		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 5, "middleware", middlewareAndHandlersCalled[4])
 	}
 
 	if len(api.GlobalMiddlewareCalls()) != 1 {
@@ -156,6 +169,10 @@ func TestMiddlware(t *testing.T) {
 
 	if len(api.PreGlobalMiddlewareCalls()) != 1 {
 		t.Errorf("expected %d call to global pre middleware, got %d", 1, len(api.PreGlobalMiddlewareCalls()))
+	}
+
+	if len(api.ContextCalls()) != 1 {
+		t.Errorf("expected %d call to global pre middleware, got %d", 1, len(api.ContextCalls()))
 	}
 
 	if len(api.AddPathConfigCalls()) < 1 {
@@ -186,6 +203,15 @@ func TestMiddleware_CORSTest(t *testing.T) {
 		FooBarFunc: func(c echo.Context) error {
 			middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "fooBarHandler")
 			return nil
+		},
+		ContextFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "contextMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
 		},
 		GlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
@@ -269,6 +295,15 @@ func TestErrorResponse(t *testing.T) {
 		},
 		FooBarFunc: func(c echo.Context) error {
 			return weoscontroller.NewControllerError("some error", errors.New("Some Detailed Error"), 405)
+		},
+		ContextFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "contextMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
 		},
 		GlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
