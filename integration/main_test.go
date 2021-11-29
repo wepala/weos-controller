@@ -25,6 +25,7 @@ type TestAPI interface {
 	PreMiddleware(handlerFunc echo.HandlerFunc) echo.HandlerFunc
 	FooBar(c echo.Context) error
 	HelloWorld(c echo.Context) error
+	Context(handlerFunc echo.HandlerFunc) echo.HandlerFunc
 }
 
 //loadHttpRequestFixture wrapper around the test helper to make it easier to use it with test table
@@ -156,7 +157,7 @@ func TestMiddlware(t *testing.T) {
 	}
 
 	if middlewareAndHandlersCalled[5] != "middleware" {
-		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 5, "middleware", middlewareAndHandlersCalled[4])
+		t.Errorf("expected middleware or handler in position %d to be '%s', got '%s'", 5, "middleware", middlewareAndHandlersCalled[5])
 	}
 
 	if len(api.GlobalMiddlewareCalls()) != 1 {
