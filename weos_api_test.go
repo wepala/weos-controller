@@ -14,11 +14,9 @@ import (
 	"testing"
 
 	"github.com/wepala/weos"
-	"golang.org/x/net/context"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/gommon/log"
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
@@ -414,10 +412,12 @@ func TestAPI_UserID(t *testing.T) {
 }
 
 func TestAPI_LogLevel(t *testing.T) {
+	//Assign desired log level
+	level := "info"
+
 	// Setup
 	e := echo.New()
-	middleware := make([]string, 1)
-	middleware[0] = "LogLevel"
+
 	key := "secureSecretText"
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
 		Subject: "sojourner@examle.com",
@@ -427,10 +427,11 @@ func TestAPI_LogLevel(t *testing.T) {
 	if err != nil {
 		t.Errorf("got an error setting up tests %s", err)
 	}
+
 	req := httptest.NewRequest(http.MethodPost, "/endpoint", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set("Authorization", bearer)
-	req.Header.Set("X-LOG-LEVEL", "info")
+	req.Header.Set("X-LOG-LEVEL", level)
 	rec := httptest.NewRecorder()
 	api := &weoscontroller.API{Config: &weoscontroller.APIConfig{
 		RecordingBaseFolder: ".",
@@ -444,38 +445,69 @@ func TestAPI_LogLevel(t *testing.T) {
 			SigningMethod:   "HS256",
 			ContextKey:      "",
 		},
-		Middleware: middleware,
 	}}
 
 	var userId string
-	level := req.Header.Get("X-LOG-LEVEL")
 
 	e.POST("/endpoint", func(c echo.Context) error {
 		userId = c.(*weoscontroller.Context).RequestContext().Value(weos.USER_ID).(string)
-		cc := c.(*weoscontroller.Context)
-		api.EchoInstance().Logger.SetLevel(log.INFO)
-		cc.WithValue(cc, "X-LOG-LEVEL", level)
 		return c.String(http.StatusOK, userId)
-	}, api.Context, api.Authenticate, api.UserID)
+	}, api.Context, api.Authenticate, api.UserID, api.LogLevel)
+
+	api.SetEchoInstance(e)
+	logLvlDefault, err := weoscontroller.LogLevels("error")
+	if err != nil {
+		t.Errorf("Expected no error, got: %s", err)
+	}
+
+	//Check for default level = error
+	if api.EchoInstance().Logger.Level() != logLvlDefault {
+		t.Errorf("expected the log level to be '%d', got '%d'", logLvlDefault, api.EchoInstance().Logger.Level())
+	}
+
+	logLvl, err := weoscontroller.LogLevels(level)
+	if err != nil {
+		t.Errorf("Expected no error, got: %s", err)
+	}
+
+	e.ServeHTTP(rec, req)
+
+	//Check for custom level
+	if api.EchoInstance().Logger.Level() != logLvl {
+		t.Errorf("expected the log level to be '%d', got '%d'", logLvl, api.EchoInstance().Logger.Level())
+	}
+}
+
+/*func TestAPI_LogLevel(t *testing.T) {
+	// Setup
+	e := echo.New()
+	//Do a switch or something to handle the levels
+	level := "info"
+
+	req := httptest.NewRequest(http.MethodGet, "/endpoint", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("X-LOG-LEVEL", level)
+
+	rec := httptest.NewRecorder()
+	api := &weoscontroller.API{Config: &weoscontroller.APIConfig{}}
+
+	e.Pre(api.LogLevel)
+
+	e.GET("/endpoint", func(c echo.Context) error {
+		return c.String(http.StatusOK, "test")
+	}, api.Context, api.LogLevel)
 
 	api.SetEchoInstance(e)
 
-	ctx := context.WithValue(req.Context(), "X-LOG-LEVEL", level)
-	req = req.WithContext(ctx)
-	e.ServeHTTP(rec, req.WithContext(ctx))
-
-	response := rec.Result()
-	defer response.Body.Close()
-
-	if response.StatusCode != 200 {
-		t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
-	}
-	if userId != "sojourner@examle.com" {
-		t.Errorf("expected the user id to be '%s', got '%s'", "sojourner@examle.com", userId)
+	//Check for default level = error
+	if api.EchoInstance().Logger.Level() != log.ERROR {
+		t.Errorf("expected the log level to be '%s', got '%d'", "info", log.ERROR)
 	}
 
-	if level != "info" {
-		t.Errorf("expected the log level to be '%s', got '%s'", "info", level)
-	}
+	e.ServeHTTP(rec, req)
 
-}
+	//Check for custom level
+	if api.EchoInstance().Logger.Level() != log.INFO {
+		t.Errorf("expected the log level to be '%s', got '%d'", "info", log.INFO)
+	}
+}*/
