@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"github.com/wepala/weos"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -14,8 +13,12 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/wepala/weos"
+	"golang.org/x/net/context"
+
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
@@ -408,4 +411,71 @@ func TestAPI_UserID(t *testing.T) {
 	if userId != "sojourner@examle.com" {
 		t.Errorf("expected the user id to be '%s', got '%s'", "sojourner@examle.com", userId)
 	}
+}
+
+func TestAPI_LogLevel(t *testing.T) {
+	// Setup
+	e := echo.New()
+	middleware := make([]string, 1)
+	middleware[0] = "LogLevel"
+	key := "secureSecretText"
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Subject: "sojourner@examle.com",
+	})
+	signedToken, err := token.SignedString([]byte(key))
+	var bearer = "Bearer " + signedToken
+	if err != nil {
+		t.Errorf("got an error setting up tests %s", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/endpoint", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", bearer)
+	req.Header.Set("X-LOG-LEVEL", "info")
+	rec := httptest.NewRecorder()
+	api := &weoscontroller.API{Config: &weoscontroller.APIConfig{
+		RecordingBaseFolder: ".",
+		JWTConfig: &weoscontroller.JWTConfig{
+			Key:             key,
+			SigningKeys:     map[string]interface{}{},
+			Certificate:     nil,
+			CertificatePath: "",
+			TokenLookup:     "",
+			AuthScheme:      "",
+			SigningMethod:   "HS256",
+			ContextKey:      "",
+		},
+		Middleware: middleware,
+	}}
+
+	var userId string
+	level := req.Header.Get("X-LOG-LEVEL")
+
+	e.POST("/endpoint", func(c echo.Context) error {
+		userId = c.(*weoscontroller.Context).RequestContext().Value(weos.USER_ID).(string)
+		cc := c.(*weoscontroller.Context)
+		api.EchoInstance().Logger.SetLevel(log.INFO)
+		cc.WithValue(cc, "X-LOG-LEVEL", level)
+		return c.String(http.StatusOK, userId)
+	}, api.Context, api.Authenticate, api.UserID)
+
+	api.SetEchoInstance(e)
+
+	ctx := context.WithValue(req.Context(), "X-LOG-LEVEL", level)
+	req = req.WithContext(ctx)
+	e.ServeHTTP(rec, req.WithContext(ctx))
+
+	response := rec.Result()
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
+	}
+	if userId != "sojourner@examle.com" {
+		t.Errorf("expected the user id to be '%s', got '%s'", "sojourner@examle.com", userId)
+	}
+
+	if level != "info" {
+		t.Errorf("expected the log level to be '%s', got '%s'", "info", level)
+	}
+
 }

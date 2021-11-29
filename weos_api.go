@@ -17,12 +17,14 @@ import (
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/gommon/log"
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/segmentio/ksuid"
 )
 
 //Handlers container for all handlers
 const HeaderXAccountID = "X-Account-ID"
+const HeaderXLogLevel = "X-LOG-LEVEL"
 
 type API struct {
 	Config      *APIConfig
@@ -76,13 +78,39 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cc := c.(*Context)
 		req := cc.Request()
+		level := req.Header.Get(HeaderXLogLevel)
+		if level == "" {
+			level = "error"
+		}
+
+		//Set the log.level based on what is passed into the header
+		switch level {
+		case "debug":
+			p.EchoInstance().Logger.SetLevel(log.DEBUG)
+		case "info":
+			p.EchoInstance().Logger.SetLevel(log.INFO)
+		case "warn":
+			p.EchoInstance().Logger.SetLevel(log.WARN)
+		case "error":
+			p.EchoInstance().Logger.SetLevel(log.ERROR)
+		}
+
+		//Assigns the log level to context
+		return next(cc.WithValue(cc, HeaderXLogLevel, level))
+	}
+}
+
+/*func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cc := c.(*Context)
+		req := cc.Request()
 		logLevel := req.Header.Get(string(weos.LOG_LEVEL))
 		if logLevel != "" {
 			return next(cc.WithValue(cc, weos.LOG_LEVEL, logLevel))
 		}
 		return next(c)
 	}
-}
+}*/
 
 func (p *API) AccountID(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
