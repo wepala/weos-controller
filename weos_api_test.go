@@ -431,7 +431,7 @@ func TestAPI_LogLevel(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/endpoint", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	req.Header.Set("Authorization", bearer)
-	req.Header.Set("X-LOG-LEVEL", level)
+	req.Header.Set(weoscontroller.HeaderXLogLevel, level)
 	rec := httptest.NewRecorder()
 	api := &weoscontroller.API{Config: &weoscontroller.APIConfig{
 		RecordingBaseFolder: ".",

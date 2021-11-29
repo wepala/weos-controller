@@ -51,6 +51,7 @@ paths:
       x-weos-config:
         handler: FooBar
         middleware:
+          - LogLevel
           - Middleware
           - PreMiddleware
       responses:
