@@ -78,10 +78,13 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cc := c.(*Context)
 		req := cc.Request()
+		res := cc.Response()
 		level := req.Header.Get(HeaderXLogLevel)
 		if level == "" {
 			level = "error"
 		}
+
+		res.Header().Set(HeaderXLogLevel, level)
 
 		//Set the log.level based on what is passed into the header
 		switch level {
