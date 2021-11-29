@@ -282,7 +282,7 @@ func (p *API) ResponseRecording(next echo.HandlerFunc) echo.HandlerFunc {
 }
 
 func (p *API) HealthChecker(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, World!")
+	return c.String(http.StatusOK, "Hello, World! "+"Version: "+p.Config.Version)
 }
 
 func (p *API) Context(next echo.HandlerFunc) echo.HandlerFunc {

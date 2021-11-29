@@ -14,6 +14,7 @@ type APIConfig struct {
 	PreMiddleware       []string        `json:"pre-middleware"`
 	JWTConfig           *JWTConfig      `json:"jwtConfig"`
 	Config              json.RawMessage `json:"config"`
+	Version             string          `json:"version"`
 }
 
 type PathConfig struct {

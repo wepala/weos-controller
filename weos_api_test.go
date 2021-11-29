@@ -6,13 +6,15 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"github.com/wepala/weos"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/wepala/weos"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -407,5 +409,51 @@ func TestAPI_UserID(t *testing.T) {
 	}
 	if userId != "sojourner@examle.com" {
 		t.Errorf("expected the user id to be '%s', got '%s'", "sojourner@examle.com", userId)
+	}
+}
+
+func TestAPI_HealthCheck(t *testing.T) {
+	// Setup
+	e := echo.New()
+	key := "secureSecretText"
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Subject: "sojourner@examle.com",
+	})
+	signedToken, err := token.SignedString([]byte(key))
+	var bearer = "Bearer " + signedToken
+	if err != nil {
+		t.Errorf("got an error setting up tests %s", err)
+	}
+	req := httptest.NewRequest(http.MethodGet, "/health", nil)
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", bearer)
+	rec := httptest.NewRecorder()
+	api := &weoscontroller.API{Config: &weoscontroller.APIConfig{
+		Version:             "1.0.0",
+		RecordingBaseFolder: ".",
+		JWTConfig: &weoscontroller.JWTConfig{
+			Key:             key,
+			SigningKeys:     map[string]interface{}{},
+			Certificate:     nil,
+			CertificatePath: "",
+			TokenLookup:     "",
+			AuthScheme:      "",
+			SigningMethod:   "HS256",
+			ContextKey:      "",
+		},
+	}}
+	e.GET("/health", func(c echo.Context) error {
+		return c.String(http.StatusOK, "Hello, World! "+"Version: "+api.Config.Version)
+	}, api.Context, api.Authenticate, api.UserID)
+	api.SetEchoInstance(e)
+	e.ServeHTTP(rec, req)
+	response := rec.Result()
+	defer response.Body.Close()
+	if response.StatusCode != 200 {
+		t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
+	}
+	b, _ := io.ReadAll(response.Body)
+	if string(b) != "Hello, World! Version: 1.0.0" {
+		t.Errorf("expected the status body to be %s, got %s", "Hello, World! Version: 1.0.0", string(b))
 	}
 }
