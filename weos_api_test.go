@@ -6,13 +6,14 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"github.com/wepala/weos"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/wepala/weos"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"

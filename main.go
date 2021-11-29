@@ -239,7 +239,6 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 		e.OPTIONS(config.BasePath+echoPath, func(context echo.Context) error {
 			return nil
 		}, corsMiddleware)
-
 	}
 	return e
 }
