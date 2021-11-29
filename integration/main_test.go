@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
@@ -356,4 +357,87 @@ func TestErrorResponse(t *testing.T) {
 			t.Errorf("expected response code to be %d, got %d", 405, response.StatusCode)
 		}
 	})
+}
+
+func TestZapLogger(t *testing.T) {
+	e := echo.New()
+	var echoInstance *echo.Echo
+	var middlewareAndHandlersCalled []string
+	//setup a mock api with handlers and middleware
+	api := &TestAPIMock{
+		InitializeFunc: func() error {
+			return nil
+		},
+		AddConfigFunc: func(config *weoscontroller.APIConfig) error {
+			return nil
+		},
+		AddPathConfigFunc: func(path string, config *weoscontroller.PathConfig) error {
+			return nil
+		},
+		SetEchoInstanceFunc: func(e *echo.Echo) {
+			echoInstance = e
+		},
+		EchoInstanceFunc: func() *echo.Echo {
+			return echoInstance
+		},
+		FooBarFunc: func(c echo.Context) error {
+			return weoscontroller.NewControllerError("some error", errors.New("Some Detailed Error"), 405)
+		},
+		ContextFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "contextMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
+		},
+		GlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "globalMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
+		},
+		PreGlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "preGlobalMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
+		},
+		MiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+			return func(c echo.Context) error {
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "middleware")
+				return nil
+			}
+		},
+		PreMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc { //run the middleware before calling the handler
+			return func(c echo.Context) error {
+				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "preMiddleware")
+				if err := handlerFunc(c); err != nil {
+					c.Error(err)
+				}
+				return nil
+			}
+		},
+	}
+	weoscontroller.Initialize(e, api, "../fixtures/api/integration.yaml")
+	prefix := api.EchoInstance().Logger.Prefix()
+	level := api.EchoInstance().Logger.Level()
+
+	if prefix != "zap" {
+		t.Errorf("expected default logger to be zap but got %s ", prefix)
+	}
+
+	if level != log.ERROR {
+		t.Errorf("expected default logger level to be erro but got %d ", level)
+	}
 }
