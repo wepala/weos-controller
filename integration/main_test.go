@@ -25,6 +25,8 @@ type TestAPI interface {
 	PreMiddleware(handlerFunc echo.HandlerFunc) echo.HandlerFunc
 	FooBar(c echo.Context) error
 	HelloWorld(c echo.Context) error
+	Context(handlerFunc echo.HandlerFunc) echo.HandlerFunc
+	LogLevel(next echo.HandlerFunc) echo.HandlerFunc
 }
 
 //loadHttpRequestFixture wrapper around the test helper to make it easier to use it with test table
