@@ -39,3 +39,7 @@ type JWTConfig struct {
 	ContextKey      string                 `json:"contextKey"`
 	SigningMethod   string                 `json:"signingMethod"`
 }
+
+type HealthCheckResponse struct {
+	Version string `json:"version"`
+}
