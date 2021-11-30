@@ -14,6 +14,7 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/gommon/log"
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
@@ -376,7 +377,6 @@ func TestErrorResponse(t *testing.T) {
 func TestLogOutputs(t *testing.T) {
 	e := echo.New()
 	var echoInstance *echo.Echo
-	var middlewareAndHandlersCalled []string
 	//setup a mock api with handlers and middleware
 	api := &TestAPIMock{
 		InitializeFunc: func() error {
@@ -395,30 +395,55 @@ func TestLogOutputs(t *testing.T) {
 			return echoInstance
 		},
 		FooBarFunc: func(c echo.Context) error {
-			middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "fooBarHandler")
+
+			//NOTE: do not use log.x for messages as we are not using the std golang logger. Use e.Logger.x
+			//Just to check the output based on what level is set
+			e.Logger.Debug("This is a debug log :)")
+
+			e.Logger.Error("This is an error log :(")
+
 			return nil
 		},
 		LogLevelFunc: func(next echo.HandlerFunc) echo.HandlerFunc {
+
 			return func(c echo.Context) error {
-				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "LogLevelMiddleware")
-				if err := next(c); err != nil {
-					c.Error(err)
+				cc := c.(*weoscontroller.Context)
+				req := cc.Request()
+				res := cc.Response()
+				level := req.Header.Get(weoscontroller.HeaderXLogLevel)
+				if level == "" {
+					level = "error"
 				}
-				return nil
+
+				res.Header().Set(weoscontroller.HeaderXLogLevel, level)
+
+				//Set the log.level based on what is passed into the header
+				switch level {
+				case "debug":
+					c.Echo().Logger.SetLevel(log.DEBUG)
+				case "info":
+					c.Echo().Logger.SetLevel(log.INFO)
+				case "warn":
+					c.Echo().Logger.SetLevel(log.WARN)
+				case "error":
+					c.Echo().Logger.SetLevel(log.ERROR)
+				}
+
+				//Assigns the log level to context
+				return next(cc.WithValue(cc, weoscontroller.HeaderXLogLevel, level))
 			}
 		},
 		ContextFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+
 			return func(c echo.Context) error {
-				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "contextMiddleware")
-				if err := handlerFunc(c); err != nil {
-					c.Error(err)
+				cc := &weoscontroller.Context{
+					Context: c,
 				}
-				return nil
+				return handlerFunc(cc)
 			}
 		},
 		GlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
-				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "globalMiddleware")
 				if err := handlerFunc(c); err != nil {
 					c.Error(err)
 				}
@@ -427,7 +452,6 @@ func TestLogOutputs(t *testing.T) {
 		},
 		PreGlobalMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
-				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "preGlobalMiddleware")
 				if err := handlerFunc(c); err != nil {
 					c.Error(err)
 				}
@@ -439,13 +463,11 @@ func TestLogOutputs(t *testing.T) {
 				if err := handlerFunc(c); err != nil {
 					c.Error(err)
 				}
-				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "middleware")
 				return nil
 			}
 		},
 		PreMiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc { //run the middleware before calling the handler
 			return func(c echo.Context) error {
-				middlewareAndHandlersCalled = append(middlewareAndHandlersCalled, "preMiddleware")
 				if err := handlerFunc(c); err != nil {
 					c.Error(err)
 				}
@@ -455,7 +477,34 @@ func TestLogOutputs(t *testing.T) {
 	}
 	weoscontroller.Initialize(e, api, "../fixtures/api/integration.yaml")
 
-	t.Run("test io.writer output default(error)", func(t *testing.T) {
-		//Edit for a post, Add a post in the integration yaml file. Write a handler for this to hit
+	t.Run("test io.writer output", func(t *testing.T) {
+		//Assign log level here
+		level := "debug"
+
+		var buf bytes.Buffer
+		e.Logger.SetOutput(&buf)
+
+		req := httptest.NewRequest(http.MethodGet, "/endpoint", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(weoscontroller.HeaderXLogLevel, level)
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		response := rec.Result()
+
+		//check response code
+		if response.StatusCode != 200 {
+			t.Errorf("expected response code to be %d, got %d", 200, response.StatusCode)
+		}
+
+		if level == "error" {
+			if !strings.Contains(buf.String(), "This is an error log :(") {
+				t.Errorf("expected the log output to contain %s, got %s", "This is an error log :(", buf.String())
+			}
+		}
+		if level == "debug" {
+			if !strings.Contains(buf.String(), "This is an error log :(") || !strings.Contains(buf.String(), "This is a debug log :)") {
+				t.Errorf("expected the log output to contain %s and %s, got %s", "This is an error log :(", "This is a debug log :)", buf.String())
+			}
+		}
 	})
 }

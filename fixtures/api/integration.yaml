@@ -67,3 +67,15 @@ paths:
       responses:
         200:
           description: PUT Endpoint
+  /endpoint:
+    summary: Some user endpoint
+    get:
+      x-weos-config:
+        handler: FooBar
+        middleware:
+          - LogLevel
+          - Middleware
+          - PreMiddleware
+      responses:
+        200:
+          description: Admin Endpoint

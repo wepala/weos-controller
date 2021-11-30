@@ -155,6 +155,7 @@ func MultiWriter(writers ...http.ResponseWriter) http.ResponseWriter {
 	return &multiWriter{allWriters}
 }
 
+//Used to get the logLvl equivalent for an inputted level string
 func LogLevels(level string) (log.Lvl, error) {
 	switch level {
 	case "debug":
@@ -169,10 +170,3 @@ func LogLevels(level string) (log.Lvl, error) {
 		return log.ERROR, fmt.Errorf("invalid level, expected debug, info, warn or error. got: %s", level)
 	}
 }
-
-/*LOG_LEVELS := map[string]log.Lvl{
-	"debug": 1,
-	"info": 2,
-	"warn": 3,
-	"error": 4,
-}*/

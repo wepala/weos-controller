@@ -13,10 +13,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wepala/weos"
-
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
+	"github.com/wepala/weos"
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
@@ -448,13 +447,14 @@ func TestAPI_LogLevel(t *testing.T) {
 	}}
 
 	var userId string
-
+	//method body
 	e.POST("/endpoint", func(c echo.Context) error {
 		userId = c.(*weoscontroller.Context).RequestContext().Value(weos.USER_ID).(string)
 		return c.String(http.StatusOK, userId)
 	}, api.Context, api.Authenticate, api.UserID, api.LogLevel)
 
 	api.SetEchoInstance(e)
+	//Gets the log.Lvl equivalent for string input
 	logLvlDefault, err := weoscontroller.LogLevels("error")
 	if err != nil {
 		t.Errorf("Expected no error, got: %s", err)
@@ -465,6 +465,7 @@ func TestAPI_LogLevel(t *testing.T) {
 		t.Errorf("expected the log level to be '%d', got '%d'", logLvlDefault, api.EchoInstance().Logger.Level())
 	}
 
+	//Gets the log.Lvl equivalent for string input
 	logLvl, err := weoscontroller.LogLevels(level)
 	if err != nil {
 		t.Errorf("Expected no error, got: %s", err)
@@ -477,37 +478,3 @@ func TestAPI_LogLevel(t *testing.T) {
 		t.Errorf("expected the log level to be '%d', got '%d'", logLvl, api.EchoInstance().Logger.Level())
 	}
 }
-
-/*func TestAPI_LogLevel(t *testing.T) {
-	// Setup
-	e := echo.New()
-	//Do a switch or something to handle the levels
-	level := "info"
-
-	req := httptest.NewRequest(http.MethodGet, "/endpoint", nil)
-	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-	req.Header.Set("X-LOG-LEVEL", level)
-
-	rec := httptest.NewRecorder()
-	api := &weoscontroller.API{Config: &weoscontroller.APIConfig{}}
-
-	e.Pre(api.LogLevel)
-
-	e.GET("/endpoint", func(c echo.Context) error {
-		return c.String(http.StatusOK, "test")
-	}, api.Context, api.LogLevel)
-
-	api.SetEchoInstance(e)
-
-	//Check for default level = error
-	if api.EchoInstance().Logger.Level() != log.ERROR {
-		t.Errorf("expected the log level to be '%s', got '%d'", "info", log.ERROR)
-	}
-
-	e.ServeHTTP(rec, req)
-
-	//Check for custom level
-	if api.EchoInstance().Logger.Level() != log.INFO {
-		t.Errorf("expected the log level to be '%s', got '%d'", "info", log.INFO)
-	}
-}*/
