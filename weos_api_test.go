@@ -412,7 +412,7 @@ func TestAPI_UserID(t *testing.T) {
 }
 
 func TestAPI_ContextZapLogger(t *testing.T) {
-	//Testing to see if the zaplogger was set in the context as well as the echo in the context has a logger
+	//Testing to see if the zaplogger was set in the context
 	// Setup
 	e := echo.New()
 	key := "secureSecretText"
@@ -445,9 +445,6 @@ func TestAPI_ContextZapLogger(t *testing.T) {
 	e.POST("/endpoint", func(c echo.Context) error {
 		if c.Logger().Prefix() != "zap" {
 			return c.String(http.StatusInternalServerError, "expected Zaplogger in the context logger got "+c.Logger().Prefix())
-		}
-		if c.Echo().Logger.Prefix() != "zap" {
-			return c.String(http.StatusInternalServerError, "expected Zaplogger in the context echo logger got "+c.Logger().Prefix())
 		}
 		return c.String(http.StatusOK, "zapLogger is set in the context logger nd context echo logger")
 	}, api.Context, api.Authenticate, api.UserID, api.ZapLogger)

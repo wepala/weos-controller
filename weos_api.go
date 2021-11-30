@@ -297,14 +297,13 @@ func (p *API) Context(next echo.HandlerFunc) echo.HandlerFunc {
 
 func (p *API) ZapLogger(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		//setting the default logger in the context as zap with the default mode being error as well as setting the context echo logger
+		//setting the default logger in the context as zap with the default mode being error
 		zapLogger, err := weosLogs.NewZap("error")
 		if err != nil {
 			p.e.Logger.Errorf("Unexpected error setting the context logger : %s", err)
 		}
 		zapLogger.SetPrefix("zap")
 		c.SetLogger(zapLogger)
-		c.Echo().Logger = zapLogger
 		cc := &Context{
 			Context: c,
 		}
