@@ -444,17 +444,22 @@ func TestAPI_LogLevel(t *testing.T) {
 			SigningMethod:   "HS256",
 			ContextKey:      "",
 		},
-	}}
+		ApplicationConfig: &weos.ApplicationConfig{
+			Log: &weos.LogConfig{
+				Level: "",
+			},
+		},
+	},
+	}
 
 	var userId string
-	//method body
+
 	e.POST("/endpoint", func(c echo.Context) error {
 		userId = c.(*weoscontroller.Context).RequestContext().Value(weos.USER_ID).(string)
 		return c.String(http.StatusOK, userId)
 	}, api.Context, api.Authenticate, api.UserID, api.LogLevel)
 
 	api.SetEchoInstance(e)
-	//Gets the log.Lvl equivalent for string input
 	logLvlDefault, err := weoscontroller.LogLevels("error")
 	if err != nil {
 		t.Errorf("Expected no error, got: %s", err)
@@ -465,7 +470,6 @@ func TestAPI_LogLevel(t *testing.T) {
 		t.Errorf("expected the log level to be '%d', got '%d'", logLvlDefault, api.EchoInstance().Logger.Level())
 	}
 
-	//Gets the log.Lvl equivalent for string input
 	logLvl, err := weoscontroller.LogLevels(level)
 	if err != nil {
 		t.Errorf("Expected no error, got: %s", err)
@@ -476,5 +480,9 @@ func TestAPI_LogLevel(t *testing.T) {
 	//Check for custom level
 	if api.EchoInstance().Logger.Level() != logLvl {
 		t.Errorf("expected the log level to be '%d', got '%d'", logLvl, api.EchoInstance().Logger.Level())
+	}
+
+	if api.Config.Log.Level != level {
+		t.Errorf("expected the log level to be '%s', got '%s'", level, api.Config.Log.Level)
 	}
 }
