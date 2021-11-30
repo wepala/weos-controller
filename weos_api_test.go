@@ -6,7 +6,6 @@ import (
 	"crypto/x509"
 	"encoding/json"
 	"encoding/pem"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -443,7 +442,10 @@ func TestAPI_HealthCheck(t *testing.T) {
 		},
 	}}
 	e.GET("/health", func(c echo.Context) error {
-		return c.String(http.StatusOK, "Hello, World! "+"Version: "+api.Config.Version)
+		response1 := &weoscontroller.HealthCheckResponse{
+			Version: api.Config.Version,
+		}
+		return c.JSON(http.StatusOK, response1)
 	}, api.Context, api.Authenticate, api.UserID)
 	api.SetEchoInstance(e)
 	e.ServeHTTP(rec, req)
@@ -452,8 +454,11 @@ func TestAPI_HealthCheck(t *testing.T) {
 	if response.StatusCode != 200 {
 		t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
 	}
-	b, _ := io.ReadAll(response.Body)
-	if string(b) != "Hello, World! Version: 1.0.0" {
-		t.Errorf("expected the status body to be %s, got %s", "Hello, World! Version: 1.0.0", string(b))
+
+	var resultResponse *weoscontroller.HealthCheckResponse
+	json.NewDecoder(response.Body).Decode(&resultResponse)
+
+	if resultResponse.Version != api.Config.Version {
+		t.Errorf("expected the status body to be %s, got %s", api.Config.Version, resultResponse.Version)
 	}
 }
