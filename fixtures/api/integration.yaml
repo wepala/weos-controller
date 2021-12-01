@@ -8,10 +8,6 @@ x-weos-config:
   session:
     key: "${SESSION_KEY}"
     path: ""
-  logger:
-    level: ${LOG_LEVEL}
-    report-caller: true
-    formatter: ${LOG_FORMAT}
   applicationId: ${APPLICATION_ID}
   applicationTitle: ${APPLICATION_TITLE}
   accountId: ${ACCOUNT_ID}

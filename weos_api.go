@@ -106,18 +106,6 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-/*func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		cc := c.(*Context)
-		req := cc.Request()
-		logLevel := req.Header.Get(string(weos.LOG_LEVEL))
-		if logLevel != "" {
-			return next(cc.WithValue(cc, weos.LOG_LEVEL, logLevel))
-		}
-		return next(c)
-	}
-}*/
-
 func (p *API) AccountID(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		cc := c.(*Context)
