@@ -13,3 +13,9 @@ type APIInterface interface {
 	EchoInstance() *echo.Echo
 	SetEchoInstance(e *echo.Echo)
 }
+
+type GRPCAPIInterface interface {
+	AddPathConfig(path string, config *PathConfig) error
+	AddConfig(config *GRPCAPIConfig) error
+	Initialize() error
+}

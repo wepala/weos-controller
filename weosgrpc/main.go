@@ -5,15 +5,13 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"os"
-	"reflect"
 	"strings"
 
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/labstack/echo"
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
-func InitalizeGrpc(ctx *context.Context, api weoscontroller.APIInterface, apiConfig string) *context.Context {
+func InitalizeGrpc(ctx *context.Context, api weoscontroller.GRPCAPIInterface, apiConfig string) *context.Context {
 	var content []byte
 	var err error
 	//try load file if it's a yaml file otherwise it's the contents of a yaml file WEOS-1009
@@ -39,7 +37,7 @@ func InitalizeGrpc(ctx *context.Context, api weoscontroller.APIInterface, apiCon
 	}
 
 	//parse the main config
-	var config *weoscontroller.APIConfig
+	var config *weoscontroller.GRPCAPIConfig
 	if swagger.ExtensionProps.Extensions["x-weos-config"] != nil {
 
 		data, err := swagger.ExtensionProps.Extensions["x-weos-config"].(json.RawMessage).MarshalJSON()
@@ -58,35 +56,8 @@ func InitalizeGrpc(ctx *context.Context, api weoscontroller.APIInterface, apiCon
 			//e.Logger.Fatalf("error setting up module '%s", err)
 			return ctx
 		}
-		//setup global pre middleware
-		var preMiddlewares []echo.MiddlewareFunc
-		for _, middlewareName := range config.PreMiddleware {
-			t := reflect.ValueOf(api)
-			m := t.MethodByName(middlewareName)
-			if !m.IsValid() {
-				//e.Logger.Fatalf("invalid handler set '%s'", middlewareName)
-			}
-			preMiddlewares = append(preMiddlewares, m.Interface().(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc))
-		}
 
-		//setup global middleware
-		var middlewares []echo.MiddlewareFunc
-		//prepend Context middleware
-		config.Middleware = append([]string{"Context"}, config.Middleware...)
-		for _, middlewareName := range config.Middleware {
-			if middlewareName == "Context" {
-				t := reflect.ValueOf(api)
-				m := t.MethodByName(middlewareName)
-				middlewares = append(middlewares, m.Interface().(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc))
-				continue
-			}
-			t := reflect.ValueOf(api)
-			m := t.MethodByName(middlewareName)
-			if !m.IsValid() {
-				//e.Logger.Fatalf("invalid handler set '%s'", middlewareName)
-			}
-			middlewares = append(middlewares, m.Interface().(func(handlerFunc echo.HandlerFunc) echo.HandlerFunc))
-		}
+		//TODO intialize the grpcmiddleware here
 
 		err = api.Initialize()
 		if err != nil {

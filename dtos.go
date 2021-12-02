@@ -38,3 +38,17 @@ type JWTConfig struct {
 	ContextKey      string                 `json:"contextKey"`
 	SigningMethod   string                 `json:"signingMethod"`
 }
+
+type GRPCAPIConfig struct {
+	*weos.ApplicationConfig
+	BasePath            string `json:"basePath" ,yaml:"basePath"`
+	RecordingBaseFolder string
+	Grpc                *GrpcMiddleware `json:"grpc"`
+	JWTConfig           *JWTConfig      `json:"jwtConfig"`
+	Config              json.RawMessage `json:"config"`
+}
+
+type GrpcMiddleware struct {
+	Middleware    []string `json:"middleware"`
+	PreMiddleware []string `json:"pre-middleware"`
+}
