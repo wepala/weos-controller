@@ -13,6 +13,7 @@ type APIConfig struct {
 	Rest                *Rest           `json:"rest"`
 	JWTConfig           *JWTConfig      `json:"jwtConfig"`
 	Config              json.RawMessage `json:"config"`
+	Version             string          `json:"version"`
 }
 
 type PathConfig struct {
@@ -41,4 +42,8 @@ type JWTConfig struct {
 type Rest struct {
 	Middleware    []string `json:"middleware"`
 	PreMiddleware []string `json:"pre-middleware"`
+}
+
+type HealthCheckResponse struct {
+	Version string `json:"version"`
 }

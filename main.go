@@ -62,6 +62,9 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 			return e
 		}
 
+		//get the version
+		config.Version = swagger.Info.Version
+
 		err = api.AddConfig(config)
 		if err != nil {
 			e.Logger.Fatalf("error setting up module '%s", err)
