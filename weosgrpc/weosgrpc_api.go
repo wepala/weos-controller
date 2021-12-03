@@ -7,12 +7,12 @@ import (
 )
 
 type GRPCAPI struct {
-	Config      *weoscontroller.GRPCAPIConfig
+	Config      *weoscontroller.APIConfig
 	c           *context.Context
 	PathConfigs map[string]*weoscontroller.PathConfig
 }
 
-func (p *GRPCAPI) AddConfig(config *weoscontroller.GRPCAPIConfig) error {
+func (p *GRPCAPI) AddConfig(config *weoscontroller.APIConfig) error {
 	p.Config = config
 	return nil
 }
@@ -109,9 +109,6 @@ func (p *GRPCAPI) Authenticate(ctx context.Context) context.Context {
 
 }
 
-func (p *GRPCAPI) HealthChecker(c context.Context) error {
-	return c.JSON(http.StatusOK, "Hello, World!")
-}
 
 func (p *GRPCAPI) Context(ctx) echo.HandlerFunc {
 	return func(c echo.Context) error {

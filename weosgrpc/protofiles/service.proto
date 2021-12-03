@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package protofiles;
+// protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative weosgrpc/protofiles/service.proto
+option go_package = "weoscontroller/weosgrpc/protofiles";
+
+service User{
+    rpc CreateUser(Request) returns (Response);
+}
+
+message Request{
+    string ID = 1;
+    string UserID = 2;
+    string Title = 3;
+}
+
+message Response{
+    Request user = 1;
+    string Result = 2;
+    bool IsValid = 3;
+}

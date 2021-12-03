@@ -10,10 +10,11 @@ type APIConfig struct {
 	*weos.ApplicationConfig
 	BasePath            string `json:"basePath" ,yaml:"basePath"`
 	RecordingBaseFolder string
-	Middleware          []string        `json:"middleware"`
-	PreMiddleware       []string        `json:"pre-middleware"`
-	JWTConfig           *JWTConfig      `json:"jwtConfig"`
-	Config              json.RawMessage `json:"config"`
+	Middleware          []string         `json:"middleware"`
+	PreMiddleware       []string         `json:"pre-middleware"`
+	JWTConfig           *JWTConfig       `json:"jwtConfig"`
+	Config              json.RawMessage  `json:"config"`
+	Grpc                *GrpcMiddlewares `json:"grpc"`
 }
 
 type PathConfig struct {
@@ -39,16 +40,19 @@ type JWTConfig struct {
 	SigningMethod   string                 `json:"signingMethod"`
 }
 
-type GRPCAPIConfig struct {
-	*weos.ApplicationConfig
-	BasePath            string `json:"basePath" ,yaml:"basePath"`
-	RecordingBaseFolder string
-	Grpc                *GrpcMiddleware `json:"grpc"`
-	JWTConfig           *JWTConfig      `json:"jwtConfig"`
-	Config              json.RawMessage `json:"config"`
+type GrpcMiddlewares struct {
+	Middlewares *Middlewares
 }
 
-type GrpcMiddleware struct {
-	Middleware    []string `json:"middleware"`
-	PreMiddleware []string `json:"pre-middleware"`
+type Middlewares struct {
+	Stream *Stream `json:"stream"`
+	Unary  *Unary  `json:"unary"`
+}
+
+type Stream struct {
+	Middleware []string `json:"middleware"`
+}
+
+type Unary struct {
+	Middleware []string `json:"middleware"`
 }

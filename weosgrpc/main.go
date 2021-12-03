@@ -11,9 +11,10 @@ import (
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
-func InitalizeGrpc(ctx *context.Context, api weoscontroller.GRPCAPIInterface, apiConfig string) *context.Context {
+func InitalizeGrpc(ctx *context.Context, api weoscontroller.APIInterface, apiConfig string) *context.Context {
 	var content []byte
 	var err error
+
 	//try load file if it's a yaml file otherwise it's the contents of a yaml file WEOS-1009
 	if strings.Contains(apiConfig, ".yaml") || strings.Contains(apiConfig, "/yml") {
 		content, err = ioutil.ReadFile(apiConfig)
@@ -37,7 +38,7 @@ func InitalizeGrpc(ctx *context.Context, api weoscontroller.GRPCAPIInterface, ap
 	}
 
 	//parse the main config
-	var config *weoscontroller.GRPCAPIConfig
+	var config *weoscontroller.APIConfig
 	if swagger.ExtensionProps.Extensions["x-weos-config"] != nil {
 
 		data, err := swagger.ExtensionProps.Extensions["x-weos-config"].(json.RawMessage).MarshalJSON()
@@ -57,13 +58,8 @@ func InitalizeGrpc(ctx *context.Context, api weoscontroller.GRPCAPIInterface, ap
 			return ctx
 		}
 
-		//TODO intialize the grpcmiddleware here
+		SetAllMiddleware(config)
 
-		err = api.Initialize()
-		if err != nil {
-			//e.Logger.Fatalf("error initializing application '%s'", err)
-			return ctx
-		}
 	}
 	return ctx
 }
