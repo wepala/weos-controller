@@ -1,6 +1,7 @@
 package weosgrpc_test
 
 import (
+	"context"
 	"log"
 	"net"
 
@@ -13,11 +14,12 @@ var client pb.AccountClient
 type GrpcTestAPI interface {
 	weoscontroller.APIInterface
 	HelloWorld(c context.Context) error
+	FooBar(c context.Context) error
 }
 
 func setUpTest() (client pb.AccountClient, teardown func()) {
 
-	InitalizeGrpc(ctx *context.Context, api weoscontroller.APIInterface,  "../fixtures/api/grpc.yaml")
+	InitalizeGrpc(context.TODO(), api weoscontroller.APIInterface,  "../fixtures/api/grpc.yaml")
 	s := grpc.NewServer()
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
