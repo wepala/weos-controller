@@ -46,7 +46,7 @@ func SetAllMiddleware(ctx *context.Context, config *weoscontroller.APIConfig) *c
 	for _, streamMiddleware := range grpcMiddlewareConfig.Stream.Middleware {
 		switch streamMiddleware {
 		case "Authenticate":
-			grpcStream = append(grpcStream, grpc_auth.StreamServerInterceptor(Authenticate))
+			grpcStream = append(grpcStream, grpc_auth.StreamServerInterceptor(Authenticate)) //Not sure how to properly pass the auth function into this
 		case "Recovery":
 			grpcStream = append(grpcStream, grpc_recovery.StreamServerInterceptor())
 		}
@@ -55,7 +55,7 @@ func SetAllMiddleware(ctx *context.Context, config *weoscontroller.APIConfig) *c
 	for _, UnaryMiddleware := range grpcMiddlewareConfig.Unary.Middleware {
 		switch UnaryMiddleware {
 		case "Authenticate":
-			grpcUnary = append(grpcUnary, grpc_auth.UnaryServerInterceptor(Authenticate))
+			grpcUnary = append(grpcUnary, grpc_auth.UnaryServerInterceptor(Authenticate)) //Not sure how to properly pass the auth function into this
 		case "Recovery":
 			grpcUnary = append(grpcUnary, grpc_recovery.UnaryServerInterceptor())
 		}
