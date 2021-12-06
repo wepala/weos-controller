@@ -539,3 +539,52 @@ func TestAPI_HealthCheck(t *testing.T) {
 		t.Errorf("expected the status body to be %s, got %s", api.Config.Version, resultResponse.Version)
 	}
 }
+
+func TestAPI_ContextZapLogger(t *testing.T) {
+	//Testing to see if the zaplogger was set in the context
+	// Setup
+	e := echo.New()
+	key := "secureSecretText"
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Subject: "sojourner@examle.com",
+	})
+	signedToken, err := token.SignedString([]byte(key))
+	var bearer = "Bearer " + signedToken
+	if err != nil {
+		t.Errorf("got an error setting up tests %s", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/endpoint", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", bearer)
+	rec := httptest.NewRecorder()
+	api := &weoscontroller.API{Config: &weoscontroller.APIConfig{
+		RecordingBaseFolder: ".",
+		JWTConfig: &weoscontroller.JWTConfig{
+			Key:             key,
+			SigningKeys:     map[string]interface{}{},
+			Certificate:     nil,
+			CertificatePath: "",
+			TokenLookup:     "",
+			AuthScheme:      "",
+			SigningMethod:   "HS256",
+			ContextKey:      "",
+		},
+	}}
+
+	e.POST("/endpoint", func(c echo.Context) error {
+		if c.Logger().Prefix() != "zap" {
+			return c.String(http.StatusInternalServerError, "expected Zaplogger in the context logger got "+c.Logger().Prefix())
+		}
+		return c.String(http.StatusOK, "zapLogger is set in the context logger nd context echo logger")
+	}, api.Context, api.Authenticate, api.UserID, api.ZapLogger)
+
+	api.SetEchoInstance(e)
+	e.ServeHTTP(rec, req)
+
+	response := rec.Result()
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		t.Errorf("expected the status code to be %d, got %d", 200, response.StatusCode)
+	}
+}

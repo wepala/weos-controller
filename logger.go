@@ -1,13 +1,13 @@
 package weoscontroller
 
 import (
-	"github.com/labstack/echo/v4"
 	log "github.com/sirupsen/logrus"
+	weosLogs "github.com/wepala/weos-controller/log"
 )
 
 //LoggerWrapper makes a WeOS compatible logger
 type LoggerWrapper struct {
-	logger echo.Logger
+	logger weosLogs.Zap
 }
 
 func (l LoggerWrapper) WithField(key string, value interface{}) *log.Entry {
@@ -130,7 +130,7 @@ func (l LoggerWrapper) Traceln(args ...interface{}) {
 	panic("implement me")
 }
 
-func NewLogger(l echo.Logger) log.Ext1FieldLogger {
+func NewLogger(l weosLogs.Zap) log.Ext1FieldLogger {
 	return &LoggerWrapper{
 		logger: l,
 	}

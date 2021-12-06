@@ -12,6 +12,7 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/labstack/echo/v4"
+	weosLogs "github.com/wepala/weos-controller/log"
 )
 
 func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
@@ -19,6 +20,10 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 	if apiConfig == "" {
 		apiConfig = "./api.yaml"
 	}
+
+	//setting the default logger in echo as zap where log level is error by default
+	e.Logger, _ = weosLogs.NewZap("error")
+	e.Logger.SetPrefix("zap")
 
 	//set echo instance because the instance may not already be in the api that is passed in but the handlers must have access to it
 	api.SetEchoInstance(e)
@@ -237,7 +242,6 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 		e.OPTIONS(config.BasePath+echoPath, func(context echo.Context) error {
 			return nil
 		}, corsMiddleware)
-
 	}
 	return e
 }

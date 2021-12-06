@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/wepala/weos"
+	weosLogs "github.com/wepala/weos-controller/log"
 
 	"github.com/SermoDigital/jose/crypto"
 	"github.com/golang-jwt/jwt"
@@ -312,6 +313,22 @@ func (p *API) HealthChecker(c echo.Context) error {
 
 func (p *API) Context(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
+		cc := &Context{
+			Context: c,
+		}
+		return next(cc)
+	}
+}
+
+func (p *API) ZapLogger(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		//setting the default logger in the context as zap with the default mode being error
+		zapLogger, err := weosLogs.NewZap("error")
+		if err != nil {
+			p.e.Logger.Errorf("Unexpected error setting the context logger : %s", err)
+		}
+		zapLogger.SetPrefix("zap")
+		c.SetLogger(zapLogger)
 		cc := &Context{
 			Context: c,
 		}

@@ -1,10 +1,12 @@
 package logs
 
 import (
+	"io"
+	"os"
+
 	"github.com/labstack/gommon/log"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"io"
 )
 
 func NewZap(level string) (*Zap, error) {
@@ -42,7 +44,7 @@ func (z *Zap) Print(args ...interface{}) {
 }
 
 func (z *Zap) Output() io.Writer {
-	panic("no output writer is available in the zap logger")
+	return zapcore.AddSync(os.Stdout)
 }
 
 func (z *Zap) SetOutput(w io.Writer) {

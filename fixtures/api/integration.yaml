@@ -21,6 +21,7 @@ x-weos-config:
     - PreGlobalMiddleware
   middleware:
     - GlobalMiddleware
+    - ZapLogger
   jwtConfig:
     key: ${JWT_KEY}
     tokenLookup: ${JWT_LOOKUP}
@@ -72,6 +73,16 @@ paths:
           - LogLevel
           - Middleware
           - PreMiddleware
+      responses:
+        200:
+          description: Admin Endpoint
+  /point/{id}/{contentID}:
+    summary: Some user endpoint
+    get:
+      x-weos-config:
+        handler: FooBar
+        middleware:
+          - ZapLogger
       responses:
         200:
           description: Admin Endpoint

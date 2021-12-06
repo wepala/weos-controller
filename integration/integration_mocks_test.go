@@ -19,7 +19,7 @@ var _ TestAPI = &TestAPIMock{}
 //
 // 		// make and configure a mocked TestAPI
 // 		mockedTestAPI := &TestAPIMock{
-// 			AddConfigFunc: func(config *weoscontroller.APIConfig) error {
+// 			AddConfigFunc: func(config *APIConfig) error {
 // 				panic("mock out the AddConfig method")
 // 			},
 // 			AddPathConfigFunc: func(path string, config *weoscontroller.PathConfig) error {
@@ -57,6 +57,9 @@ var _ TestAPI = &TestAPIMock{}
 // 			},
 // 			SetEchoInstanceFunc: func(e *echo.Echo)  {
 // 				panic("mock out the SetEchoInstance method")
+// 			},
+// 			ZapLoggerFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+// 				panic("mock out the ZapLogger method")
 // 			},
 // 		}
 //
@@ -103,6 +106,9 @@ type TestAPIMock struct {
 
 	// SetEchoInstanceFunc mocks the SetEchoInstance method.
 	SetEchoInstanceFunc func(e *echo.Echo)
+
+	// ZapLoggerFunc mocks the ZapLogger method.
+	ZapLoggerFunc func(handlerFunc echo.HandlerFunc) echo.HandlerFunc
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -169,6 +175,11 @@ type TestAPIMock struct {
 			// E is the e argument value.
 			E *echo.Echo
 		}
+		// ZapLogger holds details about calls to the ZapLogger method.
+		ZapLogger []struct {
+			// HandlerFunc is the handlerFunc argument value.
+			HandlerFunc echo.HandlerFunc
+		}
 	}
 	lockAddConfig           sync.RWMutex
 	lockAddPathConfig       sync.RWMutex
@@ -183,6 +194,7 @@ type TestAPIMock struct {
 	lockPreGlobalMiddleware sync.RWMutex
 	lockPreMiddleware       sync.RWMutex
 	lockSetEchoInstance     sync.RWMutex
+	lockZapLogger           sync.RWMutex
 }
 
 // AddConfig calls AddConfigFunc.
@@ -579,5 +591,36 @@ func (mock *TestAPIMock) SetEchoInstanceCalls() []struct {
 	mock.lockSetEchoInstance.RLock()
 	calls = mock.calls.SetEchoInstance
 	mock.lockSetEchoInstance.RUnlock()
+	return calls
+}
+
+// ZapLogger calls ZapLoggerFunc.
+func (mock *TestAPIMock) ZapLogger(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
+	if mock.ZapLoggerFunc == nil {
+		panic("TestAPIMock.ZapLoggerFunc: method is nil but TestAPI.ZapLogger was just called")
+	}
+	callInfo := struct {
+		HandlerFunc echo.HandlerFunc
+	}{
+		HandlerFunc: handlerFunc,
+	}
+	mock.lockZapLogger.Lock()
+	mock.calls.ZapLogger = append(mock.calls.ZapLogger, callInfo)
+	mock.lockZapLogger.Unlock()
+	return mock.ZapLoggerFunc(handlerFunc)
+}
+
+// ZapLoggerCalls gets all the calls that were made to ZapLogger.
+// Check the length with:
+//     len(mockedTestAPI.ZapLoggerCalls())
+func (mock *TestAPIMock) ZapLoggerCalls() []struct {
+	HandlerFunc echo.HandlerFunc
+} {
+	var calls []struct {
+		HandlerFunc echo.HandlerFunc
+	}
+	mock.lockZapLogger.RLock()
+	calls = mock.calls.ZapLogger
+	mock.lockZapLogger.RUnlock()
 	return calls
 }
