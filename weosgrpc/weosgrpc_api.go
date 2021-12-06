@@ -3,6 +3,7 @@ package weosgrpc
 import (
 	"context"
 
+	"github.com/labstack/echo"
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
@@ -23,6 +24,22 @@ func (p *GRPCAPI) AddPathConfig(path string, config *weoscontroller.PathConfig) 
 	}
 	p.PathConfigs[path] = config
 	return nil
+}
+
+func (p *GRPCAPI) EchoInstance() *echo.Echo {
+	panic("grpc does not support echo framework ")
+}
+
+func (p *GRPCAPI) SetEchoInstance(e *echo.Echo) {
+	panic("grpc does not support echo framework ")
+}
+
+func (p *GRPCAPI) Context() *context.Context {
+	return p.c
+}
+
+func (p *GRPCAPI) SetContext(c *context.Context) {
+	p.c = c
 }
 
 /*
@@ -109,12 +126,4 @@ func (p *GRPCAPI) Authenticate(ctx context.Context) context.Context {
 
 }
 
-
-func (p *GRPCAPI) Context(ctx) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		cc := &Context{
-			Context: c,
-		}
-		return next(cc)
-	}
-}*/
+*/
