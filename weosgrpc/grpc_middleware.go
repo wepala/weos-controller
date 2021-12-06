@@ -1,6 +1,8 @@
 package weosgrpc
 
 import (
+	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	weoscontroller "github.com/wepala/weos-controller"
 	"google.golang.org/grpc"
 )
@@ -10,7 +12,7 @@ type GrpcMiddleware struct {
 	unaryMiddleware  grpc.ServerOption
 }
 
-func (g *GrpcMiddleware) setStreamMiddleware(array *[]grpc.StreamServerInterceptor) {
+func (g *GrpcMiddleware) setStreamMiddleware(args ...grpc.StreamServerInterceptor) {
 
 	/*g.streamMiddleware = grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
 		array...
@@ -21,7 +23,7 @@ func (g *GrpcMiddleware) setStreamMiddleware(array *[]grpc.StreamServerIntercept
 	))*/
 }
 
-func (g *GrpcMiddleware) setUnaryMiddleware(array *[]grpc.UnaryServerInterceptor) {
+func (g *GrpcMiddleware) setUnaryMiddleware(args ...grpc.UnaryServerInterceptor) {
 
 	/*zapLogger := &zap.Logger{}
 	g.unaryMiddleware = grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
@@ -41,8 +43,8 @@ func (g *GrpcMiddleware) GetUnaryMiddleware() grpc.ServerOption {
 }
 
 func SetAllMiddleware(config *weoscontroller.APIConfig) {
-	var grpcSteam *[]grpc.StreamServerInterceptor
-	var grpcUnary *[]grpc.UnaryServerInterceptor
+	grpcStream := make([]grpc.StreamServerInterceptor, 2)
+	grpcUnary := make([]grpc.UnaryServerInterceptor, 2)
 	//TODO call the functions to convert the middleware to the interceptors and append to array
 	//call setUnaryMiddleware and setStreamMiddleware with the array
 
@@ -51,9 +53,20 @@ func SetAllMiddleware(config *weoscontroller.APIConfig) {
 	for _, streamMiddleware := range grpcMiddleware.Stream.Middleware {
 		switch streamMiddleware {
 		case "Authenticate":
-
+			grpcStream = append(grpcStream, grpc_auth.StreamServerInterceptor(Authenticate))
 		case "Recovery":
+			grpcStream = append(grpcStream, grpc_recovery.StreamServerInterceptor())
 		}
 	}
 
+	for _, UnaryMiddleware := range grpcMiddleware.Unary.Middleware {
+		switch UnaryMiddleware {
+		case "Authenticate":
+			grpcUnary = append(grpcUnary, grpc_auth.UnaryServerInterceptor(Authenticate))
+		case "Recovery":
+			grpcUnary = append(grpcUnary, grpc_recovery.UnaryServerInterceptor())
+		}
+	}
+
+	//Setup Errors
 }
