@@ -58,7 +58,8 @@ func InitalizeGrpc(ctx *context.Context, api weoscontroller.APIInterface, apiCon
 			return ctx
 		}
 
-		SetAllMiddleware(config)
+		//Maybe use context here to save the options? not sure
+		return SetAllMiddleware(ctx, config)
 
 	}
 	return ctx

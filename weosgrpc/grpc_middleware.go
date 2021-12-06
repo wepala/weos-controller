@@ -1,6 +1,9 @@
 package weosgrpc
 
 import (
+	"context"
+
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	weoscontroller "github.com/wepala/weos-controller"
@@ -14,24 +17,14 @@ type GrpcMiddleware struct {
 
 func (g *GrpcMiddleware) setStreamMiddleware(args ...grpc.StreamServerInterceptor) {
 
-	/*g.streamMiddleware = grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(
-		array...
-
-		//grpc_zap.StreamServerInterceptor(zapLogger),
-		grpc_auth.StreamServerInterceptor(myAuthFunction), // myAuthFunction = Authenticate function in weosgrpc_api.go
-		grpc_recovery.StreamServerInterceptor(),
-	))*/
+	chainStream := grpc_middleware.ChainStreamServer(args...)
+	g.streamMiddleware = grpc.StreamInterceptor(chainStream)
 }
 
 func (g *GrpcMiddleware) setUnaryMiddleware(args ...grpc.UnaryServerInterceptor) {
 
-	/*zapLogger := &zap.Logger{}
-	g.unaryMiddleware = grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-		array...
-		grpc_zap.UnaryServerInterceptor(zapLogger),
-		grpc_auth.UnaryServerInterceptor(myAuthFunction), // myAuthFunction = Authenticate function in weosgrpc_api.go
-		grpc_recovery.UnaryServerInterceptor(),
-	))*/
+	chainUnary := grpc_middleware.ChainUnaryServer(args...)
+	g.streamMiddleware = grpc.UnaryInterceptor(chainUnary)
 }
 
 func (g *GrpcMiddleware) GetStreamMiddleware() grpc.ServerOption {
@@ -42,15 +35,15 @@ func (g *GrpcMiddleware) GetUnaryMiddleware() grpc.ServerOption {
 	return g.unaryMiddleware
 }
 
-func SetAllMiddleware(config *weoscontroller.APIConfig) {
+func SetAllMiddleware(ctx *context.Context, config *weoscontroller.APIConfig) *context.Context {
 	grpcStream := make([]grpc.StreamServerInterceptor, 2)
 	grpcUnary := make([]grpc.UnaryServerInterceptor, 2)
 	//TODO call the functions to convert the middleware to the interceptors and append to array
 	//call setUnaryMiddleware and setStreamMiddleware with the array
 
-	grpcMiddleware := config.Grpc.Middlewares
+	grpcMiddlewareConfig := config.Grpc.Middlewares
 
-	for _, streamMiddleware := range grpcMiddleware.Stream.Middleware {
+	for _, streamMiddleware := range grpcMiddlewareConfig.Stream.Middleware {
 		switch streamMiddleware {
 		case "Authenticate":
 			grpcStream = append(grpcStream, grpc_auth.StreamServerInterceptor(Authenticate))
@@ -59,7 +52,7 @@ func SetAllMiddleware(config *weoscontroller.APIConfig) {
 		}
 	}
 
-	for _, UnaryMiddleware := range grpcMiddleware.Unary.Middleware {
+	for _, UnaryMiddleware := range grpcMiddlewareConfig.Unary.Middleware {
 		switch UnaryMiddleware {
 		case "Authenticate":
 			grpcUnary = append(grpcUnary, grpc_auth.UnaryServerInterceptor(Authenticate))
@@ -68,5 +61,12 @@ func SetAllMiddleware(config *weoscontroller.APIConfig) {
 		}
 	}
 
-	//Setup Errors
+	var grpcMiddleware GrpcMiddleware
+
+	grpcMiddleware.setStreamMiddleware(grpcStream...)
+	grpcMiddleware.setUnaryMiddleware(grpcUnary...)
+
+	//WithValue it into the context? not sure
+	context := context.WithValue(*ctx, "grpcServerOptions", grpcMiddleware)
+	return &context
 }

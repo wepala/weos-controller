@@ -42,6 +42,10 @@ func (p *GRPCAPI) SetContext(c *context.Context) {
 	p.c = c
 }
 
+func (p *GRPCAPI) Authenticate(ctx context.Context) context.Context {
+	return context.Background()
+}
+
 /*
 func (p *GRPCAPI) getKey(token *jwt.Token) (interface{}, error) {
 
