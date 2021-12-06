@@ -70,6 +70,7 @@ paths:
       x-weos-config:
         handler: FooBar
         middleware:
+          - ZapLogger
           - LogLevel
           - Middleware
           - PreMiddleware
