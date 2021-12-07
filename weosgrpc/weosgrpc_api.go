@@ -2,8 +2,14 @@ package weosgrpc
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"io/ioutil"
 
+	"github.com/SermoDigital/jose/crypto"
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo"
+	"github.com/lestrrat-go/jwx/jwk"
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
@@ -42,11 +48,6 @@ func (p *GRPCAPI) SetContext(c *context.Context) {
 	p.c = c
 }
 
-func (p *GRPCAPI) Authenticate(ctx context.Context) context.Context {
-	return context.Background()
-}
-
-/*
 func (p *GRPCAPI) getKey(token *jwt.Token) (interface{}, error) {
 
 	keySet, err := jwk.Fetch(context.Background(), p.Config.JWTConfig.JWKSUrl)
@@ -73,16 +74,18 @@ func (p *GRPCAPI) getKey(token *jwt.Token) (interface{}, error) {
 	return pubkey, nil
 }
 
-func (p *GRPCAPI) Authenticate(ctx context.Context) context.Context {
+func (p *GRPCAPI) Authenticate(ctx *context.Context) *context.Context {
 	//Remove all middleware. usage as this is related to echo. An alternative is required
 	var config weoscontroller.JWTConfig
 	if p.Config.JWTConfig.JWKSUrl != "" {
 		config := weoscontroller.JWTConfig{
-			KeyFunc: p.getKey,
+			KeyFunc: p.getKey, //KeyFunc returns a interface, maybe use key in jwtconfig - this takes string
 		}
 
-		return ctx.WithValue("JWTConfig", config)
+		context := context.WithValue(*ctx, "grpcServerOptions", config)
+		return &context
 	}
+	//RD: Not sure about this one
 	if p.Config.JWTConfig.Key != "" {
 		config.SigningKey = []byte(p.Config.JWTConfig.Key)
 	}
@@ -105,15 +108,20 @@ func (p *GRPCAPI) Authenticate(ctx context.Context) context.Context {
 			if err != nil {
 				//p.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
 			}
+
+			// RD: Not sure about this one
 			config.SigningKey = publicKey
 		} else if config.SigningMethod == "EC256" || config.SigningMethod == "EC384" || config.SigningMethod == "EC512" {
 			publicKey, err := crypto.ParseECPublicKeyFromPEM(p.Config.JWTConfig.Certificate)
 			if err != nil {
 				//a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
 			}
+			// RD: Not sure about this one
 			config.SigningKey = publicKey
 		}
 	}
+
+	// RD: Not sure about this one
 	if config.SigningKey == nil && config.SigningKeys == nil {
 		//p.e.Logger.Fatalf("no jwt secret was configured.")
 	}
@@ -126,8 +134,7 @@ func (p *GRPCAPI) Authenticate(ctx context.Context) context.Context {
 	if p.Config.JWTConfig.ContextKey != "" {
 		config.ContextKey = p.Config.JWTConfig.ContextKey
 	}
-	return middleware.JWTWithConfig(config)(handlerFunc)
 
+	context := context.WithValue(*ctx, "grpcServerOptions", config)
+	return &context
 }
-
-*/
