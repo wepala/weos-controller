@@ -518,12 +518,7 @@ func TestAPI_HealthCheck(t *testing.T) {
 			ContextKey:      "",
 		},
 	}}
-	e.GET("/health", func(c echo.Context) error {
-		response1 := &weoscontroller.HealthCheckResponse{
-			Version: api.Config.Version,
-		}
-		return c.JSON(http.StatusOK, response1)
-	}, api.Context, api.Authenticate, api.UserID)
+	e.GET("/health", api.HealthChecker, api.Context, api.Authenticate, api.UserID)
 	api.SetEchoInstance(e)
 	e.ServeHTTP(rec, req)
 	response := rec.Result()
