@@ -91,15 +91,27 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 		switch level {
 		case "debug":
 			p.EchoInstance().Logger.SetLevel(log.DEBUG)
+			cc.Logger().SetLevel(log.DEBUG)
 		case "info":
 			p.EchoInstance().Logger.SetLevel(log.INFO)
+			cc.Logger().SetLevel(log.INFO)
 		case "warn":
 			p.EchoInstance().Logger.SetLevel(log.WARN)
+			cc.Logger().SetLevel(log.WARN)
 		case "error":
 			p.EchoInstance().Logger.SetLevel(log.ERROR)
+			cc.Logger().SetLevel(log.ERROR)
 		}
 
 		//Sets the logger on the application object
+		if p.Config == nil {
+			p.Config = &APIConfig{}
+		}
+
+		if p.Config.Log == nil {
+			p.Config.Log = &weos.LogConfig{}
+		}
+
 		p.Config.Log.Level = level
 
 		//Assigns the log level to context
