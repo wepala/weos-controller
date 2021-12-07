@@ -49,11 +49,9 @@ func (z *Zap) Output() io.Writer {
 
 func (z *Zap) SetOutput(w io.Writer) {
 
-	writer := zap.CombineWriteSyncers(zapcore.AddSync(os.Stdout), zapcore.AddSync(w))
-
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
-		writer,
+		zapcore.AddSync(w),
 		zap.NewAtomicLevelAt(z.level.Level()),
 	)
 	logger := zap.New(core)
