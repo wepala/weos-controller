@@ -422,7 +422,14 @@ func TestZapLogger(t *testing.T) {
 			}
 		},
 		FooBarFunc: func(c echo.Context) error {
-			return weoscontroller.NewControllerError("some error", errors.New("Some Detailed Error"), 405)
+
+			//NOTE: do not use log.x for messages as we are not using the std golang logger. Use e.Logger.x
+			//Just to check the output based on what level is set
+			e.Logger.Debug("This is a debug log :)")
+
+			e.Logger.Error("This is an error log :(")
+
+			return nil
 		},
 		ContextFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
@@ -480,6 +487,34 @@ func TestZapLogger(t *testing.T) {
 	}
 
 	if level != log.ERROR {
-		t.Errorf("expected default logger level to be erro but got %d ", level)
+		t.Errorf("expected default logger level to be error but got %d ", level)
 	}
+
+	t.Run("test changing io.writer output", func(t *testing.T) {
+		level := "error"
+		var buf bytes.Buffer
+		e.Logger.SetOutput(&buf)
+
+		req := httptest.NewRequest(http.MethodGet, "/point", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		e.ServeHTTP(rec, req)
+		response := rec.Result()
+
+		//check response code
+		if response.StatusCode != 200 {
+			t.Errorf("expected response code to be %d, got %d", 200, response.StatusCode)
+		}
+
+		if level == "error" {
+			if !strings.Contains(buf.String(), "This is an error log :(") {
+				t.Errorf("expected the log output to contain %s, got %s", "This is an error log :(", buf.String())
+			}
+		}
+		if level == "debug" {
+			if !strings.Contains(buf.String(), "This is an error log :(") || !strings.Contains(buf.String(), "This is a debug log :)") {
+				t.Errorf("expected the log output to contain %s and %s, got %s", "This is an error log :(", "This is a debug log :)", buf.String())
+			}
+		}
+	})
 }

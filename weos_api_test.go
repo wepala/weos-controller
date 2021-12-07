@@ -498,7 +498,7 @@ func TestAPI_ContextZapLogger(t *testing.T) {
 		if c.Logger().Prefix() != "zap" {
 			return c.String(http.StatusInternalServerError, "expected Zaplogger in the context logger got "+c.Logger().Prefix())
 		}
-		return c.String(http.StatusOK, "zapLogger is set in the context logger nd context echo logger")
+		return c.String(http.StatusOK, "zapLogger is set in the context logger")
 	}, api.Context, api.Authenticate, api.UserID, api.ZapLogger)
 
 	api.SetEchoInstance(e)
