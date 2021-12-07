@@ -1,3 +1,4 @@
+//go:generate moq -out mocks_test.go -pkg weosgrpc_test . GrpcTestAPI
 package weosgrpc_test
 
 import (
@@ -5,32 +6,36 @@ import (
 	"log"
 	"net"
 
+	weoscontroller "github.com/wepala/weos-controller"
+	weosgrpc "github.com/wepala/weos-controller/weosgrpc"
+	pb "github.com/wepala/weos-controller/weosgrpc/protofiles"
 	"google.golang.org/grpc"
 )
 
 var port = ":8681"
-var client pb.AccountClient
+var client pb.UserClient
 
 type GrpcTestAPI interface {
-	weoscontroller.APIInterface
+	weoscontroller.GRPCAPIInterface
+	SetAllMiddleware() error
 	HelloWorld(c context.Context) error
 	FooBar(c context.Context) error
 }
 
-func setUpTest() (client pb.AccountClient, teardown func()) {
+func setUpTest() (client pb.UserClient, teardown func()) {
 
-	InitalizeGrpc(context.TODO(), api weoscontroller.APIInterface,  "../fixtures/api/grpc.yaml")
+	//InitalizeGrpc(context.TODO(), api ,  "../fixtures/api/grpc.yaml")
 	s := grpc.NewServer()
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
-	grpc1 := &controller.GRPC{}
+	grpc1 := &weosgrpc.GRPC{}
 	err = grpc1.Initialize()
 	if err != nil {
 		log.Fatalf("Failed to intialize: %v", err)
 	}
-	pb.RegisterAccountServer(s, grpc1)
+	pb.RegisterUserServer(s, grpc1)
 	go func() {
 		s.Serve(lis)
 	}()

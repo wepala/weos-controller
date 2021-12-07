@@ -11,7 +11,7 @@ import (
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
-func InitalizeGrpc(ctx *context.Context, api weoscontroller.APIInterface, apiConfig string) *context.Context {
+func InitalizeGrpc(ctx *context.Context, api weoscontroller.GRPCAPIInterface, apiConfig string) *context.Context {
 	var content []byte
 	var err error
 
@@ -58,8 +58,9 @@ func InitalizeGrpc(ctx *context.Context, api weoscontroller.APIInterface, apiCon
 			return ctx
 		}
 
-		//Maybe use context here to save the options? not sure
-		return SetAllMiddleware(ctx, config)
+		api.SetContext(ctx)
+
+		api.SetAllMiddleware()
 
 	}
 	return ctx

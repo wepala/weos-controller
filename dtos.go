@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/wepala/weos"
+	"google.golang.org/grpc"
 )
 
 type APIConfig struct {
@@ -38,6 +39,11 @@ type JWTConfig struct {
 	AuthScheme      string                 `json:"authScheme"`
 	ContextKey      string                 `json:"contextKey"`
 	SigningMethod   string                 `json:"signingMethod"`
+}
+
+type GRPCServerOptions struct {
+	StreamMiddleware grpc.ServerOption
+	UnaryMiddleware  grpc.ServerOption
 }
 
 type GrpcMiddlewares struct {
