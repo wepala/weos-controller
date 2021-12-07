@@ -87,19 +87,15 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 
 		res.Header().Set(HeaderXLogLevel, level)
 
-		//Set the log.level based on what is passed into the header
+		//Set the log.level in context based on what is passed into the header
 		switch level {
 		case "debug":
-			p.EchoInstance().Logger.SetLevel(log.DEBUG)
 			cc.Logger().SetLevel(log.DEBUG)
 		case "info":
-			p.EchoInstance().Logger.SetLevel(log.INFO)
 			cc.Logger().SetLevel(log.INFO)
 		case "warn":
-			p.EchoInstance().Logger.SetLevel(log.WARN)
 			cc.Logger().SetLevel(log.WARN)
 		case "error":
-			p.EchoInstance().Logger.SetLevel(log.ERROR)
 			cc.Logger().SetLevel(log.ERROR)
 		}
 
