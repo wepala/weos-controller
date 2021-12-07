@@ -411,6 +411,83 @@ func TestAPI_UserID(t *testing.T) {
 	}
 }
 
+func TestAPI_LogLevel(t *testing.T) {
+	//Assign desired log level
+	level := "info"
+
+	// Setup
+	e := echo.New()
+
+	key := "secureSecretText"
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+		Subject: "sojourner@examle.com",
+	})
+	signedToken, err := token.SignedString([]byte(key))
+	var bearer = "Bearer " + signedToken
+	if err != nil {
+		t.Errorf("got an error setting up tests %s", err)
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/endpoint", strings.NewReader(`{"name":"Sojourner Truth","email":"sojourner@examle.com"}`))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	req.Header.Set("Authorization", bearer)
+	req.Header.Set(weoscontroller.HeaderXLogLevel, level)
+	rec := httptest.NewRecorder()
+	api := &weoscontroller.API{Config: &weoscontroller.APIConfig{
+		RecordingBaseFolder: ".",
+		JWTConfig: &weoscontroller.JWTConfig{
+			Key:             key,
+			SigningKeys:     map[string]interface{}{},
+			Certificate:     nil,
+			CertificatePath: "",
+			TokenLookup:     "",
+			AuthScheme:      "",
+			SigningMethod:   "HS256",
+			ContextKey:      "",
+		},
+		ApplicationConfig: &weos.ApplicationConfig{
+			Log: &weos.LogConfig{
+				Level: "",
+			},
+		},
+	},
+	}
+
+	var userId string
+
+	e.POST("/endpoint", func(c echo.Context) error {
+		userId = c.(*weoscontroller.Context).RequestContext().Value(weos.USER_ID).(string)
+		return c.String(http.StatusOK, userId)
+	}, api.Context, api.Authenticate, api.UserID, api.LogLevel)
+
+	api.SetEchoInstance(e)
+	logLvlDefault, err := weoscontroller.LogLevels("error")
+	if err != nil {
+		t.Errorf("Expected no error, got: %s", err)
+	}
+
+	//Check for default level = error
+	if api.EchoInstance().Logger.Level() != logLvlDefault {
+		t.Errorf("expected the log level to be '%d', got '%d'", logLvlDefault, api.EchoInstance().Logger.Level())
+	}
+
+	logLvl, err := weoscontroller.LogLevels(level)
+	if err != nil {
+		t.Errorf("Expected no error, got: %s", err)
+	}
+
+	e.ServeHTTP(rec, req)
+
+	//Check for custom level
+	if api.EchoInstance().Logger.Level() != logLvl {
+		t.Errorf("expected the log level to be '%d', got '%d'", logLvl, api.EchoInstance().Logger.Level())
+	}
+
+	if api.Config.Log.Level != level {
+		t.Errorf("expected the log level to be '%s', got '%s'", level, api.Config.Log.Level)
+	}
+}
+
 func TestAPI_HealthCheck(t *testing.T) {
 	// Setup
 	e := echo.New()
@@ -441,12 +518,7 @@ func TestAPI_HealthCheck(t *testing.T) {
 			ContextKey:      "",
 		},
 	}}
-	e.GET("/health", func(c echo.Context) error {
-		response1 := &weoscontroller.HealthCheckResponse{
-			Version: api.Config.Version,
-		}
-		return c.JSON(http.StatusOK, response1)
-	}, api.Context, api.Authenticate, api.UserID)
+	e.GET("/health", api.HealthChecker, api.Context, api.Authenticate, api.UserID)
 	api.SetEchoInstance(e)
 	e.ServeHTTP(rec, req)
 	response := rec.Result()

@@ -8,10 +8,6 @@ x-weos-config:
   session:
     key: "${SESSION_KEY}"
     path: ""
-  logger:
-    level: ${LOG_LEVEL}
-    report-caller: true
-    formatter: ${LOG_FORMAT}
   applicationId: ${APPLICATION_ID}
   applicationTitle: ${APPLICATION_TITLE}
   accountId: ${ACCOUNT_ID}
@@ -52,6 +48,7 @@ paths:
       x-weos-config:
         handler: FooBar
         middleware:
+          - LogLevel
           - Middleware
           - PreMiddleware
       responses:
@@ -67,6 +64,19 @@ paths:
       responses:
         200:
           description: PUT Endpoint
+  /endpoint:
+    summary: Some user endpoint
+    get:
+      x-weos-config:
+        handler: FooBar
+        middleware:
+          - ZapLogger
+          - LogLevel
+          - Middleware
+          - PreMiddleware
+      responses:
+        200:
+          description: Admin Endpoint
   /point/{id}/{contentID}:
     summary: Some user endpoint
     get:

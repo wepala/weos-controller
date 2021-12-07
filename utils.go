@@ -3,9 +3,12 @@ package weoscontroller
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
+
+	"github.com/labstack/gommon/log"
 )
 
 //LoadHttpRequestFixture wrapper around the test helper to make it easier to use it with test table
@@ -150,4 +153,20 @@ func MultiWriter(writers ...http.ResponseWriter) http.ResponseWriter {
 		}
 	}
 	return &multiWriter{allWriters}
+}
+
+//Used to get the logLvl equivalent for an inputted level string
+func LogLevels(level string) (log.Lvl, error) {
+	switch level {
+	case "debug":
+		return log.DEBUG, nil
+	case "info":
+		return log.INFO, nil
+	case "warn":
+		return log.WARN, nil
+	case "error":
+		return log.ERROR, nil
+	default:
+		return log.ERROR, fmt.Errorf("invalid level, expected debug, info, warn or error. got: %s", level)
+	}
 }

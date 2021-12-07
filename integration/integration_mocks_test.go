@@ -43,6 +43,9 @@ var _ TestAPI = &TestAPIMock{}
 // 			InitializeFunc: func() error {
 // 				panic("mock out the Initialize method")
 // 			},
+// 			LogLevelFunc: func(next echo.HandlerFunc) echo.HandlerFunc {
+// 				panic("mock out the LogLevel method")
+// 			},
 // 			MiddlewareFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 // 				panic("mock out the Middleware method")
 // 			},
@@ -88,6 +91,9 @@ type TestAPIMock struct {
 
 	// InitializeFunc mocks the Initialize method.
 	InitializeFunc func() error
+
+	// LogLevelFunc mocks the LogLevel method.
+	LogLevelFunc func(next echo.HandlerFunc) echo.HandlerFunc
 
 	// MiddlewareFunc mocks the Middleware method.
 	MiddlewareFunc func(handlerFunc echo.HandlerFunc) echo.HandlerFunc
@@ -144,6 +150,11 @@ type TestAPIMock struct {
 		// Initialize holds details about calls to the Initialize method.
 		Initialize []struct {
 		}
+		// LogLevel holds details about calls to the LogLevel method.
+		LogLevel []struct {
+			// Next is the next argument value.
+			Next echo.HandlerFunc
+		}
 		// Middleware holds details about calls to the Middleware method.
 		Middleware []struct {
 			// HandlerFunc is the handlerFunc argument value.
@@ -178,6 +189,7 @@ type TestAPIMock struct {
 	lockGlobalMiddleware    sync.RWMutex
 	lockHelloWorld          sync.RWMutex
 	lockInitialize          sync.RWMutex
+	lockLogLevel            sync.RWMutex
 	lockMiddleware          sync.RWMutex
 	lockPreGlobalMiddleware sync.RWMutex
 	lockPreMiddleware       sync.RWMutex
@@ -424,6 +436,37 @@ func (mock *TestAPIMock) InitializeCalls() []struct {
 	mock.lockInitialize.RLock()
 	calls = mock.calls.Initialize
 	mock.lockInitialize.RUnlock()
+	return calls
+}
+
+// LogLevel calls LogLevelFunc.
+func (mock *TestAPIMock) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
+	if mock.LogLevelFunc == nil {
+		panic("TestAPIMock.LogLevelFunc: method is nil but TestAPI.LogLevel was just called")
+	}
+	callInfo := struct {
+		Next echo.HandlerFunc
+	}{
+		Next: next,
+	}
+	mock.lockLogLevel.Lock()
+	mock.calls.LogLevel = append(mock.calls.LogLevel, callInfo)
+	mock.lockLogLevel.Unlock()
+	return mock.LogLevelFunc(next)
+}
+
+// LogLevelCalls gets all the calls that were made to LogLevel.
+// Check the length with:
+//     len(mockedTestAPI.LogLevelCalls())
+func (mock *TestAPIMock) LogLevelCalls() []struct {
+	Next echo.HandlerFunc
+} {
+	var calls []struct {
+		Next echo.HandlerFunc
+	}
+	mock.lockLogLevel.RLock()
+	calls = mock.calls.LogLevel
+	mock.lockLogLevel.RUnlock()
 	return calls
 }
 
