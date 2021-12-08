@@ -21,4 +21,5 @@ type GRPCAPIInterface interface {
 	Initialize() error
 	Context() *context.Context
 	SetContext(c *context.Context)
+	SetAllMiddleware()
 }

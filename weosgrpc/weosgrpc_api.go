@@ -111,20 +111,20 @@ func (p *GRPCAPI) getKey(token *jwt.Token) (interface{}, error) {
 	return pubkey, nil
 }
 
-func Authenticate(ctx context.Context) (context.Context, error) {
-	//Remove all middleware. usage as this is related to echo. An alternative is required
-	var config weoscontroller.JWTConfig
+func (p *GRPCAPI) AuthFunc(ctx context.Context) (context.Context, error) {
+
+	var config weoscontroller.GRPCJWTConfig
 	if p.Config.JWTConfig.JWKSUrl != "" {
-		config := weoscontroller.JWTConfig{
-			KeyFunc: p.getKey, //KeyFunc returns a interface, maybe use key in jwtconfig - this takes string
+		config := weoscontroller.GRPCJWTConfig{
+			Key: p.getKey,
 		}
 
-		context := context.WithValue(*ctx, "grpcServerOptions", config)
-		return &context
+		context := context.WithValue(ctx, "grpcServerOptions", config)
+		p.c = &context
+		return context, nil
 	}
-	//RD: Not sure about this one
 	if p.Config.JWTConfig.Key != "" {
-		config.SigningKey = []byte(p.Config.JWTConfig.Key)
+		config.Key = []byte(p.Config.JWTConfig.Key)
 	}
 	if len(p.Config.JWTConfig.SigningKeys) > 0 {
 		config.SigningKeys = p.Config.JWTConfig.SigningKeys
@@ -147,19 +147,17 @@ func Authenticate(ctx context.Context) (context.Context, error) {
 			}
 
 			// RD: Not sure about this one
-			config.SigningKey = publicKey
+			config.Key = publicKey
 		} else if config.SigningMethod == "EC256" || config.SigningMethod == "EC384" || config.SigningMethod == "EC512" {
 			publicKey, err := crypto.ParseECPublicKeyFromPEM(p.Config.JWTConfig.Certificate)
 			if err != nil {
 				//a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
 			}
-			// RD: Not sure about this one
-			config.SigningKey = publicKey
+			config.Key = publicKey
 		}
 	}
 
-	// RD: Not sure about this one
-	if config.SigningKey == nil && config.SigningKeys == nil {
+	if config.Key == nil && config.SigningKeys == nil {
 		//p.e.Logger.Fatalf("no jwt secret was configured.")
 	}
 	if p.Config.JWTConfig.TokenLookup != "" {
@@ -172,8 +170,7 @@ func Authenticate(ctx context.Context) (context.Context, error) {
 		config.ContextKey = p.Config.JWTConfig.ContextKey
 	}
 
-	context := context.WithValue(*ctx, "grpcServerOptions", config)
-	return &context
+	context := context.WithValue(ctx, "grpcServerOptions", config)
+	p.c = &context
+	return context, nil
 }
-
-func (p *GRPCAPI) AuthFunc(ctx context.Context) (context.Context, error) { return nil, nil }
