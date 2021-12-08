@@ -4,6 +4,7 @@ package weoscontroller
 import (
 	"github.com/labstack/echo/v4"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 //define an interface that all plugins must implement
@@ -19,7 +20,9 @@ type GRPCAPIInterface interface {
 	AddPathConfig(path string, config *PathConfig) error
 	AddConfig(config *APIConfig) error
 	Initialize() error
-	Context() *context.Context
-	SetContext(c *context.Context)
+	Context() context.Context
+	SetContext(c context.Context)
 	SetAllMiddleware()
+	GetStreamMiddleware() grpc.ServerOption
+	GetUnaryMiddleware() grpc.ServerOption
 }

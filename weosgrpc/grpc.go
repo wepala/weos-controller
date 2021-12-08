@@ -2,6 +2,7 @@ package weosgrpc
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -14,6 +15,9 @@ type Grpc struct {
 }
 
 func (g *Grpc) CreateUser(ctxt context.Context, a *pb.Request) (*pb.Response, error) {
+	if a.ID == "" {
+		return &pb.Response{User: a, Result: " no id found", IsValid: false}, fmt.Errorf("expected user id but got nil")
+	}
 	return &pb.Response{User: a, Result: "account created successfully", IsValid: true}, nil
 }
 

@@ -6,18 +6,19 @@ package weosgrpc_test
 import (
 	"context"
 	"github.com/wepala/weos-controller"
+	"google.golang.org/grpc"
 	"sync"
 )
 
-// Ensure, that GrpcTestAPIMock does implement weoscontroller.GrpcTestAPI.
+// Ensure, that GrpcTestAPIMock does implement GrpcTestAPI.
 // If this is not the case, regenerate this file with moq.
-var _ weoscontroller.GrpcTestAPI = &GrpcTestAPIMock{}
+var _ GrpcTestAPI = &GrpcTestAPIMock{}
 
-// GrpcTestAPIMock is a mock implementation of weoscontroller.GrpcTestAPI.
+// GrpcTestAPIMock is a mock implementation of GrpcTestAPI.
 //
 // 	func TestSomethingThatUsesGrpcTestAPI(t *testing.T) {
 //
-// 		// make and configure a mocked weoscontroller.GrpcTestAPI
+// 		// make and configure a mocked GrpcTestAPI
 // 		mockedGrpcTestAPI := &GrpcTestAPIMock{
 // 			AddConfigFunc: func(config *weoscontroller.APIConfig) error {
 // 				panic("mock out the AddConfig method")
@@ -25,11 +26,17 @@ var _ weoscontroller.GrpcTestAPI = &GrpcTestAPIMock{}
 // 			AddPathConfigFunc: func(path string, config *weoscontroller.PathConfig) error {
 // 				panic("mock out the AddPathConfig method")
 // 			},
-// 			ContextFunc: func() *context.Context {
+// 			ContextFunc: func() context.Context {
 // 				panic("mock out the Context method")
 // 			},
 // 			FooBarFunc: func(c context.Context) error {
 // 				panic("mock out the FooBar method")
+// 			},
+// 			GetStreamMiddlewareFunc: func() grpc.ServerOption {
+// 				panic("mock out the GetStreamMiddleware method")
+// 			},
+// 			GetUnaryMiddlewareFunc: func() grpc.ServerOption {
+// 				panic("mock out the GetUnaryMiddleware method")
 // 			},
 // 			HelloWorldFunc: func(c context.Context) error {
 // 				panic("mock out the HelloWorld method")
@@ -40,7 +47,7 @@ var _ weoscontroller.GrpcTestAPI = &GrpcTestAPIMock{}
 // 			SetAllMiddlewareFunc: func()  {
 // 				panic("mock out the SetAllMiddleware method")
 // 			},
-// 			SetContextFunc: func(c *context.Context)  {
+// 			SetContextFunc: func(c context.Context)  {
 // 				panic("mock out the SetContext method")
 // 			},
 // 		}
@@ -57,10 +64,16 @@ type GrpcTestAPIMock struct {
 	AddPathConfigFunc func(path string, config *weoscontroller.PathConfig) error
 
 	// ContextFunc mocks the Context method.
-	ContextFunc func() *context.Context
+	ContextFunc func() context.Context
 
 	// FooBarFunc mocks the FooBar method.
 	FooBarFunc func(c context.Context) error
+
+	// GetStreamMiddlewareFunc mocks the GetStreamMiddleware method.
+	GetStreamMiddlewareFunc func() grpc.ServerOption
+
+	// GetUnaryMiddlewareFunc mocks the GetUnaryMiddleware method.
+	GetUnaryMiddlewareFunc func() grpc.ServerOption
 
 	// HelloWorldFunc mocks the HelloWorld method.
 	HelloWorldFunc func(c context.Context) error
@@ -72,7 +85,7 @@ type GrpcTestAPIMock struct {
 	SetAllMiddlewareFunc func()
 
 	// SetContextFunc mocks the SetContext method.
-	SetContextFunc func(c *context.Context)
+	SetContextFunc func(c context.Context)
 
 	// calls tracks calls to the methods.
 	calls struct {
@@ -96,6 +109,12 @@ type GrpcTestAPIMock struct {
 			// C is the c argument value.
 			C context.Context
 		}
+		// GetStreamMiddleware holds details about calls to the GetStreamMiddleware method.
+		GetStreamMiddleware []struct {
+		}
+		// GetUnaryMiddleware holds details about calls to the GetUnaryMiddleware method.
+		GetUnaryMiddleware []struct {
+		}
 		// HelloWorld holds details about calls to the HelloWorld method.
 		HelloWorld []struct {
 			// C is the c argument value.
@@ -110,17 +129,19 @@ type GrpcTestAPIMock struct {
 		// SetContext holds details about calls to the SetContext method.
 		SetContext []struct {
 			// C is the c argument value.
-			C *context.Context
+			C context.Context
 		}
 	}
-	lockAddConfig        sync.RWMutex
-	lockAddPathConfig    sync.RWMutex
-	lockContext          sync.RWMutex
-	lockFooBar           sync.RWMutex
-	lockHelloWorld       sync.RWMutex
-	lockInitialize       sync.RWMutex
-	lockSetAllMiddleware sync.RWMutex
-	lockSetContext       sync.RWMutex
+	lockAddConfig           sync.RWMutex
+	lockAddPathConfig       sync.RWMutex
+	lockContext             sync.RWMutex
+	lockFooBar              sync.RWMutex
+	lockGetStreamMiddleware sync.RWMutex
+	lockGetUnaryMiddleware  sync.RWMutex
+	lockHelloWorld          sync.RWMutex
+	lockInitialize          sync.RWMutex
+	lockSetAllMiddleware    sync.RWMutex
+	lockSetContext          sync.RWMutex
 }
 
 // AddConfig calls AddConfigFunc.
@@ -190,7 +211,7 @@ func (mock *GrpcTestAPIMock) AddPathConfigCalls() []struct {
 }
 
 // Context calls ContextFunc.
-func (mock *GrpcTestAPIMock) Context() *context.Context {
+func (mock *GrpcTestAPIMock) Context() context.Context {
 	if mock.ContextFunc == nil {
 		panic("GrpcTestAPIMock.ContextFunc: method is nil but GrpcTestAPI.Context was just called")
 	}
@@ -243,6 +264,58 @@ func (mock *GrpcTestAPIMock) FooBarCalls() []struct {
 	mock.lockFooBar.RLock()
 	calls = mock.calls.FooBar
 	mock.lockFooBar.RUnlock()
+	return calls
+}
+
+// GetStreamMiddleware calls GetStreamMiddlewareFunc.
+func (mock *GrpcTestAPIMock) GetStreamMiddleware() grpc.ServerOption {
+	if mock.GetStreamMiddlewareFunc == nil {
+		panic("GrpcTestAPIMock.GetStreamMiddlewareFunc: method is nil but GrpcTestAPI.GetStreamMiddleware was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockGetStreamMiddleware.Lock()
+	mock.calls.GetStreamMiddleware = append(mock.calls.GetStreamMiddleware, callInfo)
+	mock.lockGetStreamMiddleware.Unlock()
+	return mock.GetStreamMiddlewareFunc()
+}
+
+// GetStreamMiddlewareCalls gets all the calls that were made to GetStreamMiddleware.
+// Check the length with:
+//     len(mockedGrpcTestAPI.GetStreamMiddlewareCalls())
+func (mock *GrpcTestAPIMock) GetStreamMiddlewareCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockGetStreamMiddleware.RLock()
+	calls = mock.calls.GetStreamMiddleware
+	mock.lockGetStreamMiddleware.RUnlock()
+	return calls
+}
+
+// GetUnaryMiddleware calls GetUnaryMiddlewareFunc.
+func (mock *GrpcTestAPIMock) GetUnaryMiddleware() grpc.ServerOption {
+	if mock.GetUnaryMiddlewareFunc == nil {
+		panic("GrpcTestAPIMock.GetUnaryMiddlewareFunc: method is nil but GrpcTestAPI.GetUnaryMiddleware was just called")
+	}
+	callInfo := struct {
+	}{}
+	mock.lockGetUnaryMiddleware.Lock()
+	mock.calls.GetUnaryMiddleware = append(mock.calls.GetUnaryMiddleware, callInfo)
+	mock.lockGetUnaryMiddleware.Unlock()
+	return mock.GetUnaryMiddlewareFunc()
+}
+
+// GetUnaryMiddlewareCalls gets all the calls that were made to GetUnaryMiddleware.
+// Check the length with:
+//     len(mockedGrpcTestAPI.GetUnaryMiddlewareCalls())
+func (mock *GrpcTestAPIMock) GetUnaryMiddlewareCalls() []struct {
+} {
+	var calls []struct {
+	}
+	mock.lockGetUnaryMiddleware.RLock()
+	calls = mock.calls.GetUnaryMiddleware
+	mock.lockGetUnaryMiddleware.RUnlock()
 	return calls
 }
 
@@ -330,12 +403,12 @@ func (mock *GrpcTestAPIMock) SetAllMiddlewareCalls() []struct {
 }
 
 // SetContext calls SetContextFunc.
-func (mock *GrpcTestAPIMock) SetContext(c *context.Context) {
+func (mock *GrpcTestAPIMock) SetContext(c context.Context) {
 	if mock.SetContextFunc == nil {
 		panic("GrpcTestAPIMock.SetContextFunc: method is nil but GrpcTestAPI.SetContext was just called")
 	}
 	callInfo := struct {
-		C *context.Context
+		C context.Context
 	}{
 		C: c,
 	}
@@ -349,10 +422,10 @@ func (mock *GrpcTestAPIMock) SetContext(c *context.Context) {
 // Check the length with:
 //     len(mockedGrpcTestAPI.SetContextCalls())
 func (mock *GrpcTestAPIMock) SetContextCalls() []struct {
-	C *context.Context
+	C context.Context
 } {
 	var calls []struct {
-		C *context.Context
+		C context.Context
 	}
 	mock.lockSetContext.RLock()
 	calls = mock.calls.SetContext

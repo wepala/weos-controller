@@ -18,7 +18,7 @@ import (
 
 type GRPCAPI struct {
 	Config        *weoscontroller.APIConfig
-	c             *context.Context
+	c             context.Context
 	PathConfigs   map[string]*weoscontroller.PathConfig
 	ServerOptions *weoscontroller.GRPCServerOptions
 }
@@ -36,19 +36,25 @@ func (p *GRPCAPI) AddPathConfig(path string, config *weoscontroller.PathConfig) 
 	return nil
 }
 
-func (p *GRPCAPI) Context() *context.Context {
+func (p *GRPCAPI) Context() context.Context {
 	return p.c
 }
 
-func (p *GRPCAPI) SetContext(c *context.Context) {
+func (p *GRPCAPI) SetContext(c context.Context) {
 	p.c = c
 }
 
 func (p *GRPCAPI) GetStreamMiddleware() grpc.ServerOption {
+	if p.ServerOptions == nil {
+		p.ServerOptions = &weoscontroller.GRPCServerOptions{}
+	}
 	return p.ServerOptions.StreamMiddleware
 }
 
 func (p *GRPCAPI) GetUnaryMiddleware() grpc.ServerOption {
+	if p.ServerOptions == nil {
+		p.ServerOptions = &weoscontroller.GRPCServerOptions{}
+	}
 	return p.ServerOptions.UnaryMiddleware
 }
 
@@ -120,7 +126,7 @@ func (p *GRPCAPI) AuthFunc(ctx context.Context) (context.Context, error) {
 		}
 
 		context := context.WithValue(ctx, "grpcServerOptions", config)
-		p.c = &context
+		p.c = context
 		return context, nil
 	}
 	if p.Config.JWTConfig.Key != "" {
@@ -136,14 +142,14 @@ func (p *GRPCAPI) AuthFunc(ctx context.Context) (context.Context, error) {
 		bytes, err := ioutil.ReadFile(p.Config.JWTConfig.CertificatePath)
 		p.Config.JWTConfig.Certificate = bytes
 		if err != nil {
-			//p.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+			return nil, fmt.Errorf("unable to read the jwt certificate, got error '%s'", err)
 		}
 	}
 	if p.Config.JWTConfig.Certificate != nil {
 		if config.SigningMethod == "RS256" || config.SigningMethod == "RS384" || config.SigningMethod == "RS512" {
 			publicKey, err := crypto.ParseRSAPublicKeyFromPEM(p.Config.JWTConfig.Certificate)
 			if err != nil {
-				//p.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+				return nil, fmt.Errorf("unable to read the jwt certificate, got error '%s'", err)
 			}
 
 			// RD: Not sure about this one
@@ -151,14 +157,14 @@ func (p *GRPCAPI) AuthFunc(ctx context.Context) (context.Context, error) {
 		} else if config.SigningMethod == "EC256" || config.SigningMethod == "EC384" || config.SigningMethod == "EC512" {
 			publicKey, err := crypto.ParseECPublicKeyFromPEM(p.Config.JWTConfig.Certificate)
 			if err != nil {
-				//a.e.Logger.Fatalf("unable to read the jwt certificate, got error '%s'", err)
+				return nil, fmt.Errorf("unable to read the jwt certificate, got error '%s'", err)
 			}
 			config.Key = publicKey
 		}
 	}
 
 	if config.Key == nil && config.SigningKeys == nil {
-		//p.e.Logger.Fatalf("no jwt secret was configured.")
+		return nil, fmt.Errorf("no jwt secret was configured.")
 	}
 	if p.Config.JWTConfig.TokenLookup != "" {
 		config.TokenLookup = p.Config.JWTConfig.TokenLookup
@@ -171,6 +177,6 @@ func (p *GRPCAPI) AuthFunc(ctx context.Context) (context.Context, error) {
 	}
 
 	context := context.WithValue(ctx, "grpcServerOptions", config)
-	p.c = &context
+	p.c = context
 	return context, nil
 }

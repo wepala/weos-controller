@@ -11,7 +11,7 @@ import (
 	weoscontroller "github.com/wepala/weos-controller"
 )
 
-func InitalizeGrpc(ctx *context.Context, api weoscontroller.GRPCAPIInterface, apiConfig string) *context.Context {
+func InitalizeGrpc(ctx context.Context, api weoscontroller.GRPCAPIInterface, apiConfig string) context.Context {
 	var content []byte
 	var err error
 
