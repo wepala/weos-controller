@@ -2,7 +2,6 @@ package weosgrpc
 
 import (
 	"context"
-	"database/sql"
 	"net/http"
 	"time"
 
@@ -12,17 +11,19 @@ import (
 type Grpc struct {
 	pb.UnimplementedUserServer
 	Client *http.Client
-	DB     *sql.DB
 }
 
-func (g *GRPC) CreateUser(ctxt context.Context, a *pb.Request) (*pb.Response, error) {
+func (g *Grpc) CreateUser(ctxt context.Context, a *pb.Request) (*pb.Response, error) {
 	return &pb.Response{User: a, Result: "account created successfully", IsValid: true}, nil
 }
 
-func (g *GRPC) Initialize() {
+//Initialize and setup configurations for GRPC controller
+func (g *Grpc) Initialize() error {
+	//initialize app
 	if g.Client == nil {
 		g.Client = &http.Client{
 			Timeout: time.Second * 10,
 		}
 	}
+	return nil
 }

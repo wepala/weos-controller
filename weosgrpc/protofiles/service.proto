@@ -10,7 +10,6 @@ service User{
 
 message Request{
     string ID = 1;
-    string UserID = 2;
     string Title = 3;
 }
 
