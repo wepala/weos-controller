@@ -16,6 +16,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	weoscontroller "github.com/wepala/weos-controller"
+	weosLogs "github.com/wepala/weos-controller/log"
 )
 
 type TestAPI interface {
@@ -408,6 +409,7 @@ func TestErrorResponse(t *testing.T) {
 
 func TestLogOutputs(t *testing.T) {
 	e := echo.New()
+	var buf bytes.Buffer
 	var echoInstance *echo.Echo
 	//setup a mock api with handlers and middleware
 	api := &TestAPIMock{
@@ -430,18 +432,27 @@ func TestLogOutputs(t *testing.T) {
 
 			//NOTE: do not use log.x for messages as we are not using the std golang logger. Use e.Logger.x
 			//Just to check the output based on what level is set
-			e.Logger.Debug("This is a debug log :)")
 
-			e.Logger.Error("This is an error log :(")
+			c.Logger().SetOutput(&buf)
+
+			c.Logger().Debug("This is a debug log :)")
+
+			c.Logger().Error("This is an error log :(")
 
 			return nil
 		},
 		ZapLoggerFunc: func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 			return func(c echo.Context) error {
-				if err := handlerFunc(c); err != nil {
-					c.Error(err)
+				//setting the default logger in the context as zap with the default mode being error
+				zapLogger, err := weosLogs.NewZap("error")
+				if err != nil {
+					e.Logger.Errorf("Unexpected error setting the context logger : %s", err)
 				}
-				return nil
+				c.SetLogger(zapLogger)
+				cc := &weoscontroller.Context{
+					Context: c,
+				}
+				return handlerFunc(cc)
 			}
 		},
 		LogLevelFunc: func(next echo.HandlerFunc) echo.HandlerFunc {
@@ -458,15 +469,16 @@ func TestLogOutputs(t *testing.T) {
 				res.Header().Set(weoscontroller.HeaderXLogLevel, level)
 
 				//Set the log.level based on what is passed into the header
+				//Set the log.level in context based on what is passed into the header
 				switch level {
 				case "debug":
-					c.Echo().Logger.SetLevel(log.DEBUG)
+					cc.Logger().SetLevel(log.DEBUG)
 				case "info":
-					c.Echo().Logger.SetLevel(log.INFO)
+					cc.Logger().SetLevel(log.INFO)
 				case "warn":
-					c.Echo().Logger.SetLevel(log.WARN)
+					cc.Logger().SetLevel(log.WARN)
 				case "error":
-					c.Echo().Logger.SetLevel(log.ERROR)
+					cc.Logger().SetLevel(log.ERROR)
 				}
 
 				//Assigns the log level to context
@@ -520,9 +532,6 @@ func TestLogOutputs(t *testing.T) {
 	t.Run("test io.writer output", func(t *testing.T) {
 		//Assign log level here
 		level := "debug"
-
-		var buf bytes.Buffer
-		e.Logger.SetOutput(&buf)
 
 		req := httptest.NewRequest(http.MethodGet, "/endpoint", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
