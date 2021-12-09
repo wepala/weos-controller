@@ -518,7 +518,7 @@ func TestAPI_HealthCheck(t *testing.T) {
 			ContextKey:      "",
 		},
 	}}
-	e.GET("/health", api.HealthChecker, api.Context, api.Authenticate, api.UserID)
+	e.GET("/health", api.HealthCheck, api.Context, api.Authenticate, api.UserID)
 	api.SetEchoInstance(e)
 	e.ServeHTTP(rec, req)
 	response := rec.Result()

@@ -312,7 +312,7 @@ func (p *API) ResponseRecording(next echo.HandlerFunc) echo.HandlerFunc {
 	}
 }
 
-func (p *API) HealthChecker(c echo.Context) error {
+func (p *API) HealthCheck(c echo.Context) error {
 	response := &HealthCheckResponse{
 		Version: p.Config.Version,
 	}

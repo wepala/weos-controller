@@ -19,7 +19,7 @@ func (t *TestAPI) Initialize() error {
 	return t.plugin.Initialize()
 }
 
-func (*TestAPI) HealthChecker(c echo.Context) error {
+func (*TestAPI) HealthCheck(c echo.Context) error {
 	return c.String(http.StatusOK, "Hello, World!")
 }
 
@@ -227,7 +227,7 @@ paths:
     summary: Health Check
     get:
       x-weos-config:
-        handler: HealthChecker
+        handler: HealthCheck
       responses:
         "200":
           description: Health Response
@@ -250,7 +250,7 @@ paths:
           required: true
           description: contentId of the user
       x-weos-config:
-        handler: HealthChecker
+        handler: HealthCheck
         disable-cors: true
         middleware:
           - Authenticate
