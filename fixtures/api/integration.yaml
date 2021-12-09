@@ -77,7 +77,7 @@ paths:
       responses:
         200:
           description: Admin Endpoint
-  /point/{id}/{contentID}:
+  /point:
     summary: Some user endpoint
     get:
       x-weos-config:

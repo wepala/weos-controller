@@ -335,7 +335,6 @@ func (p *API) ZapLogger(next echo.HandlerFunc) echo.HandlerFunc {
 		if err != nil {
 			p.e.Logger.Errorf("Unexpected error setting the context logger : %s", err)
 		}
-		zapLogger.SetPrefix("zap")
 		c.SetLogger(zapLogger)
 		cc := &Context{
 			Context: c,

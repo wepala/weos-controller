@@ -23,7 +23,6 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 
 	//setting the default logger in echo as zap where log level is error by default
 	e.Logger, _ = weosLogs.NewZap("error")
-	e.Logger.SetPrefix("zap")
 
 	//set echo instance because the instance may not already be in the api that is passed in but the handlers must have access to it
 	api.SetEchoInstance(e)

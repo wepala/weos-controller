@@ -25,7 +25,7 @@ func NewZap(level string) (*Zap, error) {
 	return &Zap{
 		logger.Sugar(),
 		&lvl,
-		"",
+		"zap",
 	}, err
 }
 
@@ -48,7 +48,14 @@ func (z *Zap) Output() io.Writer {
 }
 
 func (z *Zap) SetOutput(w io.Writer) {
-	z.Warnf("configuring the output should be done on instantiation ")
+
+	core := zapcore.NewCore(
+		zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig()),
+		zapcore.AddSync(w),
+		zap.NewAtomicLevelAt(z.level.Level()),
+	)
+	logger := zap.New(core)
+	z.SugaredLogger = logger.Sugar()
 }
 
 func (z *Zap) Prefix() string {
