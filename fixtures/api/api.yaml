@@ -44,7 +44,7 @@ paths:
     summary: Health Check
     get:
       x-weos-config:
-        handler: HealthChecker
+        handler: HealthCheck
         disable-cors: True
       responses:
         "200":

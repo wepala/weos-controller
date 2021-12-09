@@ -31,7 +31,7 @@ paths:
     summary: Some user endpoint
     get:
       x-weos-config:
-        handler: HealthChecker
+        handler: HealthCheck
         pre-middlware:
           - RequestRecording
       responses:

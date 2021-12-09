@@ -32,7 +32,7 @@ paths:
     summary: Health Check
     get:
       x-weos-config:
-        handler: HealthChecker
+        handler: HealthCheck
       responses:
         "200":
           description: Health Response
