@@ -6,6 +6,8 @@ The previous system made use of logrus for logging however it has now transition
 
 Use the `Loglevel` middleware in `api.yaml` file.
 
+**NB: Must include `ZapLogger` middleware in `api.yaml` file since the LogLevel is set in the context/per request and `ZapLogger` is responsible for setting the logger itself on the context.**
+
 Example configurations:
 
 #### 1.Added globally to the middleware
@@ -28,6 +30,7 @@ x-weos-config:
     - PreGlobalMiddleware
   middleware:
     - LogLevel
+    - ZapLogger
     - GlobalMiddleware
   jwtConfig:
     key: ${JWT_KEY}
@@ -47,6 +50,7 @@ x-weos-config:
       handler: FooBar
       middleware:
         - LogLevel
+        - ZapLogger
         - Middleware
         - PreMiddleware
     responses:
@@ -65,8 +69,8 @@ Available headers are:
 3. `warn`
 4. `error`
 
-NB: The above list represents the hierarchy of levels, therefore whatever the current level is set at, the levels below it will also be outputted.
-`I.E.` If the level is set at `info`, you will also see `warn` and `error` logs.
+**NB: The above list represents the hierarchy of levels, therefore whatever the current level is set at, the levels below it will also be outputted.
+`I.E.` If the level is set at `info`, you will also see `warn` and `error` logs.**
 
 If no header is passed in, the default log level will be set to `error`
 
@@ -74,7 +78,9 @@ If no header is passed in, the default log level will be set to `error`
 
 Ensure that you are calling the echo logger and `not` the standard golang logger when using log outputs.
 
-This follows this format `e.Logger.x`, `x` representing the type of log you require `(Debug, Info, Warn, Error)`.
+This follows this format `e.Logger().x`, `x` representing the type of log you require `(Debug, Info, Warn, Error)`.
+
+**NB: `e` represents the `echo.context`**
 
 ### Zap Logger
 
@@ -111,4 +117,4 @@ x-weos-config:
       real: false
 ```
 
-NB: This middleware is used to set the logger on the context. If the middleware is not specified, the logger on the echo framework `only` will be set.
+**NB: This middleware is used to set the logger on the context. If the middleware is not specified, the logger on the echo framework `only` will be set.**
