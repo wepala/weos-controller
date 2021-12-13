@@ -10,8 +10,7 @@ type APIConfig struct {
 	*weos.ApplicationConfig
 	BasePath            string `json:"basePath" ,yaml:"basePath"`
 	RecordingBaseFolder string
-	Middleware          []string        `json:"middleware"`
-	PreMiddleware       []string        `json:"pre-middleware"`
+	Rest                *Rest           `json:"rest"`
 	JWTConfig           *JWTConfig      `json:"jwtConfig"`
 	Config              json.RawMessage `json:"config"`
 	Version             string          `json:"version"`
@@ -38,6 +37,11 @@ type JWTConfig struct {
 	AuthScheme      string                 `json:"authScheme"`
 	ContextKey      string                 `json:"contextKey"`
 	SigningMethod   string                 `json:"signingMethod"`
+}
+
+type Rest struct {
+	Middleware    []string `json:"middleware"`
+	PreMiddleware []string `json:"pre-middleware"`
 }
 
 type HealthCheckResponse struct {

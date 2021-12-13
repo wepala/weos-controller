@@ -17,11 +17,12 @@ x-weos-config:
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     port: ${POSTGRES_PORT}
-  pre-middleware:
-    - PreGlobalMiddleware
-  middleware:
-    - GlobalMiddleware
-    - ZapLogger
+  rest:
+    pre-middleware:
+      - PreGlobalMiddleware
+    middleware:
+      - GlobalMiddleware
+      - ZapLogger
   jwtConfig:
     key: ${JWT_KEY}
     tokenLookup: ${JWT_LOOKUP}

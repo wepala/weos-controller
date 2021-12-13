@@ -78,7 +78,7 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 
 		//setup global pre middleware
 		var preMiddlewares []echo.MiddlewareFunc
-		for _, middlewareName := range config.PreMiddleware {
+		for _, middlewareName := range config.Rest.PreMiddleware {
 			t := reflect.ValueOf(api)
 			m := t.MethodByName(middlewareName)
 			if !m.IsValid() {
@@ -92,8 +92,8 @@ func Initialize(e *echo.Echo, api APIInterface, apiConfig string) *echo.Echo {
 		//setup global middleware
 		var middlewares []echo.MiddlewareFunc
 		//prepend Context middleware
-		config.Middleware = append([]string{"Context"}, config.Middleware...)
-		for _, middlewareName := range config.Middleware {
+		config.Rest.Middleware = append([]string{"Context"}, config.Rest.Middleware...)
+		for _, middlewareName := range config.Rest.Middleware {
 			if middlewareName == "Context" {
 				t := reflect.ValueOf(api)
 				m := t.MethodByName(middlewareName)

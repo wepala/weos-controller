@@ -217,10 +217,11 @@ x-weos-config:
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
     port: ${POSTGRES_PORT}
-  middleware:
-    - RequestID
-    - Recover
-    - Static
+  rest:
+    middleware:
+      - RequestID
+      - Recover
+      - Static
 
 paths:
   /health:
