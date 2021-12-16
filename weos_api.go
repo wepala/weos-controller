@@ -99,7 +99,7 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 			cc.Logger().SetLevel(log.ERROR)
 		}
 
-		//Sets the logger on the application object
+		/*//Sets the logger on the application object
 		if p.Config == nil {
 			p.Config = &APIConfig{}
 		}
@@ -108,7 +108,7 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 			p.Config.Log = &weos.LogConfig{}
 		}
 
-		p.Config.Log.Level = level
+		p.Config.Log.Level = level*/
 
 		//Assigns the log level to context
 		return next(cc.WithValue(cc, HeaderXLogLevel, level))
