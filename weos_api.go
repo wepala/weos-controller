@@ -95,16 +95,28 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 		switch level {
 		case "debug":
 			cc.Logger().SetLevel(log.DEBUG)
-			GormLevel = "debug"
+
+			if GormLevel != "silent" {
+				GormLevel = "debug"
+			}
 		case "info":
 			cc.Logger().SetLevel(log.INFO)
-			GormLevel = "info"
+
+			if GormLevel != "silent" {
+				GormLevel = "info"
+			}
 		case "warn":
 			cc.Logger().SetLevel(log.WARN)
-			GormLevel = "warn"
+
+			if GormLevel != "silent" {
+				GormLevel = "warn"
+			}
 		case "error":
 			cc.Logger().SetLevel(log.ERROR)
-			GormLevel = "error"
+
+			if GormLevel != "silent" {
+				GormLevel = "error"
+			}
 		}
 
 		//Assigns the log level to context
