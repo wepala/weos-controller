@@ -81,8 +81,12 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 		req := cc.Request()
 		res := cc.Response()
 		level := req.Header.Get(HeaderXLogLevel)
+
+		var GormLevel string
+
 		if level == "" {
 			level = "error"
+			GormLevel = "silent"
 		}
 
 		res.Header().Set(HeaderXLogLevel, level)
@@ -91,27 +95,32 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 		switch level {
 		case "debug":
 			cc.Logger().SetLevel(log.DEBUG)
+
+			if GormLevel != "silent" {
+				GormLevel = "debug"
+			}
 		case "info":
 			cc.Logger().SetLevel(log.INFO)
+
+			if GormLevel != "silent" {
+				GormLevel = "info"
+			}
 		case "warn":
 			cc.Logger().SetLevel(log.WARN)
+
+			if GormLevel != "silent" {
+				GormLevel = "warn"
+			}
 		case "error":
 			cc.Logger().SetLevel(log.ERROR)
-		}
 
-		//Sets the logger on the application object
-		if p.Config == nil {
-			p.Config = &APIConfig{}
+			if GormLevel != "silent" {
+				GormLevel = "error"
+			}
 		}
-
-		if p.Config.Log == nil {
-			p.Config.Log = &weos.LogConfig{}
-		}
-
-		p.Config.Log.Level = level
 
 		//Assigns the log level to context
-		return next(cc.WithValue(cc, HeaderXLogLevel, level))
+		return next(cc.WithValue(cc, weos.LOG_LEVEL, GormLevel))
 	}
 }
 
