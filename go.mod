@@ -13,7 +13,7 @@ require (
 	github.com/lib/pq v1.8.0 // indirect
 	github.com/segmentio/ksuid v1.0.3
 	github.com/sirupsen/logrus v1.7.0
-	github.com/wepala/weosv1 v1.0.1-alpha.0.20220125112159-02fc25d9a3bd // indirect
+	github.com/wepala/weosv1 v1.0.1-alpha.0.20220125112159-02fc25d9a3bd
 	go.uber.org/zap v1.10.0
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985
 	gopkg.in/yaml.v2 v2.4.0 // indirect
