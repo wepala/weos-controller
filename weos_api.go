@@ -11,8 +11,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/wepala/weos"
 	weosLogs "github.com/wepala/weos-controller/log"
+	"github.com/wepala/weosv1"
 
 	"github.com/SermoDigital/jose/crypto"
 	"github.com/golang-jwt/jwt"
@@ -71,7 +71,7 @@ func (p *API) RequestID(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 		res.Header().Set(echo.HeaderXRequestID, rid)
 
-		return next(cc.WithValue(cc, weos.REQUEST_ID, rid))
+		return next(cc.WithValue(cc, weosv1.REQUEST_ID, rid))
 	}
 }
 
@@ -105,7 +105,7 @@ func (p *API) LogLevel(next echo.HandlerFunc) echo.HandlerFunc {
 		}
 
 		if p.Config.Log == nil {
-			p.Config.Log = &weos.LogConfig{}
+			p.Config.Log = &weosv1.LogConfig{}
 		}
 
 		p.Config.Log.Level = level
@@ -121,7 +121,7 @@ func (p *API) AccountID(next echo.HandlerFunc) echo.HandlerFunc {
 		req := cc.Request()
 		accountID := req.Header.Get(HeaderXAccountID)
 		if accountID != "" {
-			return next(cc.WithValue(cc, weos.ACCOUNT_ID, accountID))
+			return next(cc.WithValue(cc, weosv1.ACCOUNT_ID, accountID))
 		}
 		return next(c)
 	}
@@ -133,7 +133,7 @@ func (p *API) UserID(next echo.HandlerFunc) echo.HandlerFunc {
 		if validUser, ok := user.(*jwt.Token); ok {
 			cc := c.(*Context)
 			claims := validUser.Claims.(jwt.MapClaims)
-			return next(cc.WithValue(cc, weos.USER_ID, claims["sub"].(string)))
+			return next(cc.WithValue(cc, weosv1.USER_ID, claims["sub"].(string)))
 		}
 
 		return next(c)

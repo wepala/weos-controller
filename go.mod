@@ -16,7 +16,7 @@ require (
 	github.com/onsi/gomega v1.11.0 // indirect
 	github.com/segmentio/ksuid v1.0.3
 	github.com/sirupsen/logrus v1.7.0
-	github.com/wepala/weos v1.0.1-alpha
+	github.com/wepala/weosv1 v1.0.1-alpha.0.20220125112159-02fc25d9a3bd // indirect
 	go.uber.org/zap v1.10.0
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985
 )

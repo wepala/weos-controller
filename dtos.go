@@ -3,11 +3,11 @@ package weoscontroller
 import (
 	"encoding/json"
 
-	"github.com/wepala/weos"
+	"github.com/wepala/weosv1"
 )
 
 type APIConfig struct {
-	*weos.ApplicationConfig
+	*weosv1.ApplicationConfig
 	BasePath            string `json:"basePath" ,yaml:"basePath"`
 	RecordingBaseFolder string
 	Rest                *Rest           `json:"rest"`

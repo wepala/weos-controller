@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/wepala/weos"
+	"github.com/wepala/weosv1"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
@@ -393,7 +393,7 @@ func TestAPI_UserID(t *testing.T) {
 
 	var userId string
 	e.POST("/endpoint", func(c echo.Context) error {
-		userId = c.(*weoscontroller.Context).RequestContext().Value(weos.USER_ID).(string)
+		userId = c.(*weoscontroller.Context).RequestContext().Value(weosv1.USER_ID).(string)
 		return c.String(http.StatusOK, userId)
 	}, api.Context, api.Authenticate, api.UserID)
 
@@ -445,8 +445,8 @@ func TestAPI_LogLevel(t *testing.T) {
 			SigningMethod:   "HS256",
 			ContextKey:      "",
 		},
-		ApplicationConfig: &weos.ApplicationConfig{
-			Log: &weos.LogConfig{
+		ApplicationConfig: &weosv1.ApplicationConfig{
+			Log: &weosv1.LogConfig{
 				Level: "",
 			},
 		},
@@ -456,7 +456,7 @@ func TestAPI_LogLevel(t *testing.T) {
 	var userId string
 
 	e.POST("/endpoint", func(c echo.Context) error {
-		userId = c.(*weoscontroller.Context).RequestContext().Value(weos.USER_ID).(string)
+		userId = c.(*weoscontroller.Context).RequestContext().Value(weosv1.USER_ID).(string)
 		return c.String(http.StatusOK, userId)
 	}, api.Context, api.Authenticate, api.UserID, api.LogLevel)
 
